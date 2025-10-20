@@ -19,10 +19,8 @@ const Cart = () => {
   } = usePOS();
   const [processing, setProcessing] = useState(false);
 
-  const taxRate = 0.18; // 18% TVA Géorgie
   const subtotal = getTotalPrice();
-  const taxAmount = subtotal * taxRate;
-  const total = subtotal + taxAmount;
+  const total = subtotal;
 
   const handleCompleteOrder = async () => {
     if (cart.length === 0) {
@@ -41,15 +39,16 @@ const Cart = () => {
       // Create order
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
-        .insert({
+        .insert([{
+          order_number: '',
           session_id: currentSession.id,
           employee_id: currentEmployee.id,
           status: 'pending',
           subtotal,
-          tax_amount: taxAmount,
-          total,
+          tax_amount: 0,
+          total: subtotal,
           payment_method: 'card',
-        })
+        }])
         .select()
         .single();
 
@@ -194,14 +193,6 @@ const Cart = () => {
       {cart.length > 0 && (
         <div className="p-4 border-t border-border bg-muted/30 space-y-4">
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Sous-total</span>
-              <span className="font-medium">{subtotal.toFixed(2)} ₾</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">TVA (18%)</span>
-              <span className="font-medium">{taxAmount.toFixed(2)} ₾</span>
-            </div>
             <Separator />
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>

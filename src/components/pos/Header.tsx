@@ -1,9 +1,9 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Coffee, LogOut, User } from 'lucide-react';
+import { Coffee, LogOut, User, Moon, Sun } from 'lucide-react';
 
 const Header = () => {
-  const { currentEmployee, logout, language, setLanguage } = usePOS();
+  const { currentEmployee, logout, language, setLanguage, darkMode, toggleDarkMode } = usePOS();
 
   const handleLogout = async () => {
     await logout();
@@ -33,6 +33,14 @@ const Header = () => {
               FR
             </Button>
             <Button
+              variant={language === 'en' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setLanguage('en')}
+              className="text-xs px-3 h-8"
+            >
+              EN
+            </Button>
+            <Button
               variant={language === 'ru' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setLanguage('ru')}
@@ -49,6 +57,15 @@ const Header = () => {
               GE
             </Button>
           </div>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleDarkMode}
+            className="h-9 w-9"
+          >
+            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
 
           <div className="hidden md:flex items-center gap-2 bg-muted px-4 py-2 rounded-lg">
             <User className="w-4 h-4 text-muted-foreground" />

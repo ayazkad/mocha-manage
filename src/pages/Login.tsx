@@ -92,8 +92,9 @@ const Login = () => {
             </Button>
           </form>
 
-          <div className="text-center text-sm text-muted-foreground">
-            <p>Compte test : 0000 / 0000</p>
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">Compte test : 0000 / 0000</p>
+            <p className="text-xs text-muted-foreground">Admin access</p>
           </div>
         </div>
       </div>

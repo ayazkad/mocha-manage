@@ -28,14 +28,16 @@ interface POSContextType {
   currentEmployee: Employee | null;
   currentSession: Session | null;
   cart: CartItem[];
-  language: 'fr' | 'ru' | 'ge';
+  language: 'fr' | 'ru' | 'ge' | 'en';
+  darkMode: boolean;
   login: (code: string, pin: string) => Promise<boolean>;
   logout: () => Promise<void>;
   addToCart: (item: CartItem) => void;
   removeFromCart: (index: number) => void;
   updateCartItem: (index: number, item: CartItem) => void;
   clearCart: () => void;
-  setLanguage: (lang: 'fr' | 'ru' | 'ge') => void;
+  setLanguage: (lang: 'fr' | 'ru' | 'ge' | 'en') => void;
+  toggleDarkMode: () => void;
   getTotalPrice: () => number;
 }
 
@@ -45,7 +47,17 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [language, setLanguage] = useState<'fr' | 'ru' | 'ge'>('fr');
+  const [language, setLanguage] = useState<'fr' | 'ru' | 'ge' | 'en'>('fr');
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Apply dark mode class to document
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     // Check for existing session in localStorage
@@ -149,6 +161,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 0);
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
     <POSContext.Provider
       value={{
@@ -156,6 +172,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentSession,
         cart,
         language,
+        darkMode,
         login,
         logout,
         addToCart,
@@ -163,6 +180,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateCartItem,
         clearCart,
         setLanguage,
+        toggleDarkMode,
         getTotalPrice,
       }}
     >
