@@ -27,6 +27,7 @@ interface ProductOption {
   id: string;
   option_type: string;
   name_fr: string;
+  name_en: string;
   name_ru: string;
   name_ge: string;
   price_modifier: number;
@@ -81,7 +82,7 @@ const ProductOptionsDialog = ({
   };
 
   const getOptionName = (option: ProductOption) => {
-    return option.name_fr;
+    return option.name_en || option.name_fr;
   };
 
   const calculateTotal = () => {

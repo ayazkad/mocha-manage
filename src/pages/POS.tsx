@@ -10,6 +10,7 @@ import CategoryTabs from '@/components/pos/CategoryTabs';
 interface Category {
   id: string;
   name_fr: string;
+  name_en: string;
   name_ru: string;
   name_ge: string;
   icon: string;
@@ -46,7 +47,7 @@ const POS = () => {
   };
 
   const getCategoryName = (category: Category) => {
-    return category.name_fr;
+    return category.name_en || category.name_fr;
   };
 
   return (

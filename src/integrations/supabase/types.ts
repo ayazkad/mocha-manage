@@ -20,6 +20,7 @@ export type Database = {
           created_at: string | null
           icon: string | null
           id: string
+          name_en: string | null
           name_fr: string
           name_ge: string | null
           name_ru: string | null
@@ -30,6 +31,7 @@ export type Database = {
           created_at?: string | null
           icon?: string | null
           id?: string
+          name_en?: string | null
           name_fr: string
           name_ge?: string | null
           name_ru?: string | null
@@ -40,6 +42,7 @@ export type Database = {
           created_at?: string | null
           icon?: string | null
           id?: string
+          name_en?: string | null
           name_fr?: string
           name_ge?: string | null
           name_ru?: string | null
@@ -205,6 +208,7 @@ export type Database = {
           active: boolean | null
           created_at: string | null
           id: string
+          name_en: string | null
           name_fr: string
           name_ge: string | null
           name_ru: string | null
@@ -217,6 +221,7 @@ export type Database = {
           active?: boolean | null
           created_at?: string | null
           id?: string
+          name_en?: string | null
           name_fr: string
           name_ge?: string | null
           name_ru?: string | null
@@ -229,6 +234,7 @@ export type Database = {
           active?: boolean | null
           created_at?: string | null
           id?: string
+          name_en?: string | null
           name_fr?: string
           name_ge?: string | null
           name_ru?: string | null
@@ -253,6 +259,7 @@ export type Database = {
           base_price: number
           category_id: string | null
           created_at: string | null
+          description_en: string | null
           description_fr: string | null
           description_ge: string | null
           description_ru: string | null
@@ -260,6 +267,7 @@ export type Database = {
           has_size_options: boolean | null
           id: string
           image_url: string | null
+          name_en: string | null
           name_fr: string
           name_ge: string | null
           name_ru: string | null
@@ -271,6 +279,7 @@ export type Database = {
           base_price: number
           category_id?: string | null
           created_at?: string | null
+          description_en?: string | null
           description_fr?: string | null
           description_ge?: string | null
           description_ru?: string | null
@@ -278,6 +287,7 @@ export type Database = {
           has_size_options?: boolean | null
           id?: string
           image_url?: string | null
+          name_en?: string | null
           name_fr: string
           name_ge?: string | null
           name_ru?: string | null
@@ -289,6 +299,7 @@ export type Database = {
           base_price?: number
           category_id?: string | null
           created_at?: string | null
+          description_en?: string | null
           description_fr?: string | null
           description_ge?: string | null
           description_ru?: string | null
@@ -296,6 +307,7 @@ export type Database = {
           has_size_options?: boolean | null
           id?: string
           image_url?: string | null
+          name_en?: string | null
           name_fr?: string
           name_ge?: string | null
           name_ru?: string | null
@@ -355,10 +367,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_order_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_order_number: { Args: never; Returns: string }
     }
     Enums: {
       employee_role: "employee" | "admin"

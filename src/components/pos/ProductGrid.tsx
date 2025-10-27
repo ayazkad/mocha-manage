@@ -7,9 +7,11 @@ import ProductOptionsDialog from './ProductOptionsDialog';
 interface Product {
   id: string;
   name_fr: string;
+  name_en: string;
   name_ru: string;
   name_ge: string;
   description_fr: string;
+  description_en: string;
   description_ru: string;
   description_ge: string;
   base_price: number;
@@ -47,7 +49,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
   };
 
   const getProductName = (product: Product) => {
-    return product.name_fr;
+    return product.name_en || product.name_fr;
   };
 
   const handleProductClick = (product: Product) => {
