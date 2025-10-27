@@ -25,7 +25,7 @@ interface ProductGridProps {
 const ProductGrid = ({ categoryId }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const { language } = usePOS();
+  const { addToCart } = usePOS();
 
   useEffect(() => {
     if (categoryId) {
@@ -47,14 +47,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
   };
 
   const getProductName = (product: Product) => {
-    switch (language) {
-      case 'ru':
-        return product.name_ru || product.name_fr;
-      case 'ge':
-        return product.name_ge || product.name_fr;
-      default:
-        return product.name_fr;
-    }
+    return product.name_fr;
   };
 
   const handleProductClick = (product: Product) => {
@@ -62,7 +55,6 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
       setSelectedProduct(product);
     } else {
       // Add directly to cart with no options
-      const { addToCart } = usePOS();
       addToCart({
         productId: product.id,
         productName: getProductName(product),

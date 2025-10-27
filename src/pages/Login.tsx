@@ -17,7 +17,7 @@ const Login = () => {
     e.preventDefault();
     
     if (employeeCode.length !== 4 || pin.length !== 4) {
-      toast.error('Le code employé et le PIN doivent comporter 4 chiffres');
+      toast.error('Employee code and PIN must be 4 digits');
       return;
     }
 
@@ -26,10 +26,10 @@ const Login = () => {
     setLoading(false);
 
     if (success) {
-      toast.success('Connexion réussie');
+      toast.success('Login successful');
       navigate('/pos');
     } else {
-      toast.error('Code employé ou PIN incorrect');
+      toast.error('Invalid employee code or PIN');
       setEmployeeCode('');
       setPin('');
     }
@@ -45,14 +45,14 @@ const Login = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-foreground">Café POS</h1>
-              <p className="text-muted-foreground mt-2">Connexion employé</p>
+              <p className="text-muted-foreground mt-2">Employee Login</p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Code employé (4 chiffres)
+                Employee Code (4 digits)
               </label>
               <Input
                 type="text"
@@ -69,7 +69,7 @@ const Login = () => {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Code PIN (4 chiffres)
+                PIN Code (4 digits)
               </label>
               <Input
                 type="password"
@@ -88,12 +88,12 @@ const Login = () => {
               disabled={loading || employeeCode.length !== 4 || pin.length !== 4}
               className="w-full h-14 text-lg bg-gradient-espresso hover:opacity-90 transition-opacity"
             >
-              {loading ? 'Connexion...' : 'Se connecter'}
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
 
           <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">Compte test : 0000 / 0000</p>
+            <p className="text-sm text-muted-foreground">Test account: 0000 / 0000</p>
             <p className="text-xs text-muted-foreground">Admin access</p>
           </div>
         </div>

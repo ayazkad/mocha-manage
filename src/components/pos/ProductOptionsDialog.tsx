@@ -51,7 +51,7 @@ const ProductOptionsDialog = ({
   const [selectedMilk, setSelectedMilk] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
-  const { addToCart, language } = usePOS();
+  const { addToCart } = usePOS();
 
   useEffect(() => {
     if (open && product) {
@@ -81,14 +81,7 @@ const ProductOptionsDialog = ({
   };
 
   const getOptionName = (option: ProductOption) => {
-    switch (language) {
-      case 'ru':
-        return option.name_ru || option.name_fr;
-      case 'ge':
-        return option.name_ge || option.name_fr;
-      default:
-        return option.name_fr;
-    }
+    return option.name_fr;
   };
 
   const calculateTotal = () => {
@@ -125,7 +118,7 @@ const ProductOptionsDialog = ({
       notes: notes || undefined,
     });
 
-    toast.success('Ajouté au panier');
+    toast.success('Added to cart');
     onClose();
     
     // Reset form
@@ -143,7 +136,7 @@ const ProductOptionsDialog = ({
         <div className="space-y-6 py-4">
           {product.has_size_options && sizeOptions.length > 0 && (
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Taille</Label>
+              <Label className="text-base font-semibold">Size</Label>
               <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
                 {sizeOptions.map((option) => (
                   <div
@@ -169,7 +162,7 @@ const ProductOptionsDialog = ({
 
           {product.has_milk_options && milkOptions.length > 0 && (
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Type de lait</Label>
+              <Label className="text-base font-semibold">Milk Type</Label>
               <RadioGroup value={selectedMilk} onValueChange={setSelectedMilk}>
                 {milkOptions.map((option) => (
                   <div
@@ -194,7 +187,7 @@ const ProductOptionsDialog = ({
           )}
 
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Quantité</Label>
+            <Label className="text-base font-semibold">Quantity</Label>
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
@@ -216,11 +209,11 @@ const ProductOptionsDialog = ({
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Notes (optionnel)</Label>
+            <Label className="text-base font-semibold">Notes (optional)</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Instructions spéciales..."
+              placeholder="Special instructions..."
               className="resize-none"
               rows={3}
             />
@@ -239,7 +232,7 @@ const ProductOptionsDialog = ({
               onClick={handleAddToCart}
               className="bg-gradient-espresso hover:opacity-90 transition-opacity"
             >
-              Ajouter au panier
+              Add to Cart
             </Button>
           </div>
         </DialogFooter>

@@ -16,7 +16,7 @@ interface Category {
 }
 
 const POS = () => {
-  const { currentEmployee, language } = usePOS();
+  const { currentEmployee } = usePOS();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -46,14 +46,7 @@ const POS = () => {
   };
 
   const getCategoryName = (category: Category) => {
-    switch (language) {
-      case 'ru':
-        return category.name_ru || category.name_fr;
-      case 'ge':
-        return category.name_ge || category.name_fr;
-      default:
-        return category.name_fr;
-    }
+    return category.name_fr;
   };
 
   return (

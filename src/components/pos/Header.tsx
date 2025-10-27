@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Coffee, LogOut, User, Moon, Sun } from 'lucide-react';
 
 const Header = () => {
-  const { currentEmployee, logout, language, setLanguage, darkMode, toggleDarkMode } = usePOS();
+  const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
 
   const handleLogout = async () => {
     await logout();
@@ -18,46 +18,11 @@ const Header = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">Café POS</h1>
-            <p className="text-xs text-muted-foreground">Point de vente</p>
+            <p className="text-xs text-muted-foreground">Point of Sale</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex gap-1 bg-muted rounded-lg p-1">
-            <Button
-              variant={language === 'fr' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('fr')}
-              className="text-xs px-3 h-8"
-            >
-              FR
-            </Button>
-            <Button
-              variant={language === 'en' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('en')}
-              className="text-xs px-3 h-8"
-            >
-              EN
-            </Button>
-            <Button
-              variant={language === 'ru' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('ru')}
-              className="text-xs px-3 h-8"
-            >
-              RU
-            </Button>
-            <Button
-              variant={language === 'ge' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('ge')}
-              className="text-xs px-3 h-8"
-            >
-              GE
-            </Button>
-          </div>
-
           <Button
             variant="outline"
             size="icon"
@@ -79,7 +44,7 @@ const Header = () => {
             className="gap-2"
           >
             <LogOut className="w-4 h-4" />
-            <span className="hidden md:inline">Déconnexion</span>
+            <span className="hidden md:inline">Logout</span>
           </Button>
         </div>
       </div>

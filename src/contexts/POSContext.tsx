@@ -28,7 +28,6 @@ interface POSContextType {
   currentEmployee: Employee | null;
   currentSession: Session | null;
   cart: CartItem[];
-  language: 'fr' | 'ru' | 'ge' | 'en';
   darkMode: boolean;
   login: (code: string, pin: string) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -36,7 +35,6 @@ interface POSContextType {
   removeFromCart: (index: number) => void;
   updateCartItem: (index: number, item: CartItem) => void;
   clearCart: () => void;
-  setLanguage: (lang: 'fr' | 'ru' | 'ge' | 'en') => void;
   toggleDarkMode: () => void;
   getTotalPrice: () => number;
 }
@@ -47,7 +45,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [language, setLanguage] = useState<'fr' | 'ru' | 'ge' | 'en'>('fr');
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -171,7 +168,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentEmployee,
         currentSession,
         cart,
-        language,
         darkMode,
         login,
         logout,
@@ -179,7 +175,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         removeFromCart,
         updateCartItem,
         clearCart,
-        setLanguage,
         toggleDarkMode,
         getTotalPrice,
       }}
