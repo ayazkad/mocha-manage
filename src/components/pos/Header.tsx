@@ -1,9 +1,11 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Coffee, LogOut, User, Moon, Sun } from 'lucide-react';
+import { Coffee, LogOut, User, Moon, Sun, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
@@ -36,6 +38,18 @@ const Header = () => {
             <User className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">{currentEmployee?.name}</span>
           </div>
+
+          {currentEmployee?.role === 'admin' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/admin')}
+              className="gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden md:inline">Admin</span>
+            </Button>
+          )}
 
           <Button
             variant="outline"
