@@ -179,7 +179,7 @@ const Cart = ({ onClose }: CartProps) => {
 
   return (
     <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
-      <div className="p-4 md:p-6 border-b border-border/50 bg-secondary/30">
+      <div className="p-4 md:p-6 border-b border-border/50 bg-secondary/30 shrink-0">
         <div className="flex items-center gap-2">
           <ShoppingCart className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold text-card-foreground">Panier</h2>
@@ -189,7 +189,8 @@ const Cart = ({ onClose }: CartProps) => {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4 md:p-6">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-4 md:p-6">
         {cart.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
             <ShoppingCart className="w-16 h-16 mb-4 opacity-20" />
@@ -248,14 +249,16 @@ const Cart = ({ onClose }: CartProps) => {
             ))}
           </div>
         )}
-      </ScrollArea>
+        </div>
 
-      <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30">
-        <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
-      </div>
+        {cart.length > 0 && (
+          <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 shrink-0">
+            <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
+          </div>
+        )}
 
-      {cart.length > 0 && (
-        <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 space-y-4">
+        {cart.length > 0 && (
+          <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 shrink-0 space-y-4">
           <div className="space-y-2 text-sm">
             <Separator />
             <div className="flex justify-between text-xl font-bold pt-2">
@@ -318,8 +321,9 @@ const Cart = ({ onClose }: CartProps) => {
               </Button>
             </div>
           )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
