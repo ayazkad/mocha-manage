@@ -23,41 +23,77 @@ interface CustomerLoyaltyProps {
 }
 
 const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
-  const [qrCodeInput, setQrCodeInput] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [searchResults, setSearchResults] = useState<Customer[]>([]);
+  const [showResults, setShowResults] = useState(false);
   const queryClient = useQueryClient();
   const { cart } = usePOS();
 
   const searchCustomerMutation = useMutation({
-    mutationFn: async (qrCode: string) => {
+    mutationFn: async (searchTerm: string) => {
+      // Try exact QR code match first
+      const { data: qrMatch } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('qr_code', searchTerm)
+        .maybeSingle();
+      
+      if (qrMatch) {
+        return [qrMatch as Customer];
+      }
+
+      // Search by name or phone
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .eq('qr_code', qrCode)
-        .single();
+        .or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
       
       if (error) throw error;
-      return data as Customer;
+      return data as Customer[];
     },
-    onSuccess: (customer) => {
-      setSelectedCustomer(customer);
-      onCustomerSelected?.(customer);
-      toast.success(`Client trouvé: ${customer.name}`);
+    onSuccess: (customers) => {
+      if (customers.length === 0) {
+        toast.error('Aucun client trouvé');
+        setSearchResults([]);
+        setShowResults(false);
+      } else if (customers.length === 1) {
+        setSelectedCustomer(customers[0]);
+        onCustomerSelected?.(customers[0]);
+        setSearchResults([]);
+        setShowResults(false);
+        toast.success(`Client trouvé: ${customers[0].name}`);
+      } else {
+        setSearchResults(customers);
+        setShowResults(true);
+        toast.info(`${customers.length} clients trouvés`);
+      }
     },
     onError: () => {
-      toast.error('Client introuvable. Vérifiez le QR code.');
+      toast.error('Erreur lors de la recherche');
     },
   });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!qrCodeInput.trim()) return;
-    searchCustomerMutation.mutate(qrCodeInput.trim());
+    if (!searchInput.trim()) return;
+    searchCustomerMutation.mutate(searchInput.trim());
+  };
+
+  const handleSelectCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    onCustomerSelected?.(customer);
+    setSearchResults([]);
+    setShowResults(false);
+    setSearchInput('');
+    toast.success(`Client sélectionné: ${customer.name}`);
   };
 
   const clearCustomer = () => {
     setSelectedCustomer(null);
-    setQrCodeInput('');
+    setSearchInput('');
+    setSearchResults([]);
+    setShowResults(false);
     onCustomerSelected?.(null);
   };
 
@@ -76,21 +112,61 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!selectedCustomer ? (
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <Input
-              placeholder="Entrez ou scannez le QR code..."
-              value={qrCodeInput}
-              onChange={(e) => setQrCodeInput(e.target.value)}
-              className="flex-1"
-            />
-            <Button 
-              type="submit" 
-              disabled={searchCustomerMutation.isPending}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
+        {!selectedCustomer && !showResults ? (
+          <form onSubmit={handleSearch} className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Nom, téléphone ou QR code..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                type="submit" 
+                disabled={searchCustomerMutation.isPending}
+                className="touch-manipulation"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Recherchez par nom, numéro de téléphone ou scannez le QR code
+            </p>
           </form>
+        ) : showResults ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Résultats de recherche</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowResults(false);
+                  setSearchResults([]);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {searchResults.map((customer) => (
+                <button
+                  key={customer.id}
+                  onClick={() => handleSelectCustomer(customer)}
+                  className="w-full p-4 bg-muted hover:bg-muted/80 rounded-lg text-left transition-colors touch-manipulation"
+                >
+                  <div className="space-y-1">
+                    <p className="font-semibold text-base">{customer.name}</p>
+                    <p className="text-sm text-muted-foreground">{customer.email}</p>
+                    <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                    <p className="text-xs text-primary font-medium">
+                      {customer.points} points • {customer.total_purchases} achats
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-start justify-between p-4 bg-muted rounded-lg">
