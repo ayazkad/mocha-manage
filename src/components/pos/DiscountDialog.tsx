@@ -27,9 +27,18 @@ const DiscountDialog = ({ open, onClose, onApply, hasSelection }: DiscountDialog
   const handleApply = () => {
     const percentage = parseFloat(discountValue) || 0;
     if (percentage >= 0 && percentage <= 100) {
-      // Si aucune sélection, forcer applyToAll à true
+      console.log('=== DiscountDialog handleApply START ===');
+      console.log('Discount value:', percentage);
+      console.log('hasSelection:', hasSelection);
+      console.log('applyToAll state:', applyToAll);
+      
+      // RÈGLE SIMPLE: Si hasSelection est false, forcer applyToAll à true
       const shouldApplyToAll = !hasSelection || applyToAll;
-      console.log('DiscountDialog handleApply:', { percentage, hasSelection, applyToAll, shouldApplyToAll });
+      
+      console.log('Calculated shouldApplyToAll:', shouldApplyToAll);
+      console.log('Calling onApply with:', { percentage, shouldApplyToAll });
+      console.log('=== DiscountDialog handleApply END ===');
+      
       onApply(percentage, shouldApplyToAll);
       setDiscountValue('');
       onClose();
