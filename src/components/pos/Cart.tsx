@@ -253,7 +253,37 @@ const Cart = ({ onClose }: CartProps) => {
 
       // Update customer loyalty points if customer selected
       if (selectedCustomer) {
-        const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+        // Calculer uniquement les boissons pour les points de fidélité
+        const productIds = cart.map(item => item.productId);
+        const { data: products } = await supabase
+          .from('products')
+          .select('id, category_id, categories(name_en, name_fr, name_ru, name_ge)')
+          .in('id', productIds);
+
+        // Compter seulement les boissons (beverages/drinks)
+        const beveragesCount = cart.reduce((sum, item) => {
+          const product = products?.find(p => p.id === item.productId);
+          if (product && product.categories) {
+            const categoryName = (
+              product.categories.name_en || 
+              product.categories.name_fr || 
+              ''
+            ).toLowerCase();
+            // Vérifier si la catégorie contient "drink", "beverage", "boisson", etc.
+            if (categoryName.includes('drink') || 
+                categoryName.includes('beverage') || 
+                categoryName.includes('boisson') ||
+                categoryName.includes('coffee') ||
+                categoryName.includes('café') ||
+                categoryName.includes('tea') ||
+                categoryName.includes('thé')) {
+              return sum + item.quantity;
+            }
+          }
+          return sum;
+        }, 0);
+
+        const totalItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         const shouldRedeem = selectedCustomer.points >= 10;
 
         if (shouldRedeem) {
@@ -262,7 +292,7 @@ const Cart = ({ onClose }: CartProps) => {
             .from('customers')
             .update({ 
               points: 0,
-              total_purchases: selectedCustomer.total_purchases + itemsCount 
+              total_purchases: selectedCustomer.total_purchases + totalItemsCount 
             })
             .eq('id', selectedCustomer.id);
 
@@ -277,22 +307,32 @@ const Cart = ({ onClose }: CartProps) => {
 
           toast.success('🎁 Boisson offerte appliquée!');
         } else {
-          // Add points
-          await supabase
-            .from('customers')
-            .update({ 
-              points: selectedCustomer.points + itemsCount,
-              total_purchases: selectedCustomer.total_purchases + itemsCount 
-            })
-            .eq('id', selectedCustomer.id);
+          // Add points only for beverages
+          if (beveragesCount > 0) {
+            await supabase
+              .from('customers')
+              .update({ 
+                points: selectedCustomer.points + beveragesCount,
+                total_purchases: selectedCustomer.total_purchases + totalItemsCount 
+              })
+              .eq('id', selectedCustomer.id);
 
-          await supabase
-            .from('customer_transactions')
-            .insert([{
-              customer_id: selectedCustomer.id,
-              order_id: orderData.id,
-              points_added: itemsCount,
-            }]);
+            await supabase
+              .from('customer_transactions')
+              .insert([{
+                customer_id: selectedCustomer.id,
+                order_id: orderData.id,
+                points_added: beveragesCount,
+              }]);
+          } else {
+            // Update only total purchases if no beverages
+            await supabase
+              .from('customers')
+              .update({ 
+                total_purchases: selectedCustomer.total_purchases + totalItemsCount 
+              })
+              .eq('id', selectedCustomer.id);
+          }
         }
       }
 
