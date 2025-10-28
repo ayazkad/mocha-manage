@@ -26,6 +26,8 @@ const Cart = ({ onClose }: CartProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [showPaymentMethod, setShowPaymentMethod] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | null>(null);
+  const [showCashCalculator, setShowCashCalculator] = useState(false);
+  const [amountReceived, setAmountReceived] = useState(0);
 
   const subtotal = getTotalPrice();
   const total = subtotal;
@@ -36,6 +38,38 @@ const Cart = ({ onClose }: CartProps) => {
       return;
     }
     setShowPaymentMethod(true);
+  };
+
+  const handleCashPayment = () => {
+    setShowPaymentMethod(false);
+    setShowCashCalculator(true);
+    setAmountReceived(0);
+  };
+
+  const handleCardPayment = () => {
+    handleCompleteOrder('card');
+  };
+
+  const addBill = (amount: number) => {
+    setAmountReceived(prev => prev + amount);
+  };
+
+  const resetCash = () => {
+    setAmountReceived(0);
+  };
+
+  const getChange = () => {
+    return Math.max(0, amountReceived - total);
+  };
+
+  const canCompleteCashPayment = () => {
+    return amountReceived >= total;
+  };
+
+  const completeCashPayment = () => {
+    if (canCompleteCashPayment()) {
+      handleCompleteOrder('cash');
+    }
   };
 
   const handleCompleteOrder = async (paymentMethod: 'cash' | 'card') => {
@@ -168,6 +202,8 @@ const Cart = ({ onClose }: CartProps) => {
       setSelectedCustomer(null);
       setShowPaymentMethod(false);
       setSelectedPaymentMethod(null);
+      setShowCashCalculator(false);
+      setAmountReceived(0);
       onClose?.();
     } catch (error) {
       console.error('Error completing order:', error);
@@ -259,16 +295,15 @@ const Cart = ({ onClose }: CartProps) => {
 
         {cart.length > 0 && (
           <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 shrink-0 space-y-4">
-          <div className="space-y-2 text-sm">
-            <Separator />
-            <div className="flex justify-between text-xl font-bold pt-2">
-              <span className="text-card-foreground">Total</span>
-              <span className="text-primary">{total.toFixed(2)} ₾</span>
+            <div className="space-y-2 text-sm">
+              <Separator />
+              <div className="flex justify-between text-xl font-bold pt-2">
+                <span className="text-card-foreground">Total</span>
+                <span className="text-primary">{total.toFixed(2)} ₾</span>
+              </div>
             </div>
-          </div>
 
-          {!showPaymentMethod ? (
-            <div className="space-y-2">
+            {!showPaymentMethod && !showCashCalculator && (
               <Button
                 onClick={handlePaymentMethodClick}
                 disabled={processing}
@@ -277,50 +312,111 @@ const Cart = ({ onClose }: CartProps) => {
                 <CheckCircle className="w-5 h-5" />
                 Valider la commande
               </Button>
-              <Button
-                onClick={clearCart}
-                variant="outline"
-                className="w-full rounded-xl border-border/50"
-                disabled={processing}
-              >
-                Vider le panier
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-center text-muted-foreground mb-2">
-                Choisissez le mode de paiement
-              </p>
-              <div className="grid grid-cols-2 gap-3">
+            )}
+
+            {showPaymentMethod && !showCashCalculator && (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-center text-muted-foreground mb-2">
+                  Choisissez le mode de paiement
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={handleCashPayment}
+                    disabled={processing}
+                    className="h-20 flex-col gap-2 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-xl"
+                    variant="outline"
+                  >
+                    <Banknote className="w-8 h-8" />
+                    <span className="text-sm font-semibold">Espèces</span>
+                  </Button>
+                  <Button
+                    onClick={handleCardPayment}
+                    disabled={processing}
+                    className="h-20 flex-col gap-2 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-xl"
+                    variant="outline"
+                  >
+                    <CreditCard className="w-8 h-8" />
+                    <span className="text-sm font-semibold">Carte</span>
+                  </Button>
+                </div>
                 <Button
-                  onClick={() => handleCompleteOrder('cash')}
+                  onClick={() => setShowPaymentMethod(false)}
+                  variant="ghost"
+                  className="w-full rounded-xl"
                   disabled={processing}
-                  className="h-20 flex-col gap-2 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-xl"
-                  variant="outline"
                 >
-                  <Banknote className="w-8 h-8" />
-                  <span className="text-sm font-semibold">Espèces</span>
-                </Button>
-                <Button
-                  onClick={() => handleCompleteOrder('card')}
-                  disabled={processing}
-                  className="h-20 flex-col gap-2 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-xl"
-                  variant="outline"
-                >
-                  <CreditCard className="w-8 h-8" />
-                  <span className="text-sm font-semibold">Carte</span>
+                  Retour
                 </Button>
               </div>
-              <Button
-                onClick={() => setShowPaymentMethod(false)}
-                variant="ghost"
-                className="w-full rounded-xl"
-                disabled={processing}
-              >
-                Retour
-              </Button>
-            </div>
-          )}
+            )}
+
+            {showCashCalculator && (
+              <div className="space-y-4">
+                <div className="space-y-3 p-4 bg-muted/50 rounded-xl">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Total à payer</span>
+                    <span className="text-lg font-bold text-card-foreground">{total.toFixed(2)} ₾</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Montant reçu</span>
+                    <span className="text-lg font-bold text-primary">{amountReceived.toFixed(2)} ₾</span>
+                  </div>
+                  {amountReceived >= total && (
+                    <div className="flex justify-between items-center pt-2 border-t">
+                      <span className="text-sm font-semibold text-card-foreground">Rendu à donner</span>
+                      <span className="text-2xl font-bold text-green-600">{getChange().toFixed(2)} ₾</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-center text-muted-foreground">Billets géorgiens</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[200, 100, 50, 20, 10, 5, 2, 1].map((bill) => (
+                      <Button
+                        key={bill}
+                        onClick={() => addBill(bill)}
+                        variant="outline"
+                        className="h-14 text-base font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
+                      >
+                        {bill} ₾
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={resetCash}
+                    variant="outline"
+                    className="rounded-xl"
+                    disabled={processing}
+                  >
+                    Effacer
+                  </Button>
+                  <Button
+                    onClick={completeCashPayment}
+                    disabled={!canCompleteCashPayment() || processing}
+                    className="bg-gradient-primary hover:opacity-90 transition-opacity rounded-xl"
+                  >
+                    {processing ? 'Traitement...' : 'Valider'}
+                  </Button>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    setShowCashCalculator(false);
+                    setShowPaymentMethod(true);
+                    setAmountReceived(0);
+                  }}
+                  variant="ghost"
+                  className="w-full rounded-xl"
+                  disabled={processing}
+                >
+                  ← Retour aux modes de paiement
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
