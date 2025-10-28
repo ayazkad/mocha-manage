@@ -81,7 +81,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
   };
 
   const applyStaffDiscount = async () => {
-    if (!currentEmployee || benefits.discount_used || discountTicketsCount >= 3) return;
+    if (!currentEmployee || discountTicketsCount >= 3) return;
 
     if (cart.length === 0) {
       toast.error('Veuillez ajouter des articles au panier d\'abord');
@@ -216,10 +216,8 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     </p>
                   </div>
                 </div>
-                {benefits.discount_used || discountTicketsCount >= 3 ? (
-                  <Badge variant="secondary">
-                    {discountTicketsCount >= 3 ? 'Limite atteinte' : 'Utilisé'}
-                  </Badge>
+                {discountTicketsCount >= 3 ? (
+                  <Badge variant="secondary">Limite atteinte</Badge>
                 ) : (
                   <Button
                     size="sm"
