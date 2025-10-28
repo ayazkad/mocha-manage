@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import NumPad from '@/components/login/NumPad';
@@ -16,10 +16,20 @@ const DiscountDialog = ({ open, onClose, onApply, hasSelection }: DiscountDialog
   // Si aucune sélection, appliquer à tous par défaut
   const [applyToAll, setApplyToAll] = useState(!hasSelection);
 
+  // Réinitialiser l'état quand le dialogue s'ouvre
+  useEffect(() => {
+    if (open) {
+      setDiscountValue('');
+      setApplyToAll(!hasSelection);
+    }
+  }, [open, hasSelection]);
+
   const handleApply = () => {
     const percentage = parseFloat(discountValue) || 0;
     if (percentage >= 0 && percentage <= 100) {
-      onApply(percentage, applyToAll);
+      // Si aucune sélection, forcer applyToAll à true
+      const shouldApplyToAll = !hasSelection || applyToAll;
+      onApply(percentage, shouldApplyToAll);
       setDiscountValue('');
       onClose();
     }
