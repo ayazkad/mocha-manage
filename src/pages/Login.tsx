@@ -2,22 +2,32 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Coffee } from 'lucide-react';
 import { toast } from 'sonner';
+import NumPad from '@/components/login/NumPad';
 
 const Login = () => {
   const [employeeCode, setEmployeeCode] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<'code' | 'pin'>('code');
   const { login } = usePOS();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleNext = () => {
+    if (employeeCode.length === 4) {
+      setStep('pin');
+    }
+  };
+
+  const handleBack = () => {
+    setStep('code');
+    setPin('');
+  };
+
+  const handleSubmit = async () => {
     if (employeeCode.length !== 4 || pin.length !== 4) {
-      toast.error('Employee code and PIN must be 4 digits');
+      toast.error('Code employé et PIN doivent contenir 4 chiffres');
       return;
     }
 
@@ -26,12 +36,13 @@ const Login = () => {
     setLoading(false);
 
     if (success) {
-      toast.success('Login successful');
+      toast.success('Connexion réussie');
       navigate('/pos');
     } else {
-      toast.error('Invalid employee code or PIN');
+      toast.error('Code employé ou PIN invalide');
       setEmployeeCode('');
       setPin('');
+      setStep('code');
     }
   };
 
@@ -49,48 +60,75 @@ const Login = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Employee Code (4 digits)
-              </label>
-              <Input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={4}
-                value={employeeCode}
-                onChange={(e) => setEmployeeCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="0000"
-                className="text-center text-2xl tracking-widest h-14"
-                autoFocus
-              />
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="text-center">
+                <label className="text-lg font-semibold text-foreground">
+                  {step === 'code' ? 'Code Employé' : 'Code PIN'}
+                </label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Entrez 4 chiffres
+                </p>
+              </div>
+              
+              <div className="flex justify-center">
+                <div className="flex gap-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-14 h-14 rounded-lg border-2 border-primary flex items-center justify-center bg-muted"
+                    >
+                      <span className="text-2xl font-bold">
+                        {step === 'code' 
+                          ? employeeCode[i] || '•'
+                          : pin[i] ? '•' : '•'
+                        }
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                PIN Code (4 digits)
-              </label>
-              <Input
-                type="password"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={4}
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                placeholder="••••"
-                className="text-center text-2xl tracking-widest h-14"
-              />
-            </div>
+            <NumPad
+              value={step === 'code' ? employeeCode : pin}
+              onChange={step === 'code' ? setEmployeeCode : setPin}
+              maxLength={4}
+            />
 
-            <Button
-              type="submit"
-              disabled={loading || employeeCode.length !== 4 || pin.length !== 4}
-              className="w-full h-14 text-lg bg-gradient-espresso hover:opacity-90 transition-opacity"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </Button>
-          </form>
+            <div className="space-y-2">
+              {step === 'code' ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={employeeCode.length !== 4}
+                  className="w-full h-14 text-lg bg-gradient-espresso hover:opacity-90 transition-opacity"
+                >
+                  Suivant
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={loading || pin.length !== 4}
+                    className="w-full h-14 text-lg bg-gradient-espresso hover:opacity-90 transition-opacity"
+                  >
+                    {loading ? 'Connexion...' : 'Se connecter'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBack}
+                    disabled={loading}
+                    className="w-full h-12"
+                  >
+                    Retour
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
 
           <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">Test account: 0000 / 0000</p>

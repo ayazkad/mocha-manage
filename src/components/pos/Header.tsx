@@ -2,6 +2,7 @@ import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
 import { Coffee, LogOut, User, Moon, Sun, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import AddCustomerDialog from './AddCustomerDialog';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
@@ -24,7 +25,7 @@ const Header = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <Button
             variant="outline"
             size="icon"
@@ -33,6 +34,8 @@ const Header = () => {
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
+
+          <AddCustomerDialog />
 
           <div className="hidden md:flex items-center gap-2 bg-muted px-4 py-2 rounded-lg">
             <User className="w-4 h-4 text-muted-foreground" />
