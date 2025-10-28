@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Product {
   id: string;
@@ -133,135 +134,137 @@ const ProductOptionsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl md:text-2xl">{getProductName(product)}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Toggle Hot/Cold */}
-          <div className="bg-muted rounded-xl p-4">
-            <div className="flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => setTemperature('hot')}
-                className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
-                  temperature === 'hot'
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'bg-background hover:bg-primary/10'
-                }`}
-              >
-                🔥 Hot
-              </button>
-              <button
-                type="button"
-                onClick={() => setTemperature('cold')}
-                className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
-                  temperature === 'cold'
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'bg-background hover:bg-primary/10'
-                }`}
-              >
-                ❄️ Cold
-              </button>
+        <ScrollArea className="flex-1 px-6">
+          <div className="space-y-4 pb-4">
+            {/* Toggle Hot/Cold */}
+            <div className="bg-muted rounded-lg p-3">
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTemperature('hot')}
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${
+                    temperature === 'hot'
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-background hover:bg-primary/10'
+                  }`}
+                >
+                  🔥 Hot
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemperature('cold')}
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${
+                    temperature === 'cold'
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-background hover:bg-primary/10'
+                  }`}
+                >
+                  ❄️ Cold
+                </button>
+              </div>
+            </div>
+
+            {product.has_size_options && sizeOptions.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Taille</Label>
+                <RadioGroup value={selectedSize} onValueChange={setSelectedSize} className="space-y-2">
+                  {sizeOptions.map((option) => (
+                    <label
+                      key={option.id}
+                      htmlFor={option.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
+                        selectedSize === option.id
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <RadioGroupItem value={option.id} id={option.id} />
+                        <span className="font-medium text-sm">{getOptionName(option)}</span>
+                      </div>
+                      {option.price_modifier > 0 && (
+                        <span className="text-primary font-semibold text-sm">
+                          +{option.price_modifier.toFixed(2)} ₾
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+
+            {product.has_milk_options && milkOptions.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Lait</Label>
+                <RadioGroup value={selectedMilk} onValueChange={setSelectedMilk} className="space-y-2">
+                  {milkOptions.map((option) => (
+                    <label
+                      key={option.id}
+                      htmlFor={`milk-${option.id}`}
+                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
+                        selectedMilk === option.id
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <RadioGroupItem value={option.id} id={`milk-${option.id}`} />
+                        <span className="font-medium text-sm">{getOptionName(option)}</span>
+                      </div>
+                      {option.price_modifier > 0 && (
+                        <span className="text-primary font-semibold text-sm">
+                          +{option.price_modifier.toFixed(2)} ₾
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Quantité</Label>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                  className="h-10 w-10 touch-manipulation"
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <span className="text-2xl font-bold w-12 text-center">{quantity}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="h-10 w-10 touch-manipulation"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Notes (optionnel)</Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Instructions spéciales..."
+                className="resize-none min-h-[80px] text-sm"
+                rows={3}
+              />
             </div>
           </div>
+        </ScrollArea>
 
-          {product.has_size_options && sizeOptions.length > 0 && (
-            <div className="space-y-3">
-              <Label className="text-base md:text-lg font-semibold">Taille</Label>
-              <RadioGroup value={selectedSize} onValueChange={setSelectedSize} className="space-y-3">
-                {sizeOptions.map((option) => (
-                  <label
-                    key={option.id}
-                    htmlFor={option.id}
-                    className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
-                      selectedSize === option.id
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <RadioGroupItem value={option.id} id={option.id} />
-                      <span className="font-medium text-base">{getOptionName(option)}</span>
-                    </div>
-                    {option.price_modifier > 0 && (
-                      <span className="text-primary font-semibold text-base">
-                        +{option.price_modifier.toFixed(2)} ₾
-                      </span>
-                    )}
-                  </label>
-                ))}
-              </RadioGroup>
-            </div>
-          )}
-
-          {product.has_milk_options && milkOptions.length > 0 && (
-            <div className="space-y-3">
-              <Label className="text-base md:text-lg font-semibold">Lait</Label>
-              <RadioGroup value={selectedMilk} onValueChange={setSelectedMilk} className="space-y-3">
-                {milkOptions.map((option) => (
-                  <label
-                    key={option.id}
-                    htmlFor={`milk-${option.id}`}
-                    className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
-                      selectedMilk === option.id
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <RadioGroupItem value={option.id} id={`milk-${option.id}`} />
-                      <span className="font-medium text-base">{getOptionName(option)}</span>
-                    </div>
-                    {option.price_modifier > 0 && (
-                      <span className="text-primary font-semibold text-base">
-                        +{option.price_modifier.toFixed(2)} ₾
-                      </span>
-                    )}
-                  </label>
-                ))}
-              </RadioGroup>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <Label className="text-base md:text-lg font-semibold">Quantité</Label>
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
-                className="h-12 w-12 touch-manipulation"
-              >
-                <Minus className="w-5 h-5" />
-              </Button>
-              <span className="text-3xl font-bold w-16 text-center">{quantity}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setQuantity(quantity + 1)}
-                className="h-12 w-12 touch-manipulation"
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <Label className="text-base md:text-lg font-semibold">Notes (optionnel)</Label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Instructions spéciales..."
-              className="resize-none min-h-[100px] text-base"
-              rows={3}
-            />
-          </div>
-        </div>
-
-        <DialogFooter className="flex-col sm:flex-row gap-4">
+        <DialogFooter className="flex-col sm:flex-row gap-3 px-6 py-4 border-t">
           <div className="flex items-center justify-between w-full gap-3">
             <div className="text-left">
               <p className="text-sm text-muted-foreground">Total</p>
