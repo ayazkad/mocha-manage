@@ -23,6 +23,8 @@ interface CartItem {
   selectedMilk?: { id: string; name: string; priceModifier: number };
   notes?: string;
   image_url?: string;
+  discount?: number; // Discount percentage for this item
+  selected?: boolean; // Whether this item is selected for bulk operations
 }
 
 interface POSContextType {
@@ -155,7 +157,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return cart.reduce((total, item) => {
       const sizeModifier = item.selectedSize?.priceModifier || 0;
       const milkModifier = item.selectedMilk?.priceModifier || 0;
-      return total + (item.basePrice + sizeModifier + milkModifier) * item.quantity;
+      const itemPrice = (item.basePrice + sizeModifier + milkModifier) * item.quantity;
+      const discount = item.discount || 0;
+      const discountedPrice = itemPrice * (1 - discount / 100);
+      return total + discountedPrice;
     }, 0);
   };
 

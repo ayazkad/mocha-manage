@@ -33,6 +33,7 @@ const Cart = ({ onClose }: CartProps) => {
   const [showDiscountDialog, setShowDiscountDialog] = useState(false);
   const [manualDiscountPercent, setManualDiscountPercent] = useState(0);
   const [appliedOffer, setAppliedOffer] = useState<any>(null);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   const subtotal = getTotalPrice();
   const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -79,16 +80,57 @@ const Cart = ({ onClose }: CartProps) => {
       : appliedOffer.discount_value
     : 0;
   
-  const manualDiscount = (subtotal * manualDiscountPercent) / 100;
-  const totalDiscount = automaticDiscount + manualDiscount;
+  // Calculate manual discount from items
+  const itemDiscounts = cart.reduce((sum, item) => {
+    const itemPrice = (item.basePrice +
+      (item.selectedSize?.priceModifier || 0) +
+      (item.selectedMilk?.priceModifier || 0)) * item.quantity;
+    const discount = item.discount || 0;
+    return sum + (itemPrice * discount / 100);
+  }, 0);
+  
+  const totalDiscount = automaticDiscount + itemDiscounts;
   const total = Math.max(0, subtotal - totalDiscount);
 
   const handleQuantityChange = (index: number, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(index);
+      setSelectedItems(selectedItems.filter(i => i !== index));
     } else {
       const item = cart[index];
       updateCartItem(index, { ...item, quantity: newQuantity });
+    }
+  };
+
+  const toggleItemSelection = (index: number) => {
+    setSelectedItems(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItems.length === cart.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cart.map((_, index) => index));
+    }
+  };
+
+  const applyDiscountToItems = (percentage: number, applyToAll: boolean) => {
+    if (applyToAll) {
+      // Apply to all items
+      cart.forEach((item, index) => {
+        updateCartItem(index, { ...item, discount: percentage });
+      });
+    } else if (selectedItems.length > 0) {
+      // Apply only to selected items
+      selectedItems.forEach(index => {
+        const item = cart[index];
+        updateCartItem(index, { ...item, discount: percentage });
+      });
+      setSelectedItems([]);
     }
   };
 
@@ -268,6 +310,7 @@ const Cart = ({ onClose }: CartProps) => {
       setAmountReceived(0);
       setManualDiscountPercent(0);
       setAppliedOffer(null);
+      setSelectedItems([]);
       onClose?.();
     } catch (error) {
       console.error('Error completing order:', error);
@@ -290,7 +333,7 @@ const Cart = ({ onClose }: CartProps) => {
       </div>
 
       {cart.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground">
+        <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground min-h-[300px]">
           <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
           <p className="text-sm">Votre panier est vide</p>
         </div>
@@ -298,15 +341,45 @@ const Cart = ({ onClose }: CartProps) => {
         <>
           <ScrollArea className="flex-1">
             <div className="p-3 space-y-2">
+              {cart.length > 0 && (
+                <div className="flex items-center justify-between mb-2 pb-2 border-b border-border/30">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.length === cart.length && cart.length > 0}
+                      onChange={toggleSelectAll}
+                      className="w-3.5 h-3.5 rounded border-border accent-primary"
+                    />
+                    <span>Tout sélectionner</span>
+                  </label>
+                  {selectedItems.length > 0 && (
+                    <span className="text-xs text-primary font-medium">
+                      {selectedItems.length} sélectionné{selectedItems.length > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              )}
             {cart.map((item, index) => {
               const itemPrice = item.basePrice +
                 (item.selectedSize?.priceModifier || 0) +
                 (item.selectedMilk?.priceModifier || 0);
               const itemTotal = itemPrice * item.quantity;
+              const itemDiscount = item.discount || 0;
+              const discountedTotal = itemTotal * (1 - itemDiscount / 100);
 
               return (
-                <div key={index} className="bg-card/50 rounded-lg p-2 border border-border/30">
+                <div key={index} className={`bg-card/50 rounded-lg p-2 border-2 transition-colors ${
+                  selectedItems.includes(index) ? 'border-primary' : 'border-border/30'
+                }`}>
                   <div className="flex gap-2">
+                    <label className="flex items-center shrink-0 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(index)}
+                        onChange={() => toggleItemSelection(index)}
+                        className="w-3.5 h-3.5 rounded border-border accent-primary"
+                      />
+                    </label>
                     {/* Product image */}
                     <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                       {item.image_url ? (
@@ -344,9 +417,25 @@ const Cart = ({ onClose }: CartProps) => {
                       )}
 
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-sm text-card-foreground">
-                          {itemTotal.toFixed(2)} ₾
-                        </span>
+                        <div className="flex flex-col">
+                          {itemDiscount > 0 ? (
+                            <>
+                              <span className="text-[10px] text-muted-foreground line-through">
+                                {itemTotal.toFixed(2)} ₾
+                              </span>
+                              <span className="font-bold text-sm text-primary">
+                                {discountedTotal.toFixed(2)} ₾
+                              </span>
+                              <span className="text-[9px] text-green-600">
+                                -{itemDiscount}%
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-bold text-sm text-card-foreground">
+                              {itemTotal.toFixed(2)} ₾
+                            </span>
+                          )}
+                        </div>
 
                         <div className="flex items-center gap-0.5">
                           <Button
@@ -389,10 +478,11 @@ const Cart = ({ onClose }: CartProps) => {
                 <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
               </div>
               
-              {(appliedOffer || manualDiscountPercent > 0) && (
+              {(appliedOffer || itemDiscounts > 0) && (
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground flex items-center gap-1">
                     {appliedOffer && <Gift className="w-3 h-3" />}
+                    {itemDiscounts > 0 && <Percent className="w-3 h-3" />}
                     Discount
                   </span>
                   <span className="font-semibold text-destructive">
@@ -412,14 +502,15 @@ const Cart = ({ onClose }: CartProps) => {
                 variant="outline"
                 onClick={() => setShowDiscountDialog(true)}
                 className="w-full justify-between rounded-lg h-9 text-xs"
+                disabled={cart.length === 0}
               >
                 <span className="flex items-center gap-1.5">
                   <Percent className="w-3 h-3" />
-                  Add Discount
+                  {selectedItems.length > 0 
+                    ? `Réduction (${selectedItems.length} sélectionné${selectedItems.length > 1 ? 's' : ''})`
+                    : 'Réduction'
+                  }
                 </span>
-                {manualDiscountPercent > 0 && (
-                  <span className="text-xs text-primary">{manualDiscountPercent}%</span>
-                )}
               </Button>
             </div>
 
@@ -543,8 +634,8 @@ const Cart = ({ onClose }: CartProps) => {
       <DiscountDialog
         open={showDiscountDialog}
         onClose={() => setShowDiscountDialog(false)}
-        onApply={setManualDiscountPercent}
-        currentDiscount={manualDiscountPercent}
+        onApply={applyDiscountToItems}
+        hasSelection={selectedItems.length > 0}
       />
     </div>
   );
