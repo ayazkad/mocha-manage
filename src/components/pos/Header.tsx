@@ -1,12 +1,14 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Coffee, LogOut, User, Moon, Sun, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Coffee, LogOut, User, Moon, Sun, Settings, ArrowLeft } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AddCustomerDialog from './AddCustomerDialog';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminPage = location.pathname === '/admin';
 
   const handleLogout = async () => {
     await logout();
@@ -26,6 +28,18 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {isAdminPage && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/pos')}
+              className="gap-2 rounded-xl border-border/50"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden md:inline">Retour caisse</span>
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="icon"
@@ -35,14 +49,14 @@ const Header = () => {
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
-          <AddCustomerDialog />
+          {!isAdminPage && <AddCustomerDialog />}
 
           <div className="hidden md:flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-xl border border-border/30">
             <User className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">{currentEmployee?.name}</span>
           </div>
 
-          {currentEmployee?.role === 'admin' && (
+          {!isAdminPage && currentEmployee?.role === 'admin' && (
             <Button
               variant="outline"
               size="sm"
