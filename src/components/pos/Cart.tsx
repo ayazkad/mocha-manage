@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Trash2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import CustomerLoyalty from './CustomerLoyalty';
 
 const Cart = () => {
   const {
@@ -18,6 +19,7 @@ const Cart = () => {
     currentEmployee,
   } = usePOS();
   const [processing, setProcessing] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
 
   const subtotal = getTotalPrice();
   const total = subtotal;
@@ -90,6 +92,51 @@ const Cart = () => {
 
       if (completeError) throw completeError;
 
+      // Update customer loyalty points if customer selected
+      if (selectedCustomer) {
+        const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const shouldRedeem = selectedCustomer.points >= 10;
+
+        if (shouldRedeem) {
+          // Redeem reward (reset points to 0, add transaction)
+          await supabase
+            .from('customers')
+            .update({ 
+              points: 0,
+              total_purchases: selectedCustomer.total_purchases + itemsCount 
+            })
+            .eq('id', selectedCustomer.id);
+
+          await supabase
+            .from('customer_transactions')
+            .insert([{
+              customer_id: selectedCustomer.id,
+              order_id: orderData.id,
+              points_redeemed: 10,
+              notes: 'Boisson offerte utilisée'
+            }]);
+
+          toast.success('🎁 Boisson offerte appliquée!');
+        } else {
+          // Add points
+          await supabase
+            .from('customers')
+            .update({ 
+              points: selectedCustomer.points + itemsCount,
+              total_purchases: selectedCustomer.total_purchases + itemsCount 
+            })
+            .eq('id', selectedCustomer.id);
+
+          await supabase
+            .from('customer_transactions')
+            .insert([{
+              customer_id: selectedCustomer.id,
+              order_id: orderData.id,
+              points_added: itemsCount,
+            }]);
+        }
+      }
+
       // Update session totals
       const { data: sessionData } = await supabase
         .from('sessions')
@@ -109,6 +156,7 @@ const Cart = () => {
 
       toast.success(`Commande ${orderData.order_number} validée`);
       clearCart();
+      setSelectedCustomer(null);
     } catch (error) {
       console.error('Error completing order:', error);
       toast.error('Erreur lors de la validation de la commande');
@@ -189,6 +237,10 @@ const Cart = () => {
           </div>
         )}
       </ScrollArea>
+
+      <div className="p-4 border-t border-border">
+        <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
+      </div>
 
       {cart.length > 0 && (
         <div className="p-4 border-t border-border bg-muted/30 space-y-4">
