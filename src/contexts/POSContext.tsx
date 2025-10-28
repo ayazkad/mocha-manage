@@ -33,6 +33,7 @@ interface POSContextType {
   cart: CartItem[];
   darkMode: boolean;
   staffDiscountActive: boolean;
+  activeBenefitType: 'discount' | 'free_drink' | 'free_snack' | null;
   login: (code: string, pin: string) => Promise<boolean>;
   logout: () => Promise<void>;
   addToCart: (item: CartItem) => void;
@@ -42,6 +43,7 @@ interface POSContextType {
   toggleDarkMode: () => void;
   getTotalPrice: () => number;
   setStaffDiscountActive: (active: boolean) => void;
+  setActiveBenefitType: (type: 'discount' | 'free_drink' | 'free_snack' | null) => void;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -52,6 +54,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [darkMode, setDarkMode] = useState(false);
   const [staffDiscountActive, setStaffDiscountActive] = useState(false);
+  const [activeBenefitType, setActiveBenefitType] = useState<'discount' | 'free_drink' | 'free_snack' | null>(null);
 
   useEffect(() => {
     // Apply dark mode class to document
@@ -159,6 +162,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearCart = () => {
     setCart([]);
     setStaffDiscountActive(false);
+    setActiveBenefitType(null);
   };
 
   const getTotalPrice = () => {
@@ -184,6 +188,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cart,
         darkMode,
         staffDiscountActive,
+        activeBenefitType,
         login,
         logout,
         addToCart,
@@ -193,6 +198,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleDarkMode,
         getTotalPrice,
         setStaffDiscountActive,
+        setActiveBenefitType,
       }}
     >
       {children}

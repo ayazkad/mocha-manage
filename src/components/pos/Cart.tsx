@@ -24,6 +24,7 @@ const Cart = ({ onClose }: CartProps) => {
     currentSession,
     currentEmployee,
     staffDiscountActive,
+    activeBenefitType,
   } = usePOS();
   const [processing, setProcessing] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
@@ -303,7 +304,7 @@ const Cart = ({ onClose }: CartProps) => {
       }
 
       // Incrémenter le compteur de tickets avec réduction personnel si applicable et marquer comme utilisé
-      if (staffDiscountActive) {
+      if (activeBenefitType === 'discount' && staffDiscountActive) {
         const today = new Date().toISOString().split('T')[0];
         const { data: benefitsData } = await supabase
           .from('employee_daily_benefits')
@@ -322,7 +323,6 @@ const Cart = ({ onClose }: CartProps) => {
             .eq('employee_id', currentEmployee.id)
             .eq('benefit_date', today);
         } else {
-          // Créer l'entrée si elle n'existe pas
           await supabase
             .from('employee_daily_benefits')
             .insert({
@@ -332,6 +332,22 @@ const Cart = ({ onClose }: CartProps) => {
               discount_used: true
             });
         }
+      } else if (activeBenefitType === 'free_drink') {
+        // Marquer la boisson gratuite comme utilisée
+        const today = new Date().toISOString().split('T')[0];
+        await supabase
+          .from('employee_daily_benefits')
+          .update({ free_drink_used: true })
+          .eq('employee_id', currentEmployee.id)
+          .eq('benefit_date', today);
+      } else if (activeBenefitType === 'free_snack') {
+        // Marquer le snack gratuit comme utilisé
+        const today = new Date().toISOString().split('T')[0];
+        await supabase
+          .from('employee_daily_benefits')
+          .update({ free_snack_used: true })
+          .eq('employee_id', currentEmployee.id)
+          .eq('benefit_date', today);
       }
 
       toast.success(`Commande ${orderData.order_number} validée`);

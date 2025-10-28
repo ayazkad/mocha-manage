@@ -25,7 +25,7 @@ interface DailyBenefits {
 }
 
 const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
-  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive, updateCartItem } = usePOS();
+  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive, updateCartItem, setActiveBenefitType } = usePOS();
   const [benefits, setBenefits] = useState<DailyBenefits>({
     discount_used: false,
     free_drink_used: false,
@@ -90,6 +90,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
     // Active la réduction sans la marquer comme utilisée (sera marquée après paiement)
     setStaffDiscountActive(true);
+    setActiveBenefitType('discount');
     toast.success('Réduction personnel de 30% appliquée - Les articles ajoutés recevront automatiquement cette réduction');
     onClose();
   };
@@ -104,35 +105,25 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
     setLoading(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // Désactiver la réduction 30% si elle était active
+      setStaffDiscountActive(false);
       
-      // Trouver le dernier article de type boisson (Coffee ou Non Coffee) dans le panier
-      const drinkIndex = [...cart].reverse().findIndex(item => {
-        // Vérifier si l'article appartient aux catégories de boissons
-        return true; // Pour l'instant, on applique au dernier article du panier
+      // Retirer la réduction 30% de tous les articles
+      cart.forEach((item, index) => {
+        if (item.discount === 30) {
+          updateCartItem(index, { ...item, discount: 0 });
+        }
       });
 
-      if (drinkIndex === -1) {
-        toast.error('Aucune boisson trouvée dans le panier');
-        setLoading(false);
-        return;
-      }
-
-      // L'index réel dans le panier (car on a fait reverse())
-      const actualIndex = cart.length - 1 - drinkIndex;
+      // Trouver le dernier article dans le panier
+      const actualIndex = cart.length - 1;
       const item = cart[actualIndex];
       
       // Appliquer 100% de réduction
       updateCartItem(actualIndex, { ...item, discount: 100 });
 
-      const { error } = await supabase
-        .from('employee_daily_benefits')
-        .update({ free_drink_used: true })
-        .eq('employee_id', currentEmployee.id)
-        .eq('benefit_date', today);
-
-      if (error) throw error;
-
+      setActiveBenefitType('free_drink');
+      
       setBenefits({ ...benefits, free_drink_used: true });
       toast.success('Boisson offerte appliquée (100% de réduction)');
       onClose();
@@ -154,33 +145,24 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
     setLoading(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // Désactiver la réduction 30% si elle était active
+      setStaffDiscountActive(false);
       
-      // Trouver le dernier article dans le panier (Sweet ou Salt)
-      const snackIndex = [...cart].reverse().findIndex(item => {
-        return true; // Pour l'instant, on applique au dernier article du panier
+      // Retirer la réduction 30% de tous les articles
+      cart.forEach((item, index) => {
+        if (item.discount === 30) {
+          updateCartItem(index, { ...item, discount: 0 });
+        }
       });
 
-      if (snackIndex === -1) {
-        toast.error('Aucun snack trouvé dans le panier');
-        setLoading(false);
-        return;
-      }
-
-      // L'index réel dans le panier (car on a fait reverse())
-      const actualIndex = cart.length - 1 - snackIndex;
+      // Trouver le dernier article dans le panier
+      const actualIndex = cart.length - 1;
       const item = cart[actualIndex];
       
       // Appliquer 100% de réduction
       updateCartItem(actualIndex, { ...item, discount: 100 });
 
-      const { error } = await supabase
-        .from('employee_daily_benefits')
-        .update({ free_snack_used: true })
-        .eq('employee_id', currentEmployee.id)
-        .eq('benefit_date', today);
-
-      if (error) throw error;
+      setActiveBenefitType('free_snack');
 
       setBenefits({ ...benefits, free_snack_used: true });
       toast.success('Snack offert appliqué (100% de réduction)');
