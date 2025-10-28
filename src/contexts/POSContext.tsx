@@ -149,7 +149,39 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const itemWithDiscount = staffDiscountActive 
       ? { ...item, discount: 30 }
       : item;
-    setCart([...cart, itemWithDiscount]);
+    
+    // Vérifier si un produit identique existe déjà dans le panier
+    const existingItemIndex = cart.findIndex((cartItem) => {
+      // Comparer le produit de base
+      if (cartItem.productId !== itemWithDiscount.productId) return false;
+      
+      // Comparer les options de taille
+      if (cartItem.selectedSize?.name !== itemWithDiscount.selectedSize?.name) return false;
+      
+      // Comparer les options de lait
+      if (cartItem.selectedMilk?.name !== itemWithDiscount.selectedMilk?.name) return false;
+      
+      // Comparer les notes
+      if (cartItem.notes !== itemWithDiscount.notes) return false;
+      
+      // Comparer la réduction
+      if ((cartItem.discount || 0) !== (itemWithDiscount.discount || 0)) return false;
+      
+      return true;
+    });
+    
+    if (existingItemIndex !== -1) {
+      // Le produit existe déjà, augmenter la quantité
+      const newCart = [...cart];
+      newCart[existingItemIndex] = {
+        ...newCart[existingItemIndex],
+        quantity: newCart[existingItemIndex].quantity + itemWithDiscount.quantity
+      };
+      setCart(newCart);
+    } else {
+      // Nouveau produit, l'ajouter au panier
+      setCart([...cart, itemWithDiscount]);
+    }
   };
 
   const removeFromCart = (index: number) => {
