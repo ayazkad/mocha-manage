@@ -131,34 +131,25 @@ const Cart = ({ onClose }: CartProps) => {
   };
 
   const applyDiscountToItems = (percentage: number, applyToAll: boolean) => {
-    console.log('=== applyDiscountToItems START ===');
-    console.log('Parameters:', { percentage, applyToAll });
-    console.log('Cart length:', cart.length);
-    console.log('Selected items:', selectedItems);
-    console.log('Selected items length:', selectedItems.length);
-    
-    // RÈGLE: Si selectedItems est vide, TOUJOURS appliquer à tous
-    const shouldApplyToAll = selectedItems.length === 0 || applyToAll;
-    
-    console.log('Should apply to all?', shouldApplyToAll);
-    
-    if (shouldApplyToAll) {
-      console.log('✅ Applying discount to ALL items in cart');
-      cart.forEach((item, index) => {
-        console.log(`  - Updating item ${index}: ${item.productName} with ${percentage}% discount`);
-        updateCartItem(index, { ...item, discount: percentage });
+    // Si aucun item n'est sélectionné OU si applyToAll est true, appliquer à tous
+    if (selectedItems.length === 0 || applyToAll) {
+      // Appliquer à TOUS les items du panier
+      const newCart = cart.map(item => ({
+        ...item,
+        discount: percentage
+      }));
+      // Mettre à jour tous les items en une seule fois
+      newCart.forEach((item, index) => {
+        updateCartItem(index, item);
       });
     } else {
-      console.log('✅ Applying discount to SELECTED items only');
+      // Appliquer seulement aux items sélectionnés
       selectedItems.forEach(index => {
         const item = cart[index];
-        console.log(`  - Updating item ${index}: ${item.productName} with ${percentage}% discount`);
         updateCartItem(index, { ...item, discount: percentage });
       });
     }
-    
     setSelectedItems([]);
-    console.log('=== applyDiscountToItems END ===');
   };
 
   const handlePaymentMethodClick = () => {
