@@ -240,7 +240,7 @@ const ProductOptionsDialog = ({
             <Button
               onClick={handleAddToCart}
               size="lg"
-              className="bg-gradient-espresso hover:opacity-90 transition-opacity h-14 px-8 text-lg touch-manipulation"
+              className="bg-gradient-primary hover:opacity-90 transition-opacity h-14 px-8 text-lg touch-manipulation shadow-md"
             >
               Ajouter au panier
             </Button>
