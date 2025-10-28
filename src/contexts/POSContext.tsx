@@ -22,6 +22,7 @@ interface CartItem {
   selectedSize?: { id: string; name: string; priceModifier: number };
   selectedMilk?: { id: string; name: string; priceModifier: number };
   notes?: string;
+  image_url?: string;
 }
 
 interface POSContextType {

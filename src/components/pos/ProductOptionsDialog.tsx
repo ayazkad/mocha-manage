@@ -21,6 +21,7 @@ interface Product {
   base_price: number;
   has_size_options: boolean;
   has_milk_options: boolean;
+  image_url?: string;
 }
 
 interface ProductOption {
@@ -50,6 +51,7 @@ const ProductOptionsDialog = ({
   const [milkOptions, setMilkOptions] = useState<ProductOption[]>([]);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedMilk, setSelectedMilk] = useState<string>('');
+  const [temperature, setTemperature] = useState<'hot' | 'cold'>('hot');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const { addToCart } = usePOS();
@@ -106,6 +108,7 @@ const ProductOptionsDialog = ({
       productName: getProductName(product),
       quantity,
       basePrice: product.base_price,
+      image_url: product.image_url,
       selectedSize: size ? {
         id: size.id,
         name: getOptionName(size),
@@ -125,6 +128,7 @@ const ProductOptionsDialog = ({
     // Reset form
     setQuantity(1);
     setNotes('');
+    setTemperature('hot');
   };
 
   return (
@@ -135,6 +139,34 @@ const ProductOptionsDialog = ({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Toggle Hot/Cold */}
+          <div className="bg-muted rounded-xl p-4">
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setTemperature('hot')}
+                className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
+                  temperature === 'hot'
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-background hover:bg-primary/10'
+                }`}
+              >
+                🔥 Hot
+              </button>
+              <button
+                type="button"
+                onClick={() => setTemperature('cold')}
+                className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
+                  temperature === 'cold'
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-background hover:bg-primary/10'
+                }`}
+              >
+                ❄️ Cold
+              </button>
+            </div>
+          </div>
+
           {product.has_size_options && sizeOptions.length > 0 && (
             <div className="space-y-3">
               <Label className="text-base md:text-lg font-semibold">Taille</Label>

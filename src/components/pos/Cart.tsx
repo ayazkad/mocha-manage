@@ -72,7 +72,7 @@ const Cart = ({ onClose }: CartProps) => {
     }
   }, [cart, subtotal, itemsCount]);
 
-  // Calculer les réductions et taxes
+  // Calculer les réductions et total sans TVA
   const automaticDiscount = appliedOffer
     ? appliedOffer.discount_type === 'percentage'
       ? (subtotal * appliedOffer.discount_value) / 100
@@ -81,9 +81,7 @@ const Cart = ({ onClose }: CartProps) => {
   
   const manualDiscount = (subtotal * manualDiscountPercent) / 100;
   const totalDiscount = automaticDiscount + manualDiscount;
-  const subtotalAfterDiscount = Math.max(0, subtotal - totalDiscount);
-  const taxAmount = subtotalAfterDiscount * 0.12; // 12% tax
-  const total = subtotalAfterDiscount + taxAmount;
+  const total = Math.max(0, subtotal - totalDiscount);
 
   const handleQuantityChange = (index: number, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -309,9 +307,17 @@ const Cart = ({ onClose }: CartProps) => {
               return (
                 <div key={index} className="bg-card/50 rounded-xl p-3 border border-border/30">
                   <div className="flex gap-3">
-                    {/* Product image placeholder */}
-                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                      <ShoppingCart className="w-6 h-6 text-muted-foreground" />
+                    {/* Product image */}
+                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.productName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ShoppingCart className="w-6 h-6 text-muted-foreground" />
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -398,11 +404,6 @@ const Cart = ({ onClose }: CartProps) => {
                   </span>
                 </div>
               )}
-              
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tax 12%</span>
-                <span className="font-semibold text-card-foreground">{taxAmount.toFixed(2)} ₾</span>
-              </div>
               
               <Separator />
               

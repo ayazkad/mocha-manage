@@ -62,6 +62,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
         productName: getProductName(product),
         quantity: 1,
         basePrice: product.base_price,
+        image_url: product.image_url,
       });
     }
   };

@@ -9,12 +9,14 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
 
 const ProductsManager = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name_en: '',
     base_price: '',
@@ -23,6 +25,7 @@ const ProductsManager = () => {
     has_size_options: false,
     has_milk_options: false,
     active: true,
+    image_url: '',
   });
 
   const { data: products } = useQuery({
@@ -52,16 +55,37 @@ const ProductsManager = () => {
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
+      let imageUrl = data.image_url;
+
+      // Upload image if there's a new file
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      }
+
+      const productData = { ...data, image_url: imageUrl };
+
       if (editingId) {
         const { error } = await supabase
           .from('products')
-          .update(data)
+          .update(productData)
           .eq('id', editingId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('products')
-          .insert([data]);
+          .insert([productData]);
         if (error) throw error;
       }
     },
@@ -91,6 +115,8 @@ const ProductsManager = () => {
 
   const resetForm = () => {
     setEditingId(null);
+    setImageFile(null);
+    setImagePreview(null);
     setFormData({
       name_en: '',
       base_price: '',
@@ -99,11 +125,31 @@ const ProductsManager = () => {
       has_size_options: false,
       has_milk_options: false,
       active: true,
+      image_url: '',
     });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData({ ...formData, image_url: '' });
   };
 
   const handleEdit = (product: any) => {
     setEditingId(product.id);
+    setImagePreview(product.image_url || null);
     setFormData({
       name_en: product.name_en || '',
       base_price: product.base_price.toString(),
@@ -112,6 +158,7 @@ const ProductsManager = () => {
       has_size_options: product.has_size_options || false,
       has_milk_options: product.has_milk_options || false,
       active: product.active,
+      image_url: product.image_url || '',
     });
   };
 
@@ -186,6 +233,46 @@ const ProductsManager = () => {
                 value={formData.description_en}
                 onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="image">Product Image</Label>
+              <div className="space-y-2">
+                {(imagePreview || formData.image_url) && (
+                  <div className="relative w-32 h-32">
+                    <img
+                      src={imagePreview || formData.image_url}
+                      alt="Product preview"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={removeImage}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <Label
+                    htmlFor="image"
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload Image
+                  </Label>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-6">
