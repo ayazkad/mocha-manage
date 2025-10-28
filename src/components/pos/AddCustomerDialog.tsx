@@ -38,24 +38,33 @@ const AddCustomerDialog = () => {
       
       // Send QR code email
       try {
-        const { error: functionError } = await supabase.functions.invoke('send-loyalty-qr', {
+        const { data, error: functionError } = await supabase.functions.invoke('send-loyalty-qr', {
           body: {
             customerId: customer.id,
             customerEmail: customer.email,
             customerName: customer.name,
             qrCode: customer.qr_code,
-            language: 'en', // Default to English, can be customized later
+            language: navigator.language.startsWith('ru') ? 'ru' : 
+                     navigator.language.startsWith('ka') ? 'ge' : 'en',
           },
         });
 
         if (functionError) {
           console.error('Error sending QR code:', functionError);
-          toast.error('Client ajouté mais erreur lors de l\'envoi de l\'email');
+          const errorMessage = functionError.message || 'Unknown error';
+          
+          // Check if it's a Resend domain verification error
+          if (errorMessage.includes('verify a domain') || errorMessage.includes('validation_error')) {
+            toast.error('Email non envoyé : domaine non vérifié sur Resend. Veuillez vérifier votre domaine sur resend.com/domains');
+          } else {
+            toast.error('Client ajouté mais erreur lors de l\'envoi de l\'email');
+          }
         } else {
           toast.success('Email avec QR code envoyé!');
         }
       } catch (error) {
         console.error('Error invoking function:', error);
+        toast.error('Erreur lors de l\'envoi de l\'email');
       }
 
       queryClient.invalidateQueries({ queryKey: ['customers'] });

@@ -84,6 +84,9 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
+    // Extract base64 data without the data URL prefix
+    const base64Data = qrCodeDataUrl.split(',')[1];
+
     const t = translations[language] || translations.en;
 
     // Send email using Resend API
@@ -179,7 +182,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <div class="qr-container">
               <h2>${t.qrTitle}</h2>
-              <img src="${qrCodeDataUrl}" alt="Your QR Code" />
+              <img src="cid:qrcode" alt="Your QR Code" style="max-width: 300px; height: auto;" />
               <p style="margin-top: 20px; font-size: 14px; color: #666;">
                 ${t.qrInstruction}
               </p>
@@ -205,6 +208,13 @@ const handler = async (req: Request): Promise<Response> => {
         to: [customerEmail],
         subject: t.subject,
         html: emailHtml,
+        attachments: [
+          {
+            filename: 'qrcode.png',
+            content: base64Data,
+            content_id: 'qrcode',
+          },
+        ],
       }),
     });
 
