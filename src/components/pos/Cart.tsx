@@ -9,7 +9,11 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 import CustomerLoyalty from './CustomerLoyalty';
 
-const Cart = () => {
+interface CartProps {
+  onClose?: () => void;
+}
+
+const Cart = ({ onClose }: CartProps) => {
   const {
     cart,
     removeFromCart,
@@ -157,6 +161,7 @@ const Cart = () => {
       toast.success(`Commande ${orderData.order_number} validée`);
       clearCart();
       setSelectedCustomer(null);
+      onClose?.();
     } catch (error) {
       console.error('Error completing order:', error);
       toast.error('Erreur lors de la validation de la commande');
@@ -166,8 +171,8 @@ const Cart = () => {
   };
 
   return (
-    <div className="w-full md:w-96 bg-card border-l border-border flex flex-col shadow-medium">
-      <div className="p-4 border-b border-border bg-muted/30">
+    <div className="w-full h-full bg-card flex flex-col">
+      <div className="p-4 md:p-6 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
           <ShoppingCart className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Panier</h2>
@@ -177,7 +182,7 @@ const Cart = () => {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4 md:p-6">
         {cart.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
             <ShoppingCart className="w-16 h-16 mb-4 opacity-30" />
@@ -238,12 +243,12 @@ const Cart = () => {
         )}
       </ScrollArea>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 md:p-6 border-t border-border">
         <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
       </div>
 
       {cart.length > 0 && (
-        <div className="p-4 border-t border-border bg-muted/30 space-y-4">
+        <div className="p-4 md:p-6 border-t border-border bg-muted/30 space-y-4">
           <div className="space-y-2 text-sm">
             <Separator />
             <div className="flex justify-between text-lg font-bold">

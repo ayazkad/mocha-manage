@@ -129,33 +129,36 @@ const ProductOptionsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">{getProductName(product)}</DialogTitle>
+          <DialogTitle className="text-xl md:text-2xl">{getProductName(product)}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {product.has_size_options && sizeOptions.length > 0 && (
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Size</Label>
-              <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
+              <Label className="text-base md:text-lg font-semibold">Taille</Label>
+              <RadioGroup value={selectedSize} onValueChange={setSelectedSize} className="space-y-3">
                 {sizeOptions.map((option) => (
-                  <div
+                  <label
                     key={option.id}
-                    className="flex items-center justify-between space-x-2 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                    htmlFor={option.id}
+                    className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
+                      selectedSize === option.id
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
+                    }`}
                   >
-                    <div className="flex items-center space-x-2 flex-1">
+                    <div className="flex items-center gap-3 flex-1">
                       <RadioGroupItem value={option.id} id={option.id} />
-                      <Label htmlFor={option.id} className="cursor-pointer flex-1 font-normal">
-                        {getOptionName(option)}
-                      </Label>
+                      <span className="font-medium text-base">{getOptionName(option)}</span>
                     </div>
                     {option.price_modifier > 0 && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-primary font-semibold text-base">
                         +{option.price_modifier.toFixed(2)} ₾
                       </span>
                     )}
-                  </div>
+                  </label>
                 ))}
               </RadioGroup>
             </div>
@@ -163,77 +166,83 @@ const ProductOptionsDialog = ({
 
           {product.has_milk_options && milkOptions.length > 0 && (
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Milk Type</Label>
-              <RadioGroup value={selectedMilk} onValueChange={setSelectedMilk}>
+              <Label className="text-base md:text-lg font-semibold">Lait</Label>
+              <RadioGroup value={selectedMilk} onValueChange={setSelectedMilk} className="space-y-3">
                 {milkOptions.map((option) => (
-                  <div
+                  <label
                     key={option.id}
-                    className="flex items-center justify-between space-x-2 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                    htmlFor={`milk-${option.id}`}
+                    className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
+                      selectedMilk === option.id
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
+                    }`}
                   >
-                    <div className="flex items-center space-x-2 flex-1">
-                      <RadioGroupItem value={option.id} id={option.id} />
-                      <Label htmlFor={option.id} className="cursor-pointer flex-1 font-normal">
-                        {getOptionName(option)}
-                      </Label>
+                    <div className="flex items-center gap-3 flex-1">
+                      <RadioGroupItem value={option.id} id={`milk-${option.id}`} />
+                      <span className="font-medium text-base">{getOptionName(option)}</span>
                     </div>
                     {option.price_modifier > 0 && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-primary font-semibold text-base">
                         +{option.price_modifier.toFixed(2)} ₾
                       </span>
                     )}
-                  </div>
+                  </label>
                 ))}
               </RadioGroup>
             </div>
           )}
 
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Quantity</Label>
-            <div className="flex items-center gap-3">
+            <Label className="text-base md:text-lg font-semibold">Quantité</Label>
+            <div className="flex items-center gap-4">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 disabled={quantity <= 1}
+                className="h-12 w-12 touch-manipulation"
               >
-                <Minus className="w-4 h-4" />
+                <Minus className="w-5 h-5" />
               </Button>
-              <span className="text-2xl font-bold w-12 text-center">{quantity}</span>
+              <span className="text-3xl font-bold w-16 text-center">{quantity}</span>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setQuantity(quantity + 1)}
+                className="h-12 w-12 touch-manipulation"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
               </Button>
             </div>
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Notes (optional)</Label>
+            <Label className="text-base md:text-lg font-semibold">Notes (optionnel)</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Special instructions..."
-              className="resize-none"
+              placeholder="Instructions spéciales..."
+              className="resize-none min-h-[100px] text-base"
               rows={3}
             />
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-4">
           <div className="flex items-center justify-between w-full gap-3">
             <div className="text-left">
               <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-2xl font-bold text-primary">
+              <p className="text-3xl md:text-2xl font-bold text-primary">
                 {calculateTotal().toFixed(2)} ₾
               </p>
             </div>
             <Button
               onClick={handleAddToCart}
-              className="bg-gradient-espresso hover:opacity-90 transition-opacity"
+              size="lg"
+              className="bg-gradient-espresso hover:opacity-90 transition-opacity h-14 px-8 text-lg touch-manipulation"
             >
-              Add to Cart
+              Ajouter au panier
             </Button>
           </div>
         </DialogFooter>
