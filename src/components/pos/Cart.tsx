@@ -131,8 +131,8 @@ const Cart = ({ onClose }: CartProps) => {
   };
 
   const applyDiscountToItems = (percentage: number, applyToAll: boolean) => {
-    if (applyToAll) {
-      // Apply to all items
+    if (applyToAll || selectedItems.length === 0) {
+      // Apply to all items if applyToAll is true OR if no items are selected
       cart.forEach((item, index) => {
         updateCartItem(index, { ...item, discount: percentage });
       });
@@ -142,8 +142,8 @@ const Cart = ({ onClose }: CartProps) => {
         const item = cart[index];
         updateCartItem(index, { ...item, discount: percentage });
       });
-      setSelectedItems([]);
     }
+    setSelectedItems([]);
   };
 
   const handlePaymentMethodClick = () => {
@@ -253,7 +253,7 @@ const Cart = ({ onClose }: CartProps) => {
 
       // Update customer loyalty points if customer selected
       if (selectedCustomer) {
-        // Calculer uniquement les boissons pour les points de fidélité
+        // Calculer uniquement les produits Coffee et Non Coffee pour les points de fidélité
         const productIds = cart.map(item => item.productId);
         const { data: products } = await supabase
           .from('products')
@@ -262,32 +262,23 @@ const Cart = ({ onClose }: CartProps) => {
             category_id,
             categories!inner (
               name_en,
-              name_fr,
-              name_ru,
-              name_ge
+              name_fr
             )
           `)
           .in('id', productIds);
 
-        // Compter seulement les boissons (beverages/drinks)
-        const beveragesCount = cart.reduce((sum, item) => {
+        // Compter seulement les produits des catégories Coffee et Non Coffee
+        const drinkCount = cart.reduce((sum, item) => {
           const product = products?.find((p: any) => p.id === item.productId);
           if (product?.categories) {
-            const categoryName = (
-              product.categories.name_en || 
-              product.categories.name_fr || 
-              ''
-            ).toLowerCase();
-            // Vérifier si la catégorie contient "drink", "beverage", "boisson", "coffee", "tea", etc.
-            const isDrink = categoryName.includes('drink') || 
-                categoryName.includes('beverage') || 
-                categoryName.includes('boisson') ||
-                categoryName.includes('coffee') ||
-                categoryName.includes('café') ||
-                categoryName.includes('tea') ||
-                categoryName.includes('thé');
+            const categoryNameEn = (product.categories.name_en || '').toLowerCase();
+            const categoryNameFr = (product.categories.name_fr || '').toLowerCase();
             
-            if (isDrink) {
+            // Vérifier si c'est Coffee ou Non Coffee (exactement)
+            const isCoffeeCategory = categoryNameEn === 'coffee' || categoryNameFr === 'coffee';
+            const isNonCoffeeCategory = categoryNameEn === 'non coffee' || categoryNameFr === 'non coffee';
+            
+            if (isCoffeeCategory || isNonCoffeeCategory) {
               return sum + item.quantity;
             }
           }
@@ -318,12 +309,12 @@ const Cart = ({ onClose }: CartProps) => {
 
           toast.success('🎁 Boisson offerte appliquée!');
         } else {
-          // Add points only for beverages
-          if (beveragesCount > 0) {
+          // Add points only for Coffee and Non Coffee products
+          if (drinkCount > 0) {
             await supabase
               .from('customers')
               .update({ 
-                points: selectedCustomer.points + beveragesCount,
+                points: selectedCustomer.points + drinkCount,
                 total_purchases: selectedCustomer.total_purchases + totalItemsCount 
               })
               .eq('id', selectedCustomer.id);
@@ -333,10 +324,10 @@ const Cart = ({ onClose }: CartProps) => {
               .insert([{
                 customer_id: selectedCustomer.id,
                 order_id: orderData.id,
-                points_added: beveragesCount,
+                points_added: drinkCount,
               }]);
           } else {
-            // Update only total purchases if no beverages
+            // Update only total purchases if no drinks
             await supabase
               .from('customers')
               .update({ 
