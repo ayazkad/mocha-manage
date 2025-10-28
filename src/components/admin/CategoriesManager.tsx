@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 
 const CategoriesManager = () => {
   const { toast } = useToast();
@@ -25,7 +25,7 @@ const CategoriesManager = () => {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .order('name_en');
+        .order('sort_order', { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -70,6 +70,20 @@ const CategoriesManager = () => {
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: async ({ categoryId, newOrder }: { categoryId: string; newOrder: number }) => {
+      const { error } = await supabase
+        .from('categories')
+        .update({ sort_order: newOrder })
+        .eq('id', categoryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast({ title: 'Ordre mis à jour' });
+    },
+  });
+
   const resetForm = () => {
     setEditingId(null);
     setFormData({
@@ -90,12 +104,36 @@ const CategoriesManager = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const maxSortOrder = categories?.reduce((max, cat) => Math.max(max, cat.sort_order || 0), 0) || 0;
     saveMutation.mutate({
       name_en: formData.name_en,
       name_fr: formData.name_en, // Keep French in sync for now
       icon: formData.icon || null,
       active: formData.active,
+      sort_order: editingId ? undefined : maxSortOrder + 1, // Only set for new categories
     });
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (!categories || index === 0) return;
+    
+    const currentCategory = categories[index];
+    const previousCategory = categories[index - 1];
+    
+    // Swap sort orders
+    reorderMutation.mutate({ categoryId: currentCategory.id, newOrder: previousCategory.sort_order });
+    reorderMutation.mutate({ categoryId: previousCategory.id, newOrder: currentCategory.sort_order });
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (!categories || index === categories.length - 1) return;
+    
+    const currentCategory = categories[index];
+    const nextCategory = categories[index + 1];
+    
+    // Swap sort orders
+    reorderMutation.mutate({ categoryId: currentCategory.id, newOrder: nextCategory.sort_order });
+    reorderMutation.mutate({ categoryId: nextCategory.id, newOrder: currentCategory.sort_order });
   };
 
   return (
@@ -156,16 +194,38 @@ const CategoriesManager = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {categories?.map((category) => (
+            {categories?.map((category, index) => (
               <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-semibold flex items-center gap-2">
-                    {category.icon && <span>{category.icon}</span>}
-                    {category.name_en}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {!category.active && 'Inactive'}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleMoveUp(index)}
+                      disabled={index === 0}
+                      className="h-6 w-6"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleMoveDown(index)}
+                      disabled={index === categories.length - 1}
+                      className="h-6 w-6"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold flex items-center gap-2">
+                      {category.icon && <span>{category.icon}</span>}
+                      {category.name_en}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {!category.active && 'Inactive'}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
