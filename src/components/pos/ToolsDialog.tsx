@@ -102,7 +102,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
   };
 
   const applyFreeDrink = async () => {
-    if (!currentEmployee) return;
+    if (!currentEmployee || benefits.free_drink_used) return;
 
     if (cart.length === 0) {
       toast.error('Veuillez ajouter une boisson au panier d\'abord');
@@ -144,7 +144,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
   };
 
   const applyFreeSnack = async () => {
-    if (!currentEmployee) return;
+    if (!currentEmployee || benefits.free_snack_used) return;
 
     if (cart.length === 0) {
       toast.error('Veuillez ajouter un snack au panier d\'abord');
@@ -293,14 +293,18 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     <p className="text-xs text-muted-foreground">1 fois par jour</p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={applyFreeDrink}
-                  disabled={loading}
-                  className="rounded-xl"
-                >
-                  Appliquer
-                </Button>
+                {benefits.free_drink_used ? (
+                  <Badge variant="secondary">Utilisé</Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={applyFreeDrink}
+                    disabled={loading}
+                    className="rounded-xl"
+                  >
+                    Appliquer
+                  </Button>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -311,14 +315,18 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     <p className="text-xs text-muted-foreground">1 fois par jour</p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={applyFreeSnack}
-                  disabled={loading}
-                  className="rounded-xl"
-                >
-                  Appliquer
-                </Button>
+                {benefits.free_snack_used ? (
+                  <Badge variant="secondary">Utilisé</Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={applyFreeSnack}
+                    disabled={loading}
+                    className="rounded-xl"
+                  >
+                    Appliquer
+                  </Button>
+                )}
               </div>
             </Card>
           </div>
