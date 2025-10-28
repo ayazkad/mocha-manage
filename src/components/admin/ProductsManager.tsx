@@ -182,14 +182,19 @@ const ProductsManager = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Force les options pour les catégories Coffee
+    const selectedCategory = categories?.find(cat => cat.id === formData.category_id);
+    const isCoffee = selectedCategory?.name_en?.toLowerCase().includes('coffee');
+    
     saveMutation.mutate({
       name_en: formData.name_en,
       name_fr: formData.name_en, // Keep French in sync for now
       base_price: parseFloat(formData.base_price),
       category_id: formData.category_id || null,
       description_en: formData.description_en || null,
-      has_size_options: formData.has_size_options,
-      has_milk_options: formData.has_milk_options,
+      has_size_options: isCoffee ? true : formData.has_size_options,
+      has_milk_options: isCoffee ? true : formData.has_milk_options,
       active: formData.active,
     });
   };
