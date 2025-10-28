@@ -279,25 +279,25 @@ const Cart = ({ onClose }: CartProps) => {
 
   return (
     <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
-      <div className="p-4 md:p-6 border-b border-border/50 bg-secondary/30 shrink-0">
+      <div className="p-3 border-b border-border/50 bg-secondary/30 shrink-0">
         <div className="flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-card-foreground">Panier</h2>
-          <span className="ml-auto text-sm text-muted-foreground">
+          <ShoppingCart className="w-4 h-4 text-primary" />
+          <h2 className="text-base font-semibold text-card-foreground">Panier</h2>
+          <span className="ml-auto text-xs text-muted-foreground">
             {cart.length} article{cart.length !== 1 ? 's' : ''}
           </span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4 md:p-6">
-        {cart.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
-            <ShoppingCart className="w-16 h-16 mb-4 opacity-20" />
-            <p>Votre panier est vide</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
+      {cart.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground">
+          <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
+          <p className="text-sm">Votre panier est vide</p>
+        </div>
+      ) : (
+        <>
+          <ScrollArea className="flex-1">
+            <div className="p-3 space-y-2">
             {cart.map((item, index) => {
               const itemPrice = item.basePrice +
                 (item.selectedSize?.priceModifier || 0) +
@@ -305,10 +305,10 @@ const Cart = ({ onClose }: CartProps) => {
               const itemTotal = itemPrice * item.quantity;
 
               return (
-                <div key={index} className="bg-card/50 rounded-xl p-3 border border-border/30">
-                  <div className="flex gap-3">
+                <div key={index} className="bg-card/50 rounded-lg p-2 border border-border/30">
+                  <div className="flex gap-2">
                     {/* Product image */}
-                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                       {item.image_url ? (
                         <img
                           src={item.image_url}
@@ -316,27 +316,27 @@ const Cart = ({ onClose }: CartProps) => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <ShoppingCart className="w-6 h-6 text-muted-foreground" />
+                        <ShoppingCart className="w-5 h-5 text-muted-foreground" />
                       )}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <h3 className="font-semibold text-sm leading-tight text-card-foreground">
+                      <div className="flex items-start justify-between gap-1 mb-0.5">
+                        <h3 className="font-semibold text-xs leading-tight text-card-foreground">
                           {item.productName}
                         </h3>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 shrink-0 text-destructive hover:bg-destructive/10 rounded-lg"
+                          className="h-6 w-6 shrink-0 text-destructive hover:bg-destructive/10 rounded-md"
                           onClick={() => removeFromCart(index)}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
 
                       {(item.selectedSize || item.selectedMilk) && (
-                        <p className="text-xs text-muted-foreground mb-2">
+                        <p className="text-[10px] text-muted-foreground mb-1">
                           {[item.selectedSize?.name, item.selectedMilk?.name]
                             .filter(Boolean)
                             .join(', ')}
@@ -344,26 +344,26 @@ const Cart = ({ onClose }: CartProps) => {
                       )}
 
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-base text-card-foreground">
+                        <span className="font-bold text-sm text-card-foreground">
                           {itemTotal.toFixed(2)} ₾
                         </span>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5">
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-7 w-7 rounded-md"
+                            className="h-6 w-6 rounded-md"
                             onClick={() => handleQuantityChange(index, item.quantity - 1)}
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
-                          <span className="w-8 text-center font-medium text-sm">
+                          <span className="w-7 text-center font-medium text-xs">
                             {item.quantity}
                           </span>
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-7 w-7 rounded-md"
+                            className="h-6 w-6 rounded-md"
                             onClick={() => handleQuantityChange(index, item.quantity + 1)}
                           >
                             <Plus className="w-3 h-3" />
@@ -375,26 +375,22 @@ const Cart = ({ onClose }: CartProps) => {
                 </div>
               );
             })}
-          </div>
-        )}
-        </div>
+            </div>
+          </ScrollArea>
 
-        {cart.length > 0 && (
-          <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 shrink-0">
+          <div className="p-2 border-t border-border/50 bg-secondary/30 shrink-0">
             <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
           </div>
-        )}
 
-        {cart.length > 0 && (
-          <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 shrink-0 space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
+          <div className="p-3 border-t border-border/50 bg-secondary/30 shrink-0 space-y-2">
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Sub Total</span>
                 <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
               </div>
               
               {(appliedOffer || manualDiscountPercent > 0) && (
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground flex items-center gap-1">
                     {appliedOffer && <Gift className="w-3 h-3" />}
                     Discount
@@ -407,7 +403,7 @@ const Cart = ({ onClose }: CartProps) => {
               
               <Separator />
               
-              <div className="flex justify-between text-lg font-bold">
+              <div className="flex justify-between text-base font-bold">
                 <span className="text-card-foreground">Total Payment</span>
                 <span className="text-primary">{total.toFixed(2)} ₾</span>
               </div>
@@ -415,10 +411,10 @@ const Cart = ({ onClose }: CartProps) => {
               <Button
                 variant="outline"
                 onClick={() => setShowDiscountDialog(true)}
-                className="w-full justify-between rounded-xl"
+                className="w-full justify-between rounded-lg h-9 text-xs"
               >
-                <span className="flex items-center gap-2">
-                  <Percent className="w-4 h-4" />
+                <span className="flex items-center gap-1.5">
+                  <Percent className="w-3 h-3" />
                   Add Discount
                 </span>
                 {manualDiscountPercent > 0 && (
@@ -431,41 +427,41 @@ const Cart = ({ onClose }: CartProps) => {
               <Button
                 onClick={handlePaymentMethodClick}
                 disabled={processing}
-                className="w-full h-14 bg-[#F5A623] hover:bg-[#E09612] text-white transition-colors gap-2 text-lg font-semibold rounded-xl shadow-md"
+                className="w-full h-11 bg-[#F5A623] hover:bg-[#E09612] text-white transition-colors gap-2 text-base font-semibold rounded-lg shadow-md"
               >
                 Pay Now
               </Button>
             )}
 
             {showPaymentMethod && !showCashCalculator && (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-center text-muted-foreground mb-2">
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-center text-muted-foreground">
                   Choisissez le mode de paiement
                 </p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     onClick={handleCashPayment}
                     disabled={processing}
-                    className="h-20 flex-col gap-2 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-xl"
+                    className="h-16 flex-col gap-1.5 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-lg"
                     variant="outline"
                   >
-                    <Banknote className="w-8 h-8" />
-                    <span className="text-sm font-semibold">Espèces</span>
+                    <Banknote className="w-6 h-6" />
+                    <span className="text-xs font-semibold">Espèces</span>
                   </Button>
                   <Button
                     onClick={handleCardPayment}
                     disabled={processing}
-                    className="h-20 flex-col gap-2 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-xl"
+                    className="h-16 flex-col gap-1.5 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-lg"
                     variant="outline"
                   >
-                    <CreditCard className="w-8 h-8" />
-                    <span className="text-sm font-semibold">Carte</span>
+                    <CreditCard className="w-6 h-6" />
+                    <span className="text-xs font-semibold">Carte</span>
                   </Button>
                 </div>
                 <Button
                   onClick={() => setShowPaymentMethod(false)}
                   variant="ghost"
-                  className="w-full rounded-xl"
+                  className="w-full rounded-lg h-8 text-xs"
                   disabled={processing}
                 >
                   Retour
@@ -474,33 +470,33 @@ const Cart = ({ onClose }: CartProps) => {
             )}
 
             {showCashCalculator && (
-              <div className="space-y-4">
-                <div className="space-y-3 p-4 bg-muted/50 rounded-xl">
+              <div className="space-y-2">
+                <div className="space-y-2 p-2 bg-muted/50 rounded-lg">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Total à payer</span>
-                    <span className="text-lg font-bold text-card-foreground">{total.toFixed(2)} ₾</span>
+                    <span className="text-xs text-muted-foreground">Total à payer</span>
+                    <span className="text-sm font-bold text-card-foreground">{total.toFixed(2)} ₾</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Montant reçu</span>
-                    <span className="text-lg font-bold text-primary">{amountReceived.toFixed(2)} ₾</span>
+                    <span className="text-xs text-muted-foreground">Montant reçu</span>
+                    <span className="text-sm font-bold text-primary">{amountReceived.toFixed(2)} ₾</span>
                   </div>
                   {amountReceived >= total && (
-                    <div className="flex justify-between items-center pt-2 border-t">
-                      <span className="text-sm font-semibold text-card-foreground">Rendu à donner</span>
-                      <span className="text-2xl font-bold text-green-600">{getChange().toFixed(2)} ₾</span>
+                    <div className="flex justify-between items-center pt-1 border-t">
+                      <span className="text-xs font-semibold text-card-foreground">Rendu à donner</span>
+                      <span className="text-base font-bold text-green-600">{getChange().toFixed(2)} ₾</span>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-center text-muted-foreground">Billets géorgiens</p>
-                  <div className="grid grid-cols-4 gap-2">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-center text-muted-foreground">Billets géorgiens</p>
+                  <div className="grid grid-cols-4 gap-1">
                     {[200, 100, 50, 20, 10, 5, 2, 1].map((bill) => (
                       <Button
                         key={bill}
                         onClick={() => addBill(bill)}
                         variant="outline"
-                        className="h-14 text-base font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
+                        className="h-10 text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
                       >
                         {bill} ₾
                       </Button>
@@ -512,7 +508,7 @@ const Cart = ({ onClose }: CartProps) => {
                   <Button
                     onClick={resetCash}
                     variant="outline"
-                    className="rounded-xl"
+                    className="rounded-lg h-9 text-xs"
                     disabled={processing}
                   >
                     Effacer
@@ -520,7 +516,7 @@ const Cart = ({ onClose }: CartProps) => {
                   <Button
                     onClick={completeCashPayment}
                     disabled={!canCompleteCashPayment() || processing}
-                    className="bg-gradient-primary hover:opacity-90 transition-opacity rounded-xl"
+                    className="bg-gradient-primary hover:opacity-90 transition-opacity rounded-lg h-9 text-xs"
                   >
                     {processing ? 'Traitement...' : 'Valider'}
                   </Button>
@@ -533,7 +529,7 @@ const Cart = ({ onClose }: CartProps) => {
                     setAmountReceived(0);
                   }}
                   variant="ghost"
-                  className="w-full rounded-xl"
+                  className="w-full rounded-lg h-8 text-xs"
                   disabled={processing}
                 >
                   ← Retour aux modes de paiement
@@ -541,8 +537,8 @@ const Cart = ({ onClose }: CartProps) => {
               </div>
             )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       <DiscountDialog
         open={showDiscountDialog}

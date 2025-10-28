@@ -111,59 +111,62 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
   const itemsInCart = cart.length;
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Gift className="h-5 w-5" />
+    <Card className="w-full border-0 shadow-none">
+      <CardHeader className="p-2 pb-1">
+        <CardTitle className="flex items-center gap-1.5 text-sm">
+          <Gift className="h-3.5 w-3.5" />
           Programme de fidélité
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           Scannez le QR code client pour accumuler des points
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="p-2 space-y-2">
         {!selectedCustomer && !showResults && !showScanner ? (
-          <form onSubmit={handleSearch} className="space-y-3">
-            <div className="flex gap-2">
+          <form onSubmit={handleSearch} className="space-y-1.5">
+            <div className="flex gap-1.5">
               <Input
                 placeholder="Nom, téléphone ou QR code..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="flex-1"
+                className="flex-1 h-8 text-xs"
               />
               <Button 
                 type="submit" 
                 disabled={searchCustomerMutation.isPending}
-                className="touch-manipulation"
+                className="touch-manipulation h-8 w-8 p-0"
+                size="icon"
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-3.5 w-3.5" />
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowScanner(true)}
-                className="touch-manipulation"
+                className="touch-manipulation h-8 w-8 p-0"
+                size="icon"
               >
-                <ScanLine className="h-4 w-4" />
+                <ScanLine className="h-3.5 w-3.5" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Recherchez par nom, numéro de téléphone ou scannez le QR code
             </p>
           </form>
         ) : showScanner ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Scanner le QR code</h3>
+              <h3 className="font-semibold text-xs">Scanner le QR code</h3>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setShowScanner(false)}
+                className="h-6 w-6"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </Button>
             </div>
-            <div className="rounded-lg overflow-hidden">
+            <div className="rounded-lg overflow-hidden max-h-[150px]">
               <Scanner
                 onScan={(result) => handleScan(result[0].rawValue)}
                 onError={(error) => {
@@ -174,37 +177,38 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
                 scanDelay={500}
               />
             </div>
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-[10px] text-muted-foreground text-center">
               Positionnez le QR code devant la caméra
             </p>
           </div>
         ) : showResults ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Résultats de recherche</h3>
+              <h3 className="font-semibold text-xs">Résultats de recherche</h3>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => {
                   setShowResults(false);
                   setSearchResults([]);
                 }}
+                className="h-6 w-6"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </Button>
             </div>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
               {searchResults.map((customer) => (
                 <div
                   key={customer.id}
                   onClick={() => handleSelectCustomer(customer)}
-                  className="w-full p-4 bg-muted hover:bg-muted/80 rounded-lg text-left transition-colors touch-manipulation cursor-pointer"
+                  className="w-full p-2 bg-muted hover:bg-muted/80 rounded-md text-left transition-colors touch-manipulation cursor-pointer"
                 >
-                  <div className="space-y-1">
-                    <p className="font-semibold text-base">{customer.name}</p>
-                    <p className="text-sm text-muted-foreground">{customer.email}</p>
-                    <p className="text-sm text-muted-foreground">{customer.phone}</p>
-                    <p className="text-xs text-primary font-medium">
+                  <div className="space-y-0.5">
+                    <p className="font-semibold text-xs">{customer.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{customer.email}</p>
+                    <p className="text-[10px] text-muted-foreground">{customer.phone}</p>
+                    <p className="text-[10px] text-primary font-medium">
                       {customer.points} points • {customer.total_purchases} achats
                     </p>
                   </div>
@@ -213,21 +217,21 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex items-start justify-between p-4 bg-muted rounded-lg">
-              <div className="space-y-1 flex-1">
-                <h3 className="font-semibold text-lg">{selectedCustomer.name}</h3>
-                <p className="text-sm text-muted-foreground">{selectedCustomer.email}</p>
-                <p className="text-sm text-muted-foreground">{selectedCustomer.phone}</p>
-                <div className="mt-2 space-y-1">
-                  <p className="text-sm">
-                    <span className="font-medium">Points actuels:</span>{' '}
-                    <span className="text-lg font-bold text-primary">
+          <div className="space-y-2">
+            <div className="flex items-start justify-between p-2 bg-muted rounded-md">
+              <div className="space-y-0.5 flex-1 min-w-0">
+                <h3 className="font-semibold text-xs">{selectedCustomer.name}</h3>
+                <p className="text-[10px] text-muted-foreground truncate">{selectedCustomer.email}</p>
+                <p className="text-[10px] text-muted-foreground">{selectedCustomer.phone}</p>
+                <div className="mt-1 space-y-0.5">
+                  <p className="text-[10px]">
+                    <span className="font-medium">Points:</span>{' '}
+                    <span className="text-sm font-bold text-primary">
                       {selectedCustomer.points}/10
                     </span>
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Total achats: {selectedCustomer.total_purchases}
+                  <p className="text-[10px] text-muted-foreground">
+                    Total: {selectedCustomer.total_purchases}
                   </p>
                 </div>
               </div>
@@ -235,29 +239,29 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={clearCustomer}
-                className="touch-manipulation"
+                className="touch-manipulation h-6 w-6 shrink-0"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </Button>
             </div>
 
             {canRedeemReward && (
-              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                <p className="text-sm font-medium text-green-800 dark:text-green-200 flex items-center gap-2">
-                  <Gift className="h-4 w-4" />
-                  🎉 Boisson offerte disponible !
+              <div className="p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
+                <p className="text-[10px] font-medium text-green-800 dark:text-green-200 flex items-center gap-1">
+                  <Gift className="h-3 w-3" />
+                  🎉 Boisson offerte !
                 </p>
-                <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                  Ce client peut bénéficier d'une boisson gratuite
+                <p className="text-[10px] text-green-700 dark:text-green-300">
+                  Boisson gratuite disponible
                 </p>
               </div>
             )}
 
             {itemsInCart > 0 && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-[10px] text-muted-foreground">
                 {itemsInCart === 1 
-                  ? '✓ +1 point sera ajouté après validation'
-                  : `✓ +${itemsInCart} points seront ajoutés après validation`
+                  ? '✓ +1 point après validation'
+                  : `✓ +${itemsInCart} points après validation`
                 }
               </div>
             )}
