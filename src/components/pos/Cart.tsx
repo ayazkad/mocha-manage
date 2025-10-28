@@ -38,7 +38,16 @@ const Cart = ({ onClose }: CartProps) => {
   const [appliedOffer, setAppliedOffer] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
-  const subtotal = getTotalPrice();
+  const getRawSubtotal = () => {
+    return cart.reduce((total, item) => {
+      const sizeModifier = item.selectedSize?.priceModifier || 0;
+      const milkModifier = item.selectedMilk?.priceModifier || 0;
+      const itemPrice = (item.basePrice + sizeModifier + milkModifier) * item.quantity;
+      return total + itemPrice;
+    }, 0);
+  };
+
+  const subtotal = getRawSubtotal();
   const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   
   // Calculer la réduction automatique des offres
