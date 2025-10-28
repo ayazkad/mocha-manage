@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Trash2, CheckCircle, CreditCard, Banknote, Percent, Gift } from 'lucide-react';
+import { ShoppingCart, Trash2, CheckCircle, CreditCard, Banknote, Percent, Gift, Edit2, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import CustomerLoyalty from './CustomerLoyalty';
@@ -18,6 +18,7 @@ const Cart = ({ onClose }: CartProps) => {
   const {
     cart,
     removeFromCart,
+    updateCartItem,
     clearCart,
     getTotalPrice,
     currentSession,
@@ -62,7 +63,7 @@ const Cart = ({ onClose }: CartProps) => {
     }
   }, [cart, subtotal, itemsCount]);
 
-  // Calculer les réductions
+  // Calculer les réductions et taxes
   const automaticDiscount = appliedOffer
     ? appliedOffer.discount_type === 'percentage'
       ? (subtotal * appliedOffer.discount_value) / 100
@@ -71,7 +72,18 @@ const Cart = ({ onClose }: CartProps) => {
   
   const manualDiscount = (subtotal * manualDiscountPercent) / 100;
   const totalDiscount = automaticDiscount + manualDiscount;
-  const total = Math.max(0, subtotal - totalDiscount);
+  const subtotalAfterDiscount = Math.max(0, subtotal - totalDiscount);
+  const taxAmount = subtotalAfterDiscount * 0.12; // 12% tax
+  const total = subtotalAfterDiscount + taxAmount;
+
+  const handleQuantityChange = (index: number, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeFromCart(index);
+    } else {
+      const item = cart[index];
+      updateCartItem(index, { ...item, quantity: newQuantity });
+    }
+  };
 
   const handlePaymentMethodClick = () => {
     if (cart.length === 0) {
@@ -278,56 +290,76 @@ const Cart = ({ onClose }: CartProps) => {
             <p>Votre panier est vide</p>
           </div>
         ) : (
-          <div className="space-y-2.5">
-            {cart.map((item, index) => (
-              <Card key={index} className="p-3.5 space-y-2 border-border/50 bg-card/50 hover:bg-card/80 transition-colors">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm leading-tight text-card-foreground">
-                      {item.productName}
-                    </h3>
-                    {item.selectedSize && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {item.selectedSize.name}
-                      </p>
-                    )}
-                    {item.selectedMilk && (
-                      <p className="text-xs text-muted-foreground">
-                        {item.selectedMilk.name}
-                      </p>
-                    )}
-                    {item.notes && (
-                      <p className="text-xs text-muted-foreground italic mt-1">
-                        {item.notes}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0 hover:bg-destructive/10 rounded-lg"
-                    onClick={() => removeFromCart(index)}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </div>
+          <div className="space-y-3">
+            {cart.map((item, index) => {
+              const itemPrice = item.basePrice +
+                (item.selectedSize?.priceModifier || 0) +
+                (item.selectedMilk?.priceModifier || 0);
+              const itemTotal = itemPrice * item.quantity;
 
-                <div className="flex items-center justify-between text-sm pt-1">
-                  <span className="text-muted-foreground">
-                    Qté: {item.quantity}
-                  </span>
-                  <span className="font-bold text-primary">
-                    {(
-                      (item.basePrice +
-                        (item.selectedSize?.priceModifier || 0) +
-                        (item.selectedMilk?.priceModifier || 0)) *
-                      item.quantity
-                    ).toFixed(2)}{' '}
-                    ₾
-                  </span>
+              return (
+                <div key={index} className="bg-card/50 rounded-xl p-3 border border-border/30">
+                  <div className="flex gap-3">
+                    {/* Product image placeholder */}
+                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <ShoppingCart className="w-6 h-6 text-muted-foreground" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="font-semibold text-sm leading-tight text-card-foreground">
+                          {item.productName}
+                        </h3>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 text-destructive hover:bg-destructive/10 rounded-lg"
+                          onClick={() => removeFromCart(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      {(item.selectedSize || item.selectedMilk) && (
+                        <p className="text-xs text-muted-foreground mb-2">
+                          {[item.selectedSize?.name, item.selectedMilk?.name]
+                            .filter(Boolean)
+                            .join(', ')}
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-base text-card-foreground">
+                          {itemTotal.toFixed(2)} ₾
+                        </span>
+
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md"
+                            onClick={() => handleQuantityChange(index, item.quantity - 1)}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="w-8 text-center font-medium text-sm">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 rounded-md"
+                            onClick={() => handleQuantityChange(index, item.quantity + 1)}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </Card>
-            ))}
+              );
+            })}
           </div>
         )}
         </div>
@@ -340,57 +372,58 @@ const Cart = ({ onClose }: CartProps) => {
 
         {cart.length > 0 && (
           <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 shrink-0 space-y-4">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Sous-total</span>
-                <span className="text-card-foreground">{subtotal.toFixed(2)} ₾</span>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Sub Total</span>
+                <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
               </div>
               
-              {appliedOffer && (
-                <div className="flex justify-between items-center text-green-600">
-                  <span className="flex items-center gap-1">
-                    <Gift className="w-4 h-4" />
-                    {appliedOffer.name}
+              {(appliedOffer || manualDiscountPercent > 0) && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    {appliedOffer && <Gift className="w-3 h-3" />}
+                    Discount
                   </span>
-                  <span>-{automaticDiscount.toFixed(2)} ₾</span>
+                  <span className="font-semibold text-destructive">
+                    -{totalDiscount.toFixed(2)} ₾
+                  </span>
                 </div>
               )}
               
-              {manualDiscountPercent > 0 && (
-                <div className="flex justify-between items-center text-orange-600">
-                  <span className="flex items-center gap-1">
-                    <Percent className="w-4 h-4" />
-                    Réduction {manualDiscountPercent}%
-                  </span>
-                  <span>-{manualDiscount.toFixed(2)} ₾</span>
-                </div>
-              )}
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDiscountDialog(true)}
-                className="w-full mt-2"
-              >
-                <Percent className="w-4 h-4 mr-2" />
-                {manualDiscountPercent > 0 ? 'Modifier la réduction' : 'Appliquer une réduction'}
-              </Button>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Tax 12%</span>
+                <span className="font-semibold text-card-foreground">{taxAmount.toFixed(2)} ₾</span>
+              </div>
               
               <Separator />
-              <div className="flex justify-between text-xl font-bold pt-2">
-                <span className="text-card-foreground">Total</span>
+              
+              <div className="flex justify-between text-lg font-bold">
+                <span className="text-card-foreground">Total Payment</span>
                 <span className="text-primary">{total.toFixed(2)} ₾</span>
               </div>
+
+              <Button
+                variant="outline"
+                onClick={() => setShowDiscountDialog(true)}
+                className="w-full justify-between rounded-xl"
+              >
+                <span className="flex items-center gap-2">
+                  <Percent className="w-4 h-4" />
+                  Add Discount
+                </span>
+                {manualDiscountPercent > 0 && (
+                  <span className="text-xs text-primary">{manualDiscountPercent}%</span>
+                )}
+              </Button>
             </div>
 
             {!showPaymentMethod && !showCashCalculator && (
               <Button
                 onClick={handlePaymentMethodClick}
                 disabled={processing}
-                className="w-full h-12 bg-gradient-primary hover:opacity-90 transition-opacity gap-2 text-base font-semibold rounded-xl shadow-md"
+                className="w-full h-14 bg-[#F5A623] hover:bg-[#E09612] text-white transition-colors gap-2 text-lg font-semibold rounded-xl shadow-md"
               >
-                <CheckCircle className="w-5 h-5" />
-                Valider la commande
+                Pay Now
               </Button>
             )}
 
