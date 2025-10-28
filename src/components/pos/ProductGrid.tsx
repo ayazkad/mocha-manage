@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePOS } from '@/contexts/POSContext';
 import ProductCard from './ProductCard';
 import ProductOptionsDialog from './ProductOptionsDialog';
+import QuickEditProductDialog from './QuickEditProductDialog';
 
 interface Product {
   id: string;
@@ -16,6 +17,7 @@ interface Product {
   description_ge: string;
   base_price: number;
   image_url: string;
+  category_id: string;
   has_size_options: boolean;
   has_milk_options: boolean;
 }
@@ -27,7 +29,10 @@ interface ProductGridProps {
 const ProductGrid = ({ categoryId }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const { addToCart } = usePOS();
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const { addToCart, currentEmployee } = usePOS();
+
+  const isAdmin = currentEmployee?.role === 'admin';
 
   useEffect(() => {
     if (categoryId) {
@@ -67,6 +72,12 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
     }
   };
 
+  const handleProductLongPress = (product: Product) => {
+    if (isAdmin) {
+      setEditingProduct(product);
+    }
+  };
+
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -75,7 +86,9 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
             key={product.id}
             product={product}
             onClick={() => handleProductClick(product)}
+            onLongPress={() => handleProductLongPress(product)}
             getProductName={getProductName}
+            isAdmin={isAdmin}
           />
         ))}
       </div>
@@ -86,6 +99,15 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
           open={!!selectedProduct}
           onClose={() => setSelectedProduct(null)}
           getProductName={getProductName}
+        />
+      )}
+
+      {editingProduct && (
+        <QuickEditProductDialog
+          product={editingProduct}
+          open={!!editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSaved={loadProducts}
         />
       )}
     </>

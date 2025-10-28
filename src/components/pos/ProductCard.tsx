@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Coffee } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
 interface Product {
   id: string;
@@ -11,13 +12,107 @@ interface Product {
 interface ProductCardProps {
   product: Product;
   onClick: () => void;
+  onLongPress?: () => void;
   getProductName: (product: Product) => string;
+  isAdmin?: boolean;
 }
 
-const ProductCard = ({ product, onClick, getProductName }: ProductCardProps) => {
+const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }: ProductCardProps) => {
+  const [isLongPress, setIsLongPress] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isAdmin || !onLongPress) return;
+    
+    const touch = e.touches[0];
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+    setIsLongPress(false);
+
+    longPressTimer.current = setTimeout(() => {
+      setIsLongPress(true);
+      onLongPress();
+      // Vibration feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }, 500); // 500ms for long press
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPos.current) return;
+
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartPos.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartPos.current.y);
+
+    // Cancel long press if user moves finger more than 10px
+    if (deltaX > 10 || deltaY > 10) {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
+    if (!isLongPress) {
+      onClick();
+    }
+    
+    setIsLongPress(false);
+    touchStartPos.current = null;
+  };
+
+  const handleMouseDown = () => {
+    if (!isAdmin || !onLongPress) return;
+    
+    setIsLongPress(false);
+    longPressTimer.current = setTimeout(() => {
+      setIsLongPress(true);
+      onLongPress();
+    }, 500);
+  };
+
+  const handleMouseUp = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
+    if (!isLongPress) {
+      onClick();
+    }
+    
+    setIsLongPress(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+      }
+    };
+  }, []);
+
   return (
     <Card
-      onClick={onClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={() => {
+        if (longPressTimer.current) {
+          clearTimeout(longPressTimer.current);
+          longPressTimer.current = null;
+        }
+      }}
       className="cursor-pointer hover:shadow-medium transition-all duration-normal hover:scale-[1.02] active:scale-95 overflow-hidden group touch-manipulation border-border/50 bg-card"
     >
       <div className="aspect-square bg-gradient-card flex items-center justify-center relative overflow-hidden min-h-[140px] md:min-h-[200px] lg:min-h-[220px]">
