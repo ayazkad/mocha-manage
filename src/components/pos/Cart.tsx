@@ -356,7 +356,7 @@ const Cart = ({ onClose }: CartProps) => {
       </div>
 
       {/* Cart Items */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 max-h-[400px]">
         {cart.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground py-12 min-h-[300px]">
             <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
