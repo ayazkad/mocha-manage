@@ -131,19 +131,24 @@ const Cart = ({ onClose }: CartProps) => {
   };
 
   const applyDiscountToItems = (percentage: number, applyToAll: boolean) => {
+    console.log('applyDiscountToItems called:', { percentage, applyToAll, selectedItemsLength: selectedItems.length });
+    
     if (applyToAll || selectedItems.length === 0) {
       // Apply to all items if applyToAll is true OR if no items are selected
+      console.log('Applying discount to ALL items');
       cart.forEach((item, index) => {
         updateCartItem(index, { ...item, discount: percentage });
       });
+      setSelectedItems([]);
     } else if (selectedItems.length > 0) {
       // Apply only to selected items
+      console.log('Applying discount to SELECTED items:', selectedItems);
       selectedItems.forEach(index => {
         const item = cart[index];
         updateCartItem(index, { ...item, discount: percentage });
       });
+      setSelectedItems([]);
     }
-    setSelectedItems([]);
   };
 
   const handlePaymentMethodClick = () => {
@@ -273,19 +278,23 @@ const Cart = ({ onClose }: CartProps) => {
         const drinkCount = cart.reduce((sum, item) => {
           const product = products?.find((p: any) => p.id === item.productId);
           if (product?.categories) {
-            const categoryNameEn = (product.categories.name_en || '').toLowerCase().trim();
-            const categoryNameFr = (product.categories.name_fr || '').toLowerCase().trim();
+            // Bien nettoyer les espaces
+            const categoryNameEn = (product.categories.name_en || '').trim().toLowerCase();
+            const categoryNameFr = (product.categories.name_fr || '').trim().toLowerCase();
             
             console.log(`Product ${item.productName}: EN="${categoryNameEn}", FR="${categoryNameFr}"`);
             
-            // Vérifier si c'est Coffee ou Non Coffee (exactement)
-            const isCoffeeCategory = categoryNameEn === 'coffee' || categoryNameFr === 'coffee' || categoryNameFr === 'café';
+            // Vérifier si c'est Coffee ou Non Coffee (exactement, après trim)
+            const isCoffeeCategory = categoryNameEn === 'coffee' || categoryNameFr === 'coffee';
             const isNonCoffeeCategory = categoryNameEn === 'non coffee' || categoryNameFr === 'non coffee';
             
-            console.log(`Is coffee category: ${isCoffeeCategory}, Is non-coffee category: ${isNonCoffeeCategory}`);
+            console.log(`Is coffee: ${isCoffeeCategory}, Is non-coffee: ${isNonCoffeeCategory}`);
             
             if (isCoffeeCategory || isNonCoffeeCategory) {
+              console.log(`✅ Adding ${item.quantity} points for ${item.productName}`);
               return sum + item.quantity;
+            } else {
+              console.log(`❌ Skipping ${item.productName} (category: ${categoryNameEn})`);
             }
           }
           return sum;
