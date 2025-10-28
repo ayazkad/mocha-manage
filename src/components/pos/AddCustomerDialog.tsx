@@ -44,6 +44,7 @@ const AddCustomerDialog = () => {
             customerEmail: customer.email,
             customerName: customer.name,
             qrCode: customer.qr_code,
+            language: 'en', // Default to English, can be customized later
           },
         });
 

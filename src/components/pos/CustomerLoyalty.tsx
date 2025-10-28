@@ -150,10 +150,10 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
             </div>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {searchResults.map((customer) => (
-                <button
+                <div
                   key={customer.id}
                   onClick={() => handleSelectCustomer(customer)}
-                  className="w-full p-4 bg-muted hover:bg-muted/80 rounded-lg text-left transition-colors touch-manipulation"
+                  className="w-full p-4 bg-muted hover:bg-muted/80 rounded-lg text-left transition-colors touch-manipulation cursor-pointer"
                 >
                   <div className="space-y-1">
                     <p className="font-semibold text-base">{customer.name}</p>
@@ -163,14 +163,14 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
                       {customer.points} points • {customer.total_purchases} achats
                     </p>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-start justify-between p-4 bg-muted rounded-lg">
-              <div className="space-y-1">
+              <div className="space-y-1 flex-1">
                 <h3 className="font-semibold text-lg">{selectedCustomer.name}</h3>
                 <p className="text-sm text-muted-foreground">{selectedCustomer.email}</p>
                 <p className="text-sm text-muted-foreground">{selectedCustomer.phone}</p>
@@ -190,6 +190,7 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={clearCustomer}
+                className="touch-manipulation"
               >
                 <X className="h-4 w-4" />
               </Button>
