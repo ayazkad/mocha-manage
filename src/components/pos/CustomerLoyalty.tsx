@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Gift, Search, X } from 'lucide-react';
+import { Gift, Search, X, ScanLine } from 'lucide-react';
 import { usePOS } from '@/contexts/POSContext';
+import { Scanner } from '@yudiel/react-qr-scanner';
 
 interface Customer {
   id: string;
@@ -27,6 +28,7 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const queryClient = useQueryClient();
   const { cart } = usePOS();
 
@@ -94,7 +96,15 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
     setSearchInput('');
     setSearchResults([]);
     setShowResults(false);
+    setShowScanner(false);
     onCustomerSelected?.(null);
+  };
+
+  const handleScan = (result: string) => {
+    if (result) {
+      setShowScanner(false);
+      searchCustomerMutation.mutate(result);
+    }
   };
 
   const canRedeemReward = selectedCustomer && selectedCustomer.points >= 10;
@@ -112,7 +122,7 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!selectedCustomer && !showResults ? (
+        {!selectedCustomer && !showResults && !showScanner ? (
           <form onSubmit={handleSearch} className="space-y-3">
             <div className="flex gap-2">
               <Input
@@ -128,11 +138,46 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
               >
                 <Search className="h-4 w-4" />
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowScanner(true)}
+                className="touch-manipulation"
+              >
+                <ScanLine className="h-4 w-4" />
+              </Button>
             </div>
             <p className="text-xs text-muted-foreground">
               Recherchez par nom, numéro de téléphone ou scannez le QR code
             </p>
           </form>
+        ) : showScanner ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Scanner le QR code</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowScanner(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="rounded-lg overflow-hidden">
+              <Scanner
+                onScan={(result) => handleScan(result[0].rawValue)}
+                onError={(error) => {
+                  console.error(error);
+                  toast.error('Erreur lors du scan');
+                }}
+                allowMultiple={false}
+                scanDelay={500}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Positionnez le QR code devant la caméra
+            </p>
+          </div>
         ) : showResults ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
