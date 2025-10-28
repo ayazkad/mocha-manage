@@ -109,39 +109,6 @@ const Login = () => {
               onChange={step === 'code' ? setEmployeeCode : setPin}
               maxLength={4}
             />
-
-            <div className="space-y-2">
-              {step === 'code' ? (
-                <Button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={employeeCode.length !== 4}
-                  className="w-full h-14 text-lg bg-gradient-espresso hover:opacity-90 transition-opacity"
-                >
-                  Suivant
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={loading || pin.length !== 4}
-                    className="w-full h-14 text-lg bg-gradient-espresso hover:opacity-90 transition-opacity"
-                  >
-                    {loading ? 'Connexion...' : 'Se connecter'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleBack}
-                    disabled={loading}
-                    className="w-full h-12"
-                  >
-                    Retour
-                  </Button>
-                </>
-              )}
-            </div>
           </div>
 
           <div className="text-center space-y-2">

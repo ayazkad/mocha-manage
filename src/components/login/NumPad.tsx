@@ -27,7 +27,7 @@ const NumPad = ({ value, onChange, maxLength = 4 }: NumPadProps) => {
   return (
     <div className="w-full max-w-sm mx-auto">
       <div className="grid grid-cols-3 gap-3">
-        {numbers.map((num) => (
+        {numbers.slice(0, 9).map((num) => (
           <Button
             key={num}
             type="button"
@@ -41,18 +41,18 @@ const NumPad = ({ value, onChange, maxLength = 4 }: NumPadProps) => {
         <Button
           type="button"
           variant="outline"
-          onClick={handleClear}
-          className="h-16 text-sm font-medium hover:bg-destructive hover:text-destructive-foreground"
+          onClick={() => handleNumberClick('0')}
+          className="h-16 text-2xl font-semibold hover:bg-primary hover:text-primary-foreground transition-colors col-span-2"
         >
-          Effacer
+          0
         </Button>
         <Button
           type="button"
           variant="outline"
-          onClick={handleDelete}
-          className="h-16 hover:bg-muted col-span-2"
+          onClick={handleClear}
+          className="h-16 text-sm font-medium hover:bg-destructive hover:text-destructive-foreground"
         >
-          <Delete className="w-6 h-6" />
+          Effacer
         </Button>
       </div>
     </div>
