@@ -162,6 +162,24 @@ const ProductsManager = () => {
     });
   };
 
+  const handleCategoryChange = (categoryId: string) => {
+    const selectedCategory = categories?.find(cat => cat.id === categoryId);
+    const isCoffeeCategory = selectedCategory?.name_en?.toLowerCase().includes('coffee');
+    
+    setFormData({
+      ...formData,
+      category_id: categoryId,
+      has_size_options: isCoffeeCategory ? true : formData.has_size_options,
+      has_milk_options: isCoffeeCategory ? true : formData.has_milk_options,
+    });
+  };
+
+  const isCoffeeCategory = () => {
+    if (!formData.category_id || !categories) return false;
+    const selectedCategory = categories.find(cat => cat.id === formData.category_id);
+    return selectedCategory?.name_en?.toLowerCase().includes('coffee') || false;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     saveMutation.mutate({
@@ -211,7 +229,7 @@ const ProductsManager = () => {
               <Label htmlFor="category_id">Category</Label>
               <Select
                 value={formData.category_id}
-                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                onValueChange={handleCategoryChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
@@ -281,8 +299,11 @@ const ProductsManager = () => {
                   id="has_size_options"
                   checked={formData.has_size_options}
                   onCheckedChange={(checked) => setFormData({ ...formData, has_size_options: checked })}
+                  disabled={isCoffeeCategory()}
                 />
-                <Label htmlFor="has_size_options">Has Size Options</Label>
+                <Label htmlFor="has_size_options" className={isCoffeeCategory() ? 'text-muted-foreground' : ''}>
+                  Has Size Options {isCoffeeCategory() && '(Auto pour Coffee)'}
+                </Label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -290,8 +311,11 @@ const ProductsManager = () => {
                   id="has_milk_options"
                   checked={formData.has_milk_options}
                   onCheckedChange={(checked) => setFormData({ ...formData, has_milk_options: checked })}
+                  disabled={isCoffeeCategory()}
                 />
-                <Label htmlFor="has_milk_options">Has Milk Options</Label>
+                <Label htmlFor="has_milk_options" className={isCoffeeCategory() ? 'text-muted-foreground' : ''}>
+                  Has Milk Options {isCoffeeCategory() && '(Auto pour Coffee)'}
+                </Label>
               </div>
 
               <div className="flex items-center gap-2">
