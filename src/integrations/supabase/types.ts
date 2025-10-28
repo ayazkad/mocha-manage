@@ -168,6 +168,7 @@ export type Database = {
         Row: {
           active: boolean | null
           applicable_categories: string[] | null
+          applicable_products: string[] | null
           created_at: string | null
           discount_type: string
           discount_value: number
@@ -182,6 +183,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           applicable_categories?: string[] | null
+          applicable_products?: string[] | null
           created_at?: string | null
           discount_type: string
           discount_value: number
@@ -196,6 +198,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           applicable_categories?: string[] | null
+          applicable_products?: string[] | null
           created_at?: string | null
           discount_type?: string
           discount_value?: number

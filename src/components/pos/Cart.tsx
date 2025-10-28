@@ -46,11 +46,20 @@ const Cart = ({ onClose }: CartProps) => {
         .eq('active', true)
         .lte('min_items', itemsCount)
         .lte('min_amount', subtotal)
-        .order('discount_value', { ascending: false })
-        .limit(1);
+        .order('discount_value', { ascending: false });
 
       if (offers && offers.length > 0) {
-        setAppliedOffer(offers[0]);
+        // Filtrer les offres applicables selon les produits du panier
+        const applicableOffer = offers.find(offer => {
+          // Si aucun produit spécifique n'est défini, l'offre s'applique à tous
+          if (!offer.applicable_products || offer.applicable_products.length === 0) {
+            return true;
+          }
+          // Vérifier si au moins un produit du panier est dans la liste des produits applicables
+          return cart.some(item => offer.applicable_products.includes(item.productId));
+        });
+
+        setAppliedOffer(applicableOffer || null);
       } else {
         setAppliedOffer(null);
       }

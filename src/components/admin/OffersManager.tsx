@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { Plus, Trash2, Edit, Gift } from 'lucide-react';
 
@@ -18,12 +20,22 @@ interface Offer {
   min_items: number;
   min_amount: number;
   applicable_categories: string[];
+  applicable_products: string[];
+}
+
+interface Product {
+  id: string;
+  name_fr: string;
+  name_en: string;
+  category_id: string;
 }
 
 const OffersManager = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     discount_type: 'percentage' as 'percentage' | 'fixed',
@@ -36,6 +48,7 @@ const OffersManager = () => {
   useEffect(() => {
     loadOffers();
     loadCategories();
+    loadProducts();
   }, []);
 
   const loadOffers = async () => {
@@ -62,12 +75,23 @@ const OffersManager = () => {
     setCategories(data || []);
   };
 
+  const loadProducts = async () => {
+    const { data } = await supabase
+      .from('products')
+      .select('id, name_fr, name_en, category_id')
+      .eq('active', true)
+      .order('name_fr');
+
+    setProducts(data || []);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const offerData = {
       ...formData,
       applicable_categories: [],
+      applicable_products: selectedProducts,
     };
 
     if (editingOffer) {
@@ -101,6 +125,7 @@ const OffersManager = () => {
 
   const handleEdit = (offer: Offer) => {
     setEditingOffer(offer);
+    setSelectedProducts(offer.applicable_products || []);
     setFormData({
       name: offer.name,
       discount_type: offer.discount_type,
@@ -130,6 +155,7 @@ const OffersManager = () => {
 
   const resetForm = () => {
     setEditingOffer(null);
+    setSelectedProducts([]);
     setFormData({
       name: '',
       discount_type: 'percentage',
@@ -138,6 +164,18 @@ const OffersManager = () => {
       min_items: 0,
       min_amount: 0,
     });
+  };
+
+  const toggleProductSelection = (productId: string) => {
+    setSelectedProducts(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const getProductName = (product: Product) => {
+    return product.name_en || product.name_fr;
   };
 
   const toggleActive = async (offer: Offer) => {
@@ -241,6 +279,34 @@ const OffersManager = () => {
             <Label>Offre active</Label>
           </div>
 
+          <div className="space-y-2">
+            <Label>Produits applicables</Label>
+            <ScrollArea className="h-48 border rounded-lg p-3">
+              <div className="space-y-2">
+                {products.map((product) => (
+                  <div key={product.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`product-${product.id}`}
+                      checked={selectedProducts.includes(product.id)}
+                      onCheckedChange={() => toggleProductSelection(product.id)}
+                    />
+                    <Label
+                      htmlFor={`product-${product.id}`}
+                      className="text-sm cursor-pointer flex-1"
+                    >
+                      {getProductName(product)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+            <p className="text-xs text-muted-foreground">
+              {selectedProducts.length === 0
+                ? "Aucun produit sélectionné - l'offre s'appliquera à tous les produits"
+                : `${selectedProducts.length} produit(s) sélectionné(s)`}
+            </p>
+          </div>
+
           <div className="flex gap-2">
             <Button type="submit" className="flex-1">
               <Plus className="w-4 h-4 mr-2" />
@@ -273,9 +339,12 @@ const OffersManager = () => {
                     ? `${offer.discount_value}% de réduction`
                     : `${offer.discount_value}₾ de réduction`}
                 </p>
-                {(offer.min_items > 0 || offer.min_amount > 0) && (
+                {(offer.min_items > 0 || offer.min_amount > 0 || offer.applicable_products?.length > 0) && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Conditions: {offer.min_items > 0 && `${offer.min_items} articles min`}
+                    {offer.applicable_products?.length > 0 && (
+                      <span>{offer.applicable_products.length} produit(s) • </span>
+                    )}
+                    {offer.min_items > 0 && `${offer.min_items} articles min`}
                     {offer.min_items > 0 && offer.min_amount > 0 && ' • '}
                     {offer.min_amount > 0 && `${offer.min_amount}₾ min`}
                   </p>
