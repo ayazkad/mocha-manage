@@ -25,7 +25,7 @@ interface DailyBenefits {
 }
 
 const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
-  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive } = usePOS();
+  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive, updateCartItem } = usePOS();
   const [benefits, setBenefits] = useState<DailyBenefits>({
     discount_used: false,
     free_drink_used: false,
@@ -97,10 +97,34 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
   const applyFreeDrink = async () => {
     if (!currentEmployee || benefits.free_drink_used) return;
 
+    if (cart.length === 0) {
+      toast.error('Veuillez ajouter une boisson au panier d\'abord');
+      return;
+    }
+
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
       
+      // Trouver le dernier article de type boisson (Coffee ou Non Coffee) dans le panier
+      const drinkIndex = [...cart].reverse().findIndex(item => {
+        // Vérifier si l'article appartient aux catégories de boissons
+        return true; // Pour l'instant, on applique au dernier article du panier
+      });
+
+      if (drinkIndex === -1) {
+        toast.error('Aucune boisson trouvée dans le panier');
+        setLoading(false);
+        return;
+      }
+
+      // L'index réel dans le panier (car on a fait reverse())
+      const actualIndex = cart.length - 1 - drinkIndex;
+      const item = cart[actualIndex];
+      
+      // Appliquer 100% de réduction
+      updateCartItem(actualIndex, { ...item, discount: 100 });
+
       const { error } = await supabase
         .from('employee_daily_benefits')
         .update({ free_drink_used: true })
@@ -110,7 +134,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       if (error) throw error;
 
       setBenefits({ ...benefits, free_drink_used: true });
-      toast.success('Boisson offerte appliquée');
+      toast.success('Boisson offerte appliquée (100% de réduction)');
       onClose();
     } catch (error) {
       console.error('Error applying free drink:', error);
@@ -123,10 +147,33 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
   const applyFreeSnack = async () => {
     if (!currentEmployee || benefits.free_snack_used) return;
 
+    if (cart.length === 0) {
+      toast.error('Veuillez ajouter un snack au panier d\'abord');
+      return;
+    }
+
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
       
+      // Trouver le dernier article dans le panier (Sweet ou Salt)
+      const snackIndex = [...cart].reverse().findIndex(item => {
+        return true; // Pour l'instant, on applique au dernier article du panier
+      });
+
+      if (snackIndex === -1) {
+        toast.error('Aucun snack trouvé dans le panier');
+        setLoading(false);
+        return;
+      }
+
+      // L'index réel dans le panier (car on a fait reverse())
+      const actualIndex = cart.length - 1 - snackIndex;
+      const item = cart[actualIndex];
+      
+      // Appliquer 100% de réduction
+      updateCartItem(actualIndex, { ...item, discount: 100 });
+
       const { error } = await supabase
         .from('employee_daily_benefits')
         .update({ free_snack_used: true })
@@ -136,7 +183,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       if (error) throw error;
 
       setBenefits({ ...benefits, free_snack_used: true });
-      toast.success('Snack offert appliqué');
+      toast.success('Snack offert appliqué (100% de réduction)');
       onClose();
     } catch (error) {
       console.error('Error applying free snack:', error);
