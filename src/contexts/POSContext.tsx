@@ -33,7 +33,8 @@ interface POSContextType {
   cart: CartItem[];
   darkMode: boolean;
   staffDiscountActive: boolean;
-  activeBenefitType: 'discount' | 'free_drink' | 'free_snack' | null;
+  freeDrinkActive: boolean;
+  freeSnackActive: boolean;
   login: (code: string, pin: string) => Promise<boolean>;
   logout: () => Promise<void>;
   addToCart: (item: CartItem) => void;
@@ -43,7 +44,8 @@ interface POSContextType {
   toggleDarkMode: () => void;
   getTotalPrice: () => number;
   setStaffDiscountActive: (active: boolean) => void;
-  setActiveBenefitType: (type: 'discount' | 'free_drink' | 'free_snack' | null) => void;
+  setFreeDrinkActive: (active: boolean) => void;
+  setFreeSnackActive: (active: boolean) => void;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -54,7 +56,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [darkMode, setDarkMode] = useState(false);
   const [staffDiscountActive, setStaffDiscountActive] = useState(false);
-  const [activeBenefitType, setActiveBenefitType] = useState<'discount' | 'free_drink' | 'free_snack' | null>(null);
+  const [freeDrinkActive, setFreeDrinkActive] = useState(false);
+  const [freeSnackActive, setFreeSnackActive] = useState(false);
 
   useEffect(() => {
     // Apply dark mode class to document
@@ -162,7 +165,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearCart = () => {
     setCart([]);
     setStaffDiscountActive(false);
-    setActiveBenefitType(null);
+    setFreeDrinkActive(false);
+    setFreeSnackActive(false);
   };
 
   const getTotalPrice = () => {
@@ -188,7 +192,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cart,
         darkMode,
         staffDiscountActive,
-        activeBenefitType,
+        freeDrinkActive,
+        freeSnackActive,
         login,
         logout,
         addToCart,
@@ -198,7 +203,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleDarkMode,
         getTotalPrice,
         setStaffDiscountActive,
-        setActiveBenefitType,
+        setFreeDrinkActive,
+        setFreeSnackActive,
       }}
     >
       {children}

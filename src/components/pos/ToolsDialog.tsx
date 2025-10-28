@@ -25,7 +25,7 @@ interface DailyBenefits {
 }
 
 const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
-  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive, updateCartItem, setActiveBenefitType } = usePOS();
+  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive, updateCartItem, setFreeDrinkActive, setFreeSnackActive } = usePOS();
   const [benefits, setBenefits] = useState<DailyBenefits>({
     discount_used: false,
     free_drink_used: false,
@@ -90,7 +90,6 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
     // Active la réduction sans la marquer comme utilisée (sera marquée après paiement)
     setStaffDiscountActive(true);
-    setActiveBenefitType('discount');
     toast.success('Réduction personnel de 30% appliquée - Les articles ajoutés recevront automatiquement cette réduction');
     onClose();
   };
@@ -105,16 +104,6 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
     setLoading(true);
     try {
-      // Désactiver la réduction 30% si elle était active
-      setStaffDiscountActive(false);
-      
-      // Retirer la réduction 30% de tous les articles
-      cart.forEach((item, index) => {
-        if (item.discount === 30) {
-          updateCartItem(index, { ...item, discount: 0 });
-        }
-      });
-
       // Trouver le dernier article dans le panier
       const actualIndex = cart.length - 1;
       const item = cart[actualIndex];
@@ -122,7 +111,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       // Appliquer 100% de réduction
       updateCartItem(actualIndex, { ...item, discount: 100 });
 
-      setActiveBenefitType('free_drink');
+      setFreeDrinkActive(true);
       
       setBenefits({ ...benefits, free_drink_used: true });
       toast.success('Boisson offerte appliquée (100% de réduction)');
@@ -145,24 +134,41 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
     setLoading(true);
     try {
-      // Désactiver la réduction 30% si elle était active
-      setStaffDiscountActive(false);
-      
-      // Retirer la réduction 30% de tous les articles
-      cart.forEach((item, index) => {
-        if (item.discount === 30) {
-          updateCartItem(index, { ...item, discount: 0 });
-        }
-      });
+      // Chercher un produit de catégorie Sweet ou Salt
+      const categories = await supabase
+        .from('categories')
+        .select('id, name_en')
+        .in('name_en', ['Sweet', 'Salt']);
 
-      // Trouver le dernier article dans le panier
-      const actualIndex = cart.length - 1;
-      const item = cart[actualIndex];
+      const sweetSaltCategoryIds = categories.data?.map(cat => cat.id) || [];
+
+      // Trouver le dernier produit Sweet/Salt dans le panier
+      let snackIndex = -1;
+      for (let i = cart.length - 1; i >= 0; i--) {
+        const { data: product } = await supabase
+          .from('products')
+          .select('category_id')
+          .eq('id', cart[i].productId)
+          .single();
+        
+        if (product && sweetSaltCategoryIds.includes(product.category_id)) {
+          snackIndex = i;
+          break;
+        }
+      }
+
+      if (snackIndex === -1) {
+        toast.error('Aucun produit Sweet/Salt trouvé dans le panier');
+        setLoading(false);
+        return;
+      }
+
+      const item = cart[snackIndex];
       
       // Appliquer 100% de réduction
-      updateCartItem(actualIndex, { ...item, discount: 100 });
+      updateCartItem(snackIndex, { ...item, discount: 100 });
 
-      setActiveBenefitType('free_snack');
+      setFreeSnackActive(true);
 
       setBenefits({ ...benefits, free_snack_used: true });
       toast.success('Snack offert appliqué (100% de réduction)');
