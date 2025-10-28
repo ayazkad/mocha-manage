@@ -164,6 +164,51 @@ export type Database = {
         }
         Relationships: []
       }
+      offers: {
+        Row: {
+          active: boolean | null
+          applicable_categories: string[] | null
+          created_at: string | null
+          discount_type: string
+          discount_value: number
+          end_date: string | null
+          id: string
+          min_amount: number | null
+          min_items: number | null
+          name: string
+          start_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          applicable_categories?: string[] | null
+          created_at?: string | null
+          discount_type: string
+          discount_value: number
+          end_date?: string | null
+          id?: string
+          min_amount?: number | null
+          min_items?: number | null
+          name: string
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          applicable_categories?: string[] | null
+          created_at?: string | null
+          discount_type?: string
+          discount_value?: number
+          end_date?: string | null
+          id?: string
+          min_amount?: number | null
+          min_items?: number | null
+          name?: string
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null

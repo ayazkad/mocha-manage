@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Trash2, CheckCircle, CreditCard, Banknote } from 'lucide-react';
+import { ShoppingCart, Trash2, CheckCircle, CreditCard, Banknote, Percent, Gift } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CustomerLoyalty from './CustomerLoyalty';
+import DiscountDialog from './DiscountDialog';
 
 interface CartProps {
   onClose?: () => void;
@@ -28,9 +29,49 @@ const Cart = ({ onClose }: CartProps) => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | null>(null);
   const [showCashCalculator, setShowCashCalculator] = useState(false);
   const [amountReceived, setAmountReceived] = useState(0);
+  const [showDiscountDialog, setShowDiscountDialog] = useState(false);
+  const [manualDiscountPercent, setManualDiscountPercent] = useState(0);
+  const [appliedOffer, setAppliedOffer] = useState<any>(null);
 
   const subtotal = getTotalPrice();
-  const total = subtotal;
+  const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  
+  // Calculer la réduction automatique des offres
+  useEffect(() => {
+    const checkOffers = async () => {
+      const { data: offers } = await supabase
+        .from('offers')
+        .select('*')
+        .eq('active', true)
+        .lte('min_items', itemsCount)
+        .lte('min_amount', subtotal)
+        .order('discount_value', { ascending: false })
+        .limit(1);
+
+      if (offers && offers.length > 0) {
+        setAppliedOffer(offers[0]);
+      } else {
+        setAppliedOffer(null);
+      }
+    };
+
+    if (cart.length > 0) {
+      checkOffers();
+    } else {
+      setAppliedOffer(null);
+    }
+  }, [cart, subtotal, itemsCount]);
+
+  // Calculer les réductions
+  const automaticDiscount = appliedOffer
+    ? appliedOffer.discount_type === 'percentage'
+      ? (subtotal * appliedOffer.discount_value) / 100
+      : appliedOffer.discount_value
+    : 0;
+  
+  const manualDiscount = (subtotal * manualDiscountPercent) / 100;
+  const totalDiscount = automaticDiscount + manualDiscount;
+  const total = Math.max(0, subtotal - totalDiscount);
 
   const handlePaymentMethodClick = () => {
     if (cart.length === 0) {
@@ -91,8 +132,10 @@ const Cart = ({ onClose }: CartProps) => {
           status: 'pending',
           subtotal,
           tax_amount: 0,
-          total: subtotal,
+          discount_amount: totalDiscount,
+          total,
           payment_method: paymentMethod,
+          notes: appliedOffer ? `Offre appliquée: ${appliedOffer.name}` : undefined,
         }])
         .select()
         .single();
@@ -204,6 +247,8 @@ const Cart = ({ onClose }: CartProps) => {
       setSelectedPaymentMethod(null);
       setShowCashCalculator(false);
       setAmountReceived(0);
+      setManualDiscountPercent(0);
+      setAppliedOffer(null);
       onClose?.();
     } catch (error) {
       console.error('Error completing order:', error);
@@ -296,6 +341,41 @@ const Cart = ({ onClose }: CartProps) => {
         {cart.length > 0 && (
           <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 shrink-0 space-y-4">
             <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Sous-total</span>
+                <span className="text-card-foreground">{subtotal.toFixed(2)} ₾</span>
+              </div>
+              
+              {appliedOffer && (
+                <div className="flex justify-between items-center text-green-600">
+                  <span className="flex items-center gap-1">
+                    <Gift className="w-4 h-4" />
+                    {appliedOffer.name}
+                  </span>
+                  <span>-{automaticDiscount.toFixed(2)} ₾</span>
+                </div>
+              )}
+              
+              {manualDiscountPercent > 0 && (
+                <div className="flex justify-between items-center text-orange-600">
+                  <span className="flex items-center gap-1">
+                    <Percent className="w-4 h-4" />
+                    Réduction {manualDiscountPercent}%
+                  </span>
+                  <span>-{manualDiscount.toFixed(2)} ₾</span>
+                </div>
+              )}
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDiscountDialog(true)}
+                className="w-full mt-2"
+              >
+                <Percent className="w-4 h-4 mr-2" />
+                {manualDiscountPercent > 0 ? 'Modifier la réduction' : 'Appliquer une réduction'}
+              </Button>
+              
               <Separator />
               <div className="flex justify-between text-xl font-bold pt-2">
                 <span className="text-card-foreground">Total</span>
@@ -420,6 +500,13 @@ const Cart = ({ onClose }: CartProps) => {
           </div>
         )}
       </div>
+
+      <DiscountDialog
+        open={showDiscountDialog}
+        onClose={() => setShowDiscountDialog(false)}
+        onApply={setManualDiscountPercent}
+        currentDiscount={manualDiscountPercent}
+      />
     </div>
   );
 };
