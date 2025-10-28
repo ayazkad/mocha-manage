@@ -199,6 +199,7 @@ export type Database = {
         Row: {
           benefit_date: string
           created_at: string | null
+          discount_tickets_count: number | null
           discount_used: boolean | null
           employee_id: string
           free_drink_used: boolean | null
@@ -208,6 +209,7 @@ export type Database = {
         Insert: {
           benefit_date?: string
           created_at?: string | null
+          discount_tickets_count?: number | null
           discount_used?: boolean | null
           employee_id: string
           free_drink_used?: boolean | null
@@ -217,6 +219,7 @@ export type Database = {
         Update: {
           benefit_date?: string
           created_at?: string | null
+          discount_tickets_count?: number | null
           discount_used?: boolean | null
           employee_id?: string
           free_drink_used?: boolean | null

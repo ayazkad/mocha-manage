@@ -25,13 +25,14 @@ interface DailyBenefits {
 }
 
 const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
-  const { currentEmployee, currentSession, cart, clearCart } = usePOS();
+  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive } = usePOS();
   const [benefits, setBenefits] = useState<DailyBenefits>({
     discount_used: false,
     free_drink_used: false,
     free_snack_used: false,
   });
   const [loading, setLoading] = useState(false);
+  const [discountTicketsCount, setDiscountTicketsCount] = useState(0);
 
   useEffect(() => {
     if (open && currentEmployee) {
@@ -57,6 +58,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
         free_drink_used: data.free_drink_used,
         free_snack_used: data.free_snack_used,
       });
+      setDiscountTicketsCount(data.discount_tickets_count || 0);
     } else if (error && error.code !== 'PGRST116') {
       // Create entry for today if it doesn't exist
       const { data: newData } = await supabase
@@ -79,7 +81,12 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
   };
 
   const applyStaffDiscount = async () => {
-    if (!currentEmployee || benefits.discount_used) return;
+    if (!currentEmployee || benefits.discount_used || discountTicketsCount >= 3) return;
+
+    if (cart.length === 0) {
+      toast.error('Veuillez ajouter des articles au panier d\'abord');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -94,7 +101,8 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       if (error) throw error;
 
       setBenefits({ ...benefits, discount_used: true });
-      toast.success('Réduction personnel de 30% appliquée');
+      setStaffDiscountActive(true);
+      toast.success('Réduction personnel de 30% appliquée - Les articles ajoutés recevront automatiquement cette réduction');
       onClose();
     } catch (error) {
       console.error('Error applying discount:', error);
@@ -221,16 +229,20 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                   <Percent className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium">Réduction 30%</p>
-                    <p className="text-xs text-muted-foreground">1 fois par jour</p>
+                    <p className="text-xs text-muted-foreground">
+                      Max 3 tickets par jour ({discountTicketsCount}/3)
+                    </p>
                   </div>
                 </div>
-                {benefits.discount_used ? (
-                  <Badge variant="secondary">Utilisé</Badge>
+                {benefits.discount_used || discountTicketsCount >= 3 ? (
+                  <Badge variant="secondary">
+                    {discountTicketsCount >= 3 ? 'Limite atteinte' : 'Utilisé'}
+                  </Badge>
                 ) : (
                   <Button
                     size="sm"
                     onClick={applyStaffDiscount}
-                    disabled={loading}
+                    disabled={loading || cart.length === 0}
                     className="rounded-xl"
                   >
                     Appliquer

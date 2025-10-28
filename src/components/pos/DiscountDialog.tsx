@@ -12,21 +12,21 @@ interface DiscountDialogProps {
 }
 
 const DiscountDialog = ({ open, onClose, onApply, hasSelection }: DiscountDialogProps) => {
-  const [discountValue, setDiscountValue] = useState('0');
+  const [discountValue, setDiscountValue] = useState('');
   const [applyToAll, setApplyToAll] = useState(!hasSelection);
 
   const handleApply = () => {
     const percentage = parseFloat(discountValue) || 0;
     if (percentage >= 0 && percentage <= 100) {
       onApply(percentage, applyToAll);
-      setDiscountValue('0');
+      setDiscountValue('');
       onClose();
     }
   };
 
   const handleClear = () => {
     onApply(0, true);
-    setDiscountValue('0');
+    setDiscountValue('');
     onClose();
   };
 

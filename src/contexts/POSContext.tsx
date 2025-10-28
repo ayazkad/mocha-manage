@@ -32,6 +32,7 @@ interface POSContextType {
   currentSession: Session | null;
   cart: CartItem[];
   darkMode: boolean;
+  staffDiscountActive: boolean;
   login: (code: string, pin: string) => Promise<boolean>;
   logout: () => Promise<void>;
   addToCart: (item: CartItem) => void;
@@ -40,6 +41,7 @@ interface POSContextType {
   clearCart: () => void;
   toggleDarkMode: () => void;
   getTotalPrice: () => number;
+  setStaffDiscountActive: (active: boolean) => void;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -49,6 +51,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [darkMode, setDarkMode] = useState(false);
+  const [staffDiscountActive, setStaffDiscountActive] = useState(false);
 
   useEffect(() => {
     // Apply dark mode class to document
@@ -136,7 +139,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addToCart = (item: CartItem) => {
-    setCart([...cart, item]);
+    // Si la réduction personnel est active, appliquer 30% automatiquement
+    const itemWithDiscount = staffDiscountActive 
+      ? { ...item, discount: 30 }
+      : item;
+    setCart([...cart, itemWithDiscount]);
   };
 
   const removeFromCart = (index: number) => {
@@ -151,6 +158,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const clearCart = () => {
     setCart([]);
+    setStaffDiscountActive(false);
   };
 
   const getTotalPrice = () => {
@@ -175,6 +183,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentSession,
         cart,
         darkMode,
+        staffDiscountActive,
         login,
         logout,
         addToCart,
@@ -183,6 +192,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clearCart,
         toggleDarkMode,
         getTotalPrice,
+        setStaffDiscountActive,
       }}
     >
       {children}

@@ -23,6 +23,7 @@ const Cart = ({ onClose }: CartProps) => {
     getTotalPrice,
     currentSession,
     currentEmployee,
+    staffDiscountActive,
   } = usePOS();
   const [processing, setProcessing] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
@@ -299,6 +300,27 @@ const Cart = ({ onClose }: CartProps) => {
             total_orders: (sessionData.total_orders || 0) + 1,
           })
           .eq('id', currentSession.id);
+      }
+
+      // Incrémenter le compteur de tickets avec réduction personnel si applicable
+      if (staffDiscountActive) {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: benefitsData } = await supabase
+          .from('employee_daily_benefits')
+          .select('discount_tickets_count')
+          .eq('employee_id', currentEmployee.id)
+          .eq('benefit_date', today)
+          .single();
+
+        if (benefitsData) {
+          await supabase
+            .from('employee_daily_benefits')
+            .update({ 
+              discount_tickets_count: (benefitsData.discount_tickets_count || 0) + 1 
+            })
+            .eq('employee_id', currentEmployee.id)
+            .eq('benefit_date', today);
+        }
       }
 
       toast.success(`Commande ${orderData.order_number} validée`);
