@@ -13,7 +13,7 @@ interface DiscountDialogProps {
 
 const DiscountDialog = ({ open, onClose, onApply, hasSelection }: DiscountDialogProps) => {
   const [discountValue, setDiscountValue] = useState('');
-  const [applyToAll, setApplyToAll] = useState(!hasSelection);
+  const [applyToAll, setApplyToAll] = useState(false);
 
   const handleApply = () => {
     const percentage = parseFloat(discountValue) || 0;
@@ -50,8 +50,8 @@ const DiscountDialog = ({ open, onClose, onApply, hasSelection }: DiscountDialog
             </p>
           </div>
 
-          {hasSelection && (
-            <div className="flex items-center justify-center gap-4 p-3 bg-muted rounded-lg">
+          <div className="flex items-center justify-center gap-4 p-3 bg-muted rounded-lg">
+            {hasSelection && (
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -61,17 +61,17 @@ const DiscountDialog = ({ open, onClose, onApply, hasSelection }: DiscountDialog
                 />
                 <span className="text-sm font-medium">Articles sélectionnés</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  checked={applyToAll}
-                  onChange={() => setApplyToAll(true)}
-                  className="w-4 h-4 accent-primary"
-                />
-                <span className="text-sm font-medium">Tous les articles</span>
-              </label>
-            </div>
-          )}
+            )}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                checked={applyToAll}
+                onChange={() => setApplyToAll(true)}
+                className="w-4 h-4 accent-primary"
+              />
+              <span className="text-sm font-medium">Tous les articles</span>
+            </label>
+          </div>
 
           <NumPad
             value={discountValue}

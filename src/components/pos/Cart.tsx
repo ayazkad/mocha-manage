@@ -257,26 +257,37 @@ const Cart = ({ onClose }: CartProps) => {
         const productIds = cart.map(item => item.productId);
         const { data: products } = await supabase
           .from('products')
-          .select('id, category_id, categories(name_en, name_fr, name_ru, name_ge)')
+          .select(`
+            id,
+            category_id,
+            categories!inner (
+              name_en,
+              name_fr,
+              name_ru,
+              name_ge
+            )
+          `)
           .in('id', productIds);
 
         // Compter seulement les boissons (beverages/drinks)
         const beveragesCount = cart.reduce((sum, item) => {
-          const product = products?.find(p => p.id === item.productId);
-          if (product && product.categories) {
+          const product = products?.find((p: any) => p.id === item.productId);
+          if (product?.categories) {
             const categoryName = (
               product.categories.name_en || 
               product.categories.name_fr || 
               ''
             ).toLowerCase();
-            // Vérifier si la catégorie contient "drink", "beverage", "boisson", etc.
-            if (categoryName.includes('drink') || 
+            // Vérifier si la catégorie contient "drink", "beverage", "boisson", "coffee", "tea", etc.
+            const isDrink = categoryName.includes('drink') || 
                 categoryName.includes('beverage') || 
                 categoryName.includes('boisson') ||
                 categoryName.includes('coffee') ||
                 categoryName.includes('café') ||
                 categoryName.includes('tea') ||
-                categoryName.includes('thé')) {
+                categoryName.includes('thé');
+            
+            if (isDrink) {
               return sum + item.quantity;
             }
           }
@@ -607,20 +618,30 @@ const Cart = ({ onClose }: CartProps) => {
               <span className="text-primary">{total.toFixed(2)} ₾</span>
             </div>
 
-            <Button
-              variant="outline"
-              onClick={() => setShowDiscountDialog(true)}
-              className="w-full justify-between rounded-lg h-9 text-xs"
-              disabled={cart.length === 0}
-            >
-              <span className="flex items-center gap-1.5">
-                <Percent className="w-3 h-3" />
-                {selectedItems.length > 0 
-                  ? `Réduction (${selectedItems.length} sélectionné${selectedItems.length > 1 ? 's' : ''})`
-                  : 'Réduction'
-                }
-              </span>
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDiscountDialog(true)}
+                className="justify-between rounded-lg h-9 text-xs"
+                disabled={cart.length === 0}
+              >
+                <span className="flex items-center gap-1.5">
+                  <Percent className="w-3 h-3" />
+                  {selectedItems.length > 0 
+                    ? `Réduction (${selectedItems.length})`
+                    : 'Réduction'
+                  }
+                </span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => applyDiscountToItems(0, true)}
+                className="rounded-lg h-9 text-xs text-destructive hover:text-destructive"
+                disabled={cart.length === 0 || itemDiscounts === 0}
+              >
+                Retirer
+              </Button>
+            </div>
           </div>
 
           {!showPaymentMethod && !showCashCalculator && (
