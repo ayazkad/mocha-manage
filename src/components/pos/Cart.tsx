@@ -171,11 +171,11 @@ const Cart = ({ onClose }: CartProps) => {
   };
 
   return (
-    <div className="w-full h-full bg-card flex flex-col">
-      <div className="p-4 md:p-6 border-b border-border bg-muted/30">
+    <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
+      <div className="p-4 md:p-6 border-b border-border/50 bg-secondary/30">
         <div className="flex items-center gap-2">
           <ShoppingCart className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">Panier</h2>
+          <h2 className="text-lg font-semibold text-card-foreground">Panier</h2>
           <span className="ml-auto text-sm text-muted-foreground">
             {cart.length} article{cart.length !== 1 ? 's' : ''}
           </span>
@@ -185,20 +185,20 @@ const Cart = ({ onClose }: CartProps) => {
       <ScrollArea className="flex-1 p-4 md:p-6">
         {cart.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
-            <ShoppingCart className="w-16 h-16 mb-4 opacity-30" />
+            <ShoppingCart className="w-16 h-16 mb-4 opacity-20" />
             <p>Votre panier est vide</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {cart.map((item, index) => (
-              <Card key={index} className="p-3 space-y-2">
+              <Card key={index} className="p-3.5 space-y-2 border-border/50 bg-card/50 hover:bg-card/80 transition-colors">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm leading-tight">
+                    <h3 className="font-semibold text-sm leading-tight text-card-foreground">
                       {item.productName}
                     </h3>
                     {item.selectedSize && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {item.selectedSize.name}
                       </p>
                     )}
@@ -216,18 +216,18 @@ const Cart = ({ onClose }: CartProps) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0"
+                    className="h-8 w-8 shrink-0 hover:bg-destructive/10 rounded-lg"
                     onClick={() => removeFromCart(index)}
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-sm pt-1">
                   <span className="text-muted-foreground">
                     Qté: {item.quantity}
                   </span>
-                  <span className="font-semibold text-primary">
+                  <span className="font-bold text-primary">
                     {(
                       (item.basePrice +
                         (item.selectedSize?.priceModifier || 0) +
@@ -243,16 +243,16 @@ const Cart = ({ onClose }: CartProps) => {
         )}
       </ScrollArea>
 
-      <div className="p-4 md:p-6 border-t border-border">
+      <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30">
         <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
       </div>
 
       {cart.length > 0 && (
-        <div className="p-4 md:p-6 border-t border-border bg-muted/30 space-y-4">
+        <div className="p-4 md:p-6 border-t border-border/50 bg-secondary/30 space-y-4">
           <div className="space-y-2 text-sm">
             <Separator />
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total</span>
+            <div className="flex justify-between text-xl font-bold pt-2">
+              <span className="text-card-foreground">Total</span>
               <span className="text-primary">{total.toFixed(2)} ₾</span>
             </div>
           </div>
@@ -261,7 +261,7 @@ const Cart = ({ onClose }: CartProps) => {
             <Button
               onClick={handleCompleteOrder}
               disabled={processing}
-              className="w-full h-12 bg-gradient-espresso hover:opacity-90 transition-opacity gap-2"
+              className="w-full h-12 bg-gradient-primary hover:opacity-90 transition-opacity gap-2 text-base font-semibold rounded-xl shadow-md"
             >
               <CheckCircle className="w-5 h-5" />
               {processing ? 'Traitement...' : 'Valider la commande'}
@@ -269,7 +269,7 @@ const Cart = ({ onClose }: CartProps) => {
             <Button
               onClick={clearCart}
               variant="outline"
-              className="w-full"
+              className="w-full rounded-xl border-border/50"
               disabled={processing}
             >
               Vider le panier

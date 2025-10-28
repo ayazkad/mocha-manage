@@ -23,15 +23,19 @@ const CategoryTabs = ({
   getCategoryName,
 }: CategoryTabsProps) => {
   return (
-    <div className="border-b border-border bg-card sticky top-0 z-40">
+    <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
       <ScrollArea className="w-full">
-        <div className="flex gap-2 px-4 md:px-6 py-3 md:py-4">
+        <div className="flex gap-1 px-4 md:px-6 py-3">
           {categories.map((category) => (
             <Button
               key={category.id}
               variant={selectedCategory === category.id ? 'default' : 'ghost'}
               onClick={() => onSelectCategory(category.id)}
-              className="whitespace-nowrap h-12 md:h-11 px-6 md:px-8 font-medium transition-all text-base md:text-sm touch-manipulation"
+              className={`whitespace-nowrap h-10 md:h-11 px-5 md:px-7 font-medium transition-all text-sm md:text-sm touch-manipulation rounded-xl ${
+                selectedCategory === category.id 
+                  ? 'bg-primary text-primary-foreground shadow-md' 
+                  : 'hover:bg-secondary/80'
+              }`}
             >
               {getCategoryName(category)}
             </Button>

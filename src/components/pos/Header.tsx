@@ -13,33 +13,33 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-card border-b border-border shadow-soft">
-      <div className="flex items-center justify-between px-4 md:px-6 py-4">
+    <header className="bg-card border-b border-border/50 shadow-soft backdrop-blur-sm">
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-espresso flex items-center justify-center shadow-soft">
-            <Coffee className="w-6 h-6 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-soft">
+            <Coffee className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Café POS</h1>
-            <p className="text-xs text-muted-foreground">Point of Sale</p>
+            <h1 className="text-lg md:text-xl font-bold text-foreground">Café POS</h1>
+            <p className="text-xs text-muted-foreground hidden md:block">Point of Sale</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="icon"
             onClick={toggleDarkMode}
-            className="h-9 w-9"
+            className="h-9 w-9 rounded-xl border-border/50"
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
           <AddCustomerDialog />
 
-          <div className="hidden md:flex items-center gap-2 bg-muted px-4 py-2 rounded-lg">
+          <div className="hidden md:flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-xl border border-border/30">
             <User className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{currentEmployee?.name}</span>
+            <span className="text-sm font-medium text-foreground">{currentEmployee?.name}</span>
           </div>
 
           {currentEmployee?.role === 'admin' && (
@@ -47,7 +47,7 @@ const Header = () => {
               variant="outline"
               size="sm"
               onClick={() => navigate('/admin')}
-              className="gap-2"
+              className="gap-2 rounded-xl border-border/50"
             >
               <Settings className="w-4 h-4" />
               <span className="hidden md:inline">Admin</span>
@@ -58,7 +58,7 @@ const Header = () => {
             variant="outline"
             size="sm"
             onClick={handleLogout}
-            className="gap-2"
+            className="gap-2 rounded-xl border-border/50"
           >
             <LogOut className="w-4 h-4" />
             <span className="hidden md:inline">Logout</span>

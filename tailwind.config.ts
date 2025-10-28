@@ -49,9 +49,9 @@ export default {
         },
       },
       backgroundImage: {
-        'gradient-espresso': 'var(--gradient-espresso)',
-        'gradient-latte': 'var(--gradient-latte)',
-        'gradient-caramel': 'var(--gradient-caramel)',
+        'gradient-primary': 'var(--gradient-primary)',
+        'gradient-card': 'var(--gradient-card)',
+        'gradient-accent': 'var(--gradient-accent)',
       },
       boxShadow: {
         'soft': 'var(--shadow-soft)',

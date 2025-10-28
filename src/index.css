@@ -8,50 +8,50 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Café color palette - warm, inviting tones */
-    --background: 35 20% 97%;
-    --foreground: 25 30% 15%;
+    /* Modern POS - Clean & Professional (Light Mode) */
+    --background: 0 0% 98%;
+    --foreground: 240 10% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 25 30% 15%;
+    --card-foreground: 240 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 25 30% 15%;
+    --popover-foreground: 240 10% 10%;
 
-    /* Espresso - rich, dark primary */
-    --primary: 25 40% 25%;
-    --primary-foreground: 35 25% 95%;
+    /* Primary - Professional Blue */
+    --primary: 220 70% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Caramel - warm secondary */
-    --secondary: 30 45% 70%;
-    --secondary-foreground: 25 30% 15%;
+    /* Secondary - Soft Gray */
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 10%;
 
-    /* Cream - soft muted */
-    --muted: 35 25% 90%;
-    --muted-foreground: 25 20% 45%;
+    /* Muted - Light Gray */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
 
-    /* Latte - warm accent */
-    --accent: 35 60% 85%;
-    --accent-foreground: 25 30% 15%;
+    /* Accent - Vibrant Blue */
+    --accent: 220 90% 56%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 35 20% 88%;
-    --input: 35 20% 88%;
-    --ring: 25 40% 25%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 220 70% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Coffee gradients */
-    --gradient-espresso: linear-gradient(135deg, hsl(25 40% 25%) 0%, hsl(20 35% 20%) 100%);
-    --gradient-latte: linear-gradient(135deg, hsl(35 60% 85%) 0%, hsl(30 50% 75%) 100%);
-    --gradient-caramel: linear-gradient(135deg, hsl(30 55% 70%) 0%, hsl(28 50% 60%) 100%);
+    /* Modern gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 70% 50%) 0%, hsl(220 80% 45%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(240 5% 98%) 0%, hsl(240 5% 96%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(220 90% 56%) 0%, hsl(220 90% 50%) 100%);
     
-    /* Shadows */
-    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.1);
-    --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.15);
+    /* Shadows - Subtle & Modern */
+    --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.12);
     
     /* Transitions */
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,33 +60,43 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 25 30% 12%;
-    --foreground: 35 25% 95%;
+    /* Modern POS - Dark Mode (Revolut Style) */
+    --background: 220 20% 8%;
+    --foreground: 0 0% 98%;
 
-    --card: 25 25% 15%;
-    --card-foreground: 35 25% 95%;
+    --card: 220 18% 12%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 25 25% 15%;
-    --popover-foreground: 35 25% 95%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 35 60% 85%;
-    --primary-foreground: 25 30% 15%;
+    /* Primary - Bright Accent */
+    --primary: 220 90% 56%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 25 20% 25%;
-    --secondary-foreground: 35 25% 95%;
+    /* Secondary - Dark Gray */
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 25 20% 20%;
-    --muted-foreground: 35 15% 65%;
+    /* Muted - Darker Gray */
+    --muted: 220 15% 16%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 30 45% 35%;
-    --accent-foreground: 35 25% 95%;
+    /* Accent - Vibrant Blue */
+    --accent: 220 90% 56%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62% 45%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 25 20% 22%;
-    --input: 25 20% 22%;
-    --ring: 35 60% 85%;
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 220 90% 56%;
+
+    /* Dark gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 90% 56%) 0%, hsl(220 90% 50%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(220 18% 14%) 0%, hsl(220 18% 12%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(220 90% 56%) 0%, hsl(220 80% 48%) 100%);
   }
 }
 

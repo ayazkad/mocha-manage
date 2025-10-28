@@ -63,7 +63,7 @@ const POS = () => {
       
       <div className="flex-1 flex overflow-hidden">
         {/* Main content area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-background via-background to-secondary/5">
           <CategoryTabs
             categories={categories}
             selectedCategory={selectedCategory}
@@ -71,7 +71,7 @@ const POS = () => {
             getCategoryName={getCategoryName}
           />
           
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">
+          <div className="flex-1 overflow-y-auto p-3 md:p-6 pb-24 md:pb-6">
             <ProductGrid categoryId={selectedCategory} />
           </div>
         </div>
@@ -83,17 +83,17 @@ const POS = () => {
       </div>
 
       {/* Mobile/Tablet Cart Button - Fixed at bottom */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-card/95 backdrop-blur-md border-t border-border/50 z-50">
         <Sheet open={cartOpen} onOpenChange={setCartOpen}>
           <SheetTrigger asChild>
             <Button 
               size="lg" 
-              className="w-full h-14 text-lg gap-3 bg-gradient-espresso hover:opacity-90 transition-opacity relative"
+              className="w-full h-14 text-base font-semibold gap-3 bg-gradient-primary hover:opacity-90 transition-opacity relative rounded-xl shadow-lg"
             >
               <ShoppingCart className="w-6 h-6" />
               Panier
               {cartItemsCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-7 w-7 rounded-full flex items-center justify-center bg-accent text-accent-foreground">
+                <Badge className="absolute -top-2 -right-2 h-8 w-8 rounded-full flex items-center justify-center bg-accent text-accent-foreground font-bold shadow-md">
                   {cartItemsCount}
                 </Badge>
               )}
