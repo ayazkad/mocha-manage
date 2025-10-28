@@ -88,9 +88,16 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       return;
     }
 
-    // Active la réduction sans la marquer comme utilisée (sera marquée après paiement)
+    // Appliquer 30% à tous les articles existants qui n'ont pas déjà 100% de réduction
+    cart.forEach((item, index) => {
+      if (item.discount !== 100) {
+        updateCartItem(index, { ...item, discount: 30 });
+      }
+    });
+
+    // Active la réduction pour les futurs articles
     setStaffDiscountActive(true);
-    toast.success('Réduction personnel de 30% appliquée - Les articles ajoutés recevront automatiquement cette réduction');
+    toast.success('Réduction personnel de 30% appliquée sur tous les articles');
     onClose();
   };
 
