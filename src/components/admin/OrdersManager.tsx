@@ -330,11 +330,11 @@ const OrdersManager = () => {
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
+          <DialogContent className="max-h-[90vh] flex flex-col">
+            <DialogHeader className="shrink-0">
               <DialogTitle>Modifier le ticket {selectedOrder?.order_number}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-1 pr-2">
               <div>
                 <Label>Statut</Label>
                 <Select value={editForm.status} onValueChange={(value) => setEditForm({ ...editForm, status: value })}>
