@@ -267,16 +267,22 @@ const Cart = ({ onClose }: CartProps) => {
           `)
           .in('id', productIds);
 
+        console.log('Products with categories:', products);
+
         // Compter seulement les produits des catégories Coffee et Non Coffee
         const drinkCount = cart.reduce((sum, item) => {
           const product = products?.find((p: any) => p.id === item.productId);
           if (product?.categories) {
-            const categoryNameEn = (product.categories.name_en || '').toLowerCase();
-            const categoryNameFr = (product.categories.name_fr || '').toLowerCase();
+            const categoryNameEn = (product.categories.name_en || '').toLowerCase().trim();
+            const categoryNameFr = (product.categories.name_fr || '').toLowerCase().trim();
+            
+            console.log(`Product ${item.productName}: EN="${categoryNameEn}", FR="${categoryNameFr}"`);
             
             // Vérifier si c'est Coffee ou Non Coffee (exactement)
-            const isCoffeeCategory = categoryNameEn === 'coffee' || categoryNameFr === 'coffee';
+            const isCoffeeCategory = categoryNameEn === 'coffee' || categoryNameFr === 'coffee' || categoryNameFr === 'café';
             const isNonCoffeeCategory = categoryNameEn === 'non coffee' || categoryNameFr === 'non coffee';
+            
+            console.log(`Is coffee category: ${isCoffeeCategory}, Is non-coffee category: ${isNonCoffeeCategory}`);
             
             if (isCoffeeCategory || isNonCoffeeCategory) {
               return sum + item.quantity;
@@ -284,6 +290,8 @@ const Cart = ({ onClose }: CartProps) => {
           }
           return sum;
         }, 0);
+
+        console.log(`Total drinks count: ${drinkCount}`);
 
         const totalItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         const shouldRedeem = selectedCustomer.points >= 10;
@@ -311,6 +319,7 @@ const Cart = ({ onClose }: CartProps) => {
         } else {
           // Add points only for Coffee and Non Coffee products
           if (drinkCount > 0) {
+            console.log(`Adding ${drinkCount} points to customer`);
             await supabase
               .from('customers')
               .update({ 
@@ -327,6 +336,7 @@ const Cart = ({ onClose }: CartProps) => {
                 points_added: drinkCount,
               }]);
           } else {
+            console.log('No drinks in cart, only updating total purchases');
             // Update only total purchases if no drinks
             await supabase
               .from('customers')

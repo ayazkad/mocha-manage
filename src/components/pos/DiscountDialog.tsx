@@ -13,7 +13,8 @@ interface DiscountDialogProps {
 
 const DiscountDialog = ({ open, onClose, onApply, hasSelection }: DiscountDialogProps) => {
   const [discountValue, setDiscountValue] = useState('');
-  const [applyToAll, setApplyToAll] = useState(false);
+  // Si aucune sélection, appliquer à tous par défaut
+  const [applyToAll, setApplyToAll] = useState(!hasSelection);
 
   const handleApply = () => {
     const percentage = parseFloat(discountValue) || 0;
