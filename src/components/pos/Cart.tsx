@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Trash2, CheckCircle } from 'lucide-react';
+import { ShoppingCart, Trash2, CheckCircle, CreditCard, Banknote } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import CustomerLoyalty from './CustomerLoyalty';
@@ -24,16 +24,21 @@ const Cart = ({ onClose }: CartProps) => {
   } = usePOS();
   const [processing, setProcessing] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [showPaymentMethod, setShowPaymentMethod] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | null>(null);
 
   const subtotal = getTotalPrice();
   const total = subtotal;
 
-  const handleCompleteOrder = async () => {
+  const handlePaymentMethodClick = () => {
     if (cart.length === 0) {
       toast.error('Le panier est vide');
       return;
     }
+    setShowPaymentMethod(true);
+  };
 
+  const handleCompleteOrder = async (paymentMethod: 'cash' | 'card') => {
     if (!currentSession || !currentEmployee) {
       toast.error('Session invalide');
       return;
@@ -53,7 +58,7 @@ const Cart = ({ onClose }: CartProps) => {
           subtotal,
           tax_amount: 0,
           total: subtotal,
-          payment_method: 'card',
+          payment_method: paymentMethod,
         }])
         .select()
         .single();
@@ -161,6 +166,8 @@ const Cart = ({ onClose }: CartProps) => {
       toast.success(`Commande ${orderData.order_number} validée`);
       clearCart();
       setSelectedCustomer(null);
+      setShowPaymentMethod(false);
+      setSelectedPaymentMethod(null);
       onClose?.();
     } catch (error) {
       console.error('Error completing order:', error);
@@ -257,24 +264,60 @@ const Cart = ({ onClose }: CartProps) => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Button
-              onClick={handleCompleteOrder}
-              disabled={processing}
-              className="w-full h-12 bg-gradient-primary hover:opacity-90 transition-opacity gap-2 text-base font-semibold rounded-xl shadow-md"
-            >
-              <CheckCircle className="w-5 h-5" />
-              {processing ? 'Traitement...' : 'Valider la commande'}
-            </Button>
-            <Button
-              onClick={clearCart}
-              variant="outline"
-              className="w-full rounded-xl border-border/50"
-              disabled={processing}
-            >
-              Vider le panier
-            </Button>
-          </div>
+          {!showPaymentMethod ? (
+            <div className="space-y-2">
+              <Button
+                onClick={handlePaymentMethodClick}
+                disabled={processing}
+                className="w-full h-12 bg-gradient-primary hover:opacity-90 transition-opacity gap-2 text-base font-semibold rounded-xl shadow-md"
+              >
+                <CheckCircle className="w-5 h-5" />
+                Valider la commande
+              </Button>
+              <Button
+                onClick={clearCart}
+                variant="outline"
+                className="w-full rounded-xl border-border/50"
+                disabled={processing}
+              >
+                Vider le panier
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-center text-muted-foreground mb-2">
+                Choisissez le mode de paiement
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => handleCompleteOrder('cash')}
+                  disabled={processing}
+                  className="h-20 flex-col gap-2 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-xl"
+                  variant="outline"
+                >
+                  <Banknote className="w-8 h-8" />
+                  <span className="text-sm font-semibold">Espèces</span>
+                </Button>
+                <Button
+                  onClick={() => handleCompleteOrder('card')}
+                  disabled={processing}
+                  className="h-20 flex-col gap-2 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-xl"
+                  variant="outline"
+                >
+                  <CreditCard className="w-8 h-8" />
+                  <span className="text-sm font-semibold">Carte</span>
+                </Button>
+              </div>
+              <Button
+                onClick={() => setShowPaymentMethod(false)}
+                variant="ghost"
+                className="w-full rounded-xl"
+                disabled={processing}
+              >
+                Retour
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
