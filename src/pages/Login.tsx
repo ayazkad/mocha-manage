@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,20 @@ const Login = () => {
       setStep('code');
     }
   };
+
+  // Auto-advance when employee code is complete
+  useEffect(() => {
+    if (step === 'code' && employeeCode.length === 4) {
+      setTimeout(() => setStep('pin'), 300);
+    }
+  }, [employeeCode, step]);
+
+  // Auto-submit when PIN is complete
+  useEffect(() => {
+    if (step === 'pin' && pin.length === 4 && !loading) {
+      setTimeout(() => handleSubmit(), 300);
+    }
+  }, [pin, step]);
 
   return (
     <div className="min-h-screen bg-gradient-latte flex items-center justify-center p-4">
