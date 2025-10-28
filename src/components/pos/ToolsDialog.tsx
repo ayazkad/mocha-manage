@@ -102,7 +102,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
   };
 
   const applyFreeDrink = async () => {
-    if (!currentEmployee || benefits.free_drink_used) return;
+    if (!currentEmployee) return;
 
     if (cart.length === 0) {
       toast.error('Veuillez ajouter une boisson au panier d\'abord');
@@ -111,16 +111,28 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
     setLoading(true);
     try {
-      // Trouver le dernier article dans le panier
-      const actualIndex = cart.length - 1;
-      const item = cart[actualIndex];
+      // Trouver le dernier article dans le panier qui n'a pas déjà 100% de réduction
+      let drinkIndex = -1;
+      for (let i = cart.length - 1; i >= 0; i--) {
+        if (cart[i].discount !== 100) {
+          drinkIndex = i;
+          break;
+        }
+      }
+
+      if (drinkIndex === -1) {
+        toast.error('Tous les articles ont déjà une réduction de 100%');
+        setLoading(false);
+        return;
+      }
+
+      const item = cart[drinkIndex];
       
       // Appliquer 100% de réduction
-      updateCartItem(actualIndex, { ...item, discount: 100 });
+      updateCartItem(drinkIndex, { ...item, discount: 100 });
 
       setFreeDrinkActive(true);
       
-      setBenefits({ ...benefits, free_drink_used: true });
       toast.success('Boisson offerte appliquée (100% de réduction)');
       onClose();
     } catch (error) {
@@ -132,7 +144,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
   };
 
   const applyFreeSnack = async () => {
-    if (!currentEmployee || benefits.free_snack_used) return;
+    if (!currentEmployee) return;
 
     if (cart.length === 0) {
       toast.error('Veuillez ajouter un snack au panier d\'abord');
@@ -149,9 +161,11 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
       const sweetSaltCategoryIds = categories.data?.map(cat => cat.id) || [];
 
-      // Trouver le dernier produit Sweet/Salt dans le panier
+      // Trouver le dernier produit Sweet/Salt dans le panier qui n'a pas déjà 100% de réduction
       let snackIndex = -1;
       for (let i = cart.length - 1; i >= 0; i--) {
+        if (cart[i].discount === 100) continue; // Skip items already at 100%
+        
         const { data: product } = await supabase
           .from('products')
           .select('category_id')
@@ -165,7 +179,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       }
 
       if (snackIndex === -1) {
-        toast.error('Aucun produit Sweet/Salt trouvé dans le panier');
+        toast.error('Aucun produit Sweet/Salt disponible sans réduction de 100%');
         setLoading(false);
         return;
       }
@@ -177,7 +191,6 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
       setFreeSnackActive(true);
 
-      setBenefits({ ...benefits, free_snack_used: true });
       toast.success('Snack offert appliqué (100% de réduction)');
       onClose();
     } catch (error) {
@@ -280,18 +293,14 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     <p className="text-xs text-muted-foreground">1 fois par jour</p>
                   </div>
                 </div>
-                {benefits.free_drink_used ? (
-                  <Badge variant="secondary">Utilisé</Badge>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={applyFreeDrink}
-                    disabled={loading}
-                    className="rounded-xl"
-                  >
-                    Appliquer
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  onClick={applyFreeDrink}
+                  disabled={loading}
+                  className="rounded-xl"
+                >
+                  Appliquer
+                </Button>
               </div>
 
               <div className="flex items-center justify-between">
@@ -302,18 +311,14 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     <p className="text-xs text-muted-foreground">1 fois par jour</p>
                   </div>
                 </div>
-                {benefits.free_snack_used ? (
-                  <Badge variant="secondary">Utilisé</Badge>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={applyFreeSnack}
-                    disabled={loading}
-                    className="rounded-xl"
-                  >
-                    Appliquer
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  onClick={applyFreeSnack}
+                  disabled={loading}
+                  className="rounded-xl"
+                >
+                  Appliquer
+                </Button>
               </div>
             </Card>
           </div>
