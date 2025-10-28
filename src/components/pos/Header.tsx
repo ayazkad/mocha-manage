@@ -1,14 +1,17 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Coffee, LogOut, User, Moon, Sun, Settings, ArrowLeft } from 'lucide-react';
+import { Coffee, LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 import AddCustomerDialog from './AddCustomerDialog';
+import ToolsDialog from './ToolsDialog';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminPage = location.pathname === '/admin';
+  const [showTools, setShowTools] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -51,6 +54,18 @@ const Header = () => {
 
           {!isAdminPage && <AddCustomerDialog />}
 
+          {!isAdminPage && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTools(true)}
+              className="gap-2 rounded-xl border-border/50"
+            >
+              <Wrench className="w-4 h-4" />
+              <span className="hidden md:inline">Outils</span>
+            </Button>
+          )}
+
           <div className="hidden md:flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-xl border border-border/30">
             <User className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">{currentEmployee?.name}</span>
@@ -79,6 +94,8 @@ const Header = () => {
           </Button>
         </div>
       </div>
+
+      <ToolsDialog open={showTools} onClose={() => setShowTools(false)} />
     </header>
   );
 };

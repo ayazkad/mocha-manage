@@ -9,6 +9,7 @@ import CustomersManager from '@/components/admin/CustomersManager';
 import SalesStatistics from '@/components/admin/SalesStatistics';
 import OrdersManager from '@/components/admin/OrdersManager';
 import OffersManager from '@/components/admin/OffersManager';
+import LossesStatistics from '@/components/admin/LossesStatistics';
 
 const Admin = () => {
   const { currentEmployee } = usePOS();
@@ -29,12 +30,13 @@ const Admin = () => {
         <h2 className="text-3xl font-bold mb-6">Admin Panel</h2>
         
         <Tabs defaultValue="statistics" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 max-w-5xl">
+          <TabsList className="grid w-full grid-cols-8 max-w-6xl">
             <TabsTrigger value="statistics">Statistiques</TabsTrigger>
             <TabsTrigger value="orders">Tickets</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="offers">Offres</TabsTrigger>
+            <TabsTrigger value="losses">Pertes</TabsTrigger>
             <TabsTrigger value="employees">Employees</TabsTrigger>
             <TabsTrigger value="customers">Clients</TabsTrigger>
           </TabsList>
@@ -57,6 +59,10 @@ const Admin = () => {
 
           <TabsContent value="offers" className="mt-6">
             <OffersManager />
+          </TabsContent>
+
+          <TabsContent value="losses" className="mt-6">
+            <LossesStatistics />
           </TabsContent>
           
           <TabsContent value="employees" className="mt-6">

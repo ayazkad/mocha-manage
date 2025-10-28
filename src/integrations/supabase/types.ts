@@ -131,6 +131,108 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_losses: {
+        Row: {
+          created_at: string | null
+          employee_id: string
+          id: string
+          loss_date: string
+          notes: string | null
+          product_id: string | null
+          product_name: string
+          quantity: number
+          session_id: string | null
+          total_loss: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          loss_date?: string
+          notes?: string | null
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          session_id?: string | null
+          total_loss: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          loss_date?: string
+          notes?: string | null
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          session_id?: string | null
+          total_loss?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_losses_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_losses_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_losses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_daily_benefits: {
+        Row: {
+          benefit_date: string
+          created_at: string | null
+          discount_used: boolean | null
+          employee_id: string
+          free_drink_used: boolean | null
+          free_snack_used: boolean | null
+          id: string
+        }
+        Insert: {
+          benefit_date?: string
+          created_at?: string | null
+          discount_used?: boolean | null
+          employee_id: string
+          free_drink_used?: boolean | null
+          free_snack_used?: boolean | null
+          id?: string
+        }
+        Update: {
+          benefit_date?: string
+          created_at?: string | null
+          discount_used?: boolean | null
+          employee_id?: string
+          free_drink_used?: boolean | null
+          free_snack_used?: boolean | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_daily_benefits_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           active: boolean | null
