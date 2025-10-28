@@ -471,16 +471,13 @@ const Cart = ({ onClose }: CartProps) => {
         )}
       </ScrollArea>
 
-      {/* Customer Loyalty - only show when cart has items */}
-      {cart.length > 0 && (
-        <div className="p-2 border-t border-border/50 bg-secondary/30 shrink-0">
-          <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
-        </div>
-      )}
+      {/* Customer Loyalty - always visible */}
+      <div className="p-2 border-t border-border/50 bg-secondary/30 shrink-0">
+        <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
+      </div>
 
-      {/* Footer - only show when cart has items */}
-      {cart.length > 0 && (
-        <div className="p-3 border-t border-border/50 bg-secondary/30 shrink-0 space-y-2">
+      {/* Footer - always visible */}
+      <div className="p-3 border-t border-border/50 bg-secondary/30 shrink-0 space-y-2">
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Sub Total</span>
@@ -637,7 +634,6 @@ const Cart = ({ onClose }: CartProps) => {
             </div>
           )}
         </div>
-      )}
 
       <DiscountDialog
         open={showDiscountDialog}
