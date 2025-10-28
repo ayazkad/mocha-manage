@@ -645,7 +645,19 @@ const Cart = ({ onClose }: CartProps) => {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => applyDiscountToItems(0, true)}
+                onClick={() => {
+                  // Si des items sont sélectionnés, retirer seulement ceux-là
+                  // Sinon, retirer toutes les réductions
+                  if (selectedItems.length > 0) {
+                    selectedItems.forEach(index => {
+                      const item = cart[index];
+                      updateCartItem(index, { ...item, discount: 0 });
+                    });
+                    setSelectedItems([]);
+                  } else {
+                    applyDiscountToItems(0, true);
+                  }
+                }}
                 className="rounded-lg h-9 text-xs text-destructive hover:text-destructive"
                 disabled={cart.length === 0 || itemDiscounts === 0}
               >

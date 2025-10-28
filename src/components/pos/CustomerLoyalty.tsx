@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Gift, Search, X, ScanLine } from 'lucide-react';
 import { usePOS } from '@/contexts/POSContext';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import DrinkPointsDisplay from './DrinkPointsDisplay';
 
 interface Customer {
   id: string;
@@ -258,12 +259,7 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
             )}
 
             {itemsInCart > 0 && (
-              <div className="text-[10px] text-muted-foreground">
-                {itemsInCart === 1 
-                  ? '✓ +1 point après validation'
-                  : `✓ +${itemsInCart} points après validation`
-                }
-              </div>
+              <DrinkPointsDisplay cart={cart} />
             )}
           </div>
         )}
