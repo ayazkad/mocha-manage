@@ -302,24 +302,35 @@ const Cart = ({ onClose }: CartProps) => {
           .eq('id', currentSession.id);
       }
 
-      // Incrémenter le compteur de tickets avec réduction personnel si applicable
+      // Incrémenter le compteur de tickets avec réduction personnel si applicable et marquer comme utilisé
       if (staffDiscountActive) {
         const today = new Date().toISOString().split('T')[0];
         const { data: benefitsData } = await supabase
           .from('employee_daily_benefits')
-          .select('discount_tickets_count')
+          .select('discount_tickets_count, discount_used')
           .eq('employee_id', currentEmployee.id)
           .eq('benefit_date', today)
-          .single();
+          .maybeSingle();
 
         if (benefitsData) {
           await supabase
             .from('employee_daily_benefits')
             .update({ 
-              discount_tickets_count: (benefitsData.discount_tickets_count || 0) + 1 
+              discount_tickets_count: (benefitsData.discount_tickets_count || 0) + 1,
+              discount_used: true
             })
             .eq('employee_id', currentEmployee.id)
             .eq('benefit_date', today);
+        } else {
+          // Créer l'entrée si elle n'existe pas
+          await supabase
+            .from('employee_daily_benefits')
+            .insert({
+              employee_id: currentEmployee.id,
+              benefit_date: today,
+              discount_tickets_count: 1,
+              discount_used: true
+            });
         }
       }
 

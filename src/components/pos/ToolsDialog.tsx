@@ -88,28 +88,10 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       return;
     }
 
-    setLoading(true);
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      
-      const { error } = await supabase
-        .from('employee_daily_benefits')
-        .update({ discount_used: true })
-        .eq('employee_id', currentEmployee.id)
-        .eq('benefit_date', today);
-
-      if (error) throw error;
-
-      setBenefits({ ...benefits, discount_used: true });
-      setStaffDiscountActive(true);
-      toast.success('Réduction personnel de 30% appliquée - Les articles ajoutés recevront automatiquement cette réduction');
-      onClose();
-    } catch (error) {
-      console.error('Error applying discount:', error);
-      toast.error('Erreur lors de l\'application de la réduction');
-    } finally {
-      setLoading(false);
-    }
+    // Active la réduction sans la marquer comme utilisée (sera marquée après paiement)
+    setStaffDiscountActive(true);
+    toast.success('Réduction personnel de 30% appliquée - Les articles ajoutés recevront automatiquement cette réduction');
+    onClose();
   };
 
   const applyFreeDrink = async () => {
