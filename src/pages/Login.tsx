@@ -95,7 +95,7 @@ const Login = () => {
                       <span className="text-2xl font-bold">
                         {step === 'code' 
                           ? employeeCode[i] || '•'
-                          : pin[i] ? '★' : '•'
+                          : pin[i] ? '*' : '•'
                         }
                       </span>
                     </div>
