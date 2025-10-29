@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,10 @@ interface Customer {
 
 interface CustomerLoyaltyProps {
   onCustomerSelected?: (customer: Customer | null) => void;
+  selectedCustomer?: Customer | null;
 }
 
-const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
+const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustomer }: CustomerLoyaltyProps) => {
   const [searchInput, setSearchInput] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
@@ -32,6 +33,17 @@ const CustomerLoyalty = ({ onCustomerSelected }: CustomerLoyaltyProps) => {
   const [showScanner, setShowScanner] = useState(false);
   const queryClient = useQueryClient();
   const { cart } = usePOS();
+
+  // Sync with external selectedCustomer prop
+  useEffect(() => {
+    if (externalCustomer === null && selectedCustomer !== null) {
+      setSelectedCustomer(null);
+      setSearchInput('');
+      setSearchResults([]);
+      setShowResults(false);
+      setShowScanner(false);
+    }
+  }, [externalCustomer]);
 
   const searchCustomerMutation = useMutation({
     mutationFn: async (searchTerm: string) => {

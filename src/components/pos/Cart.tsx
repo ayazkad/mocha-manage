@@ -623,7 +623,10 @@ const Cart = ({ onClose }: CartProps) => {
 
       {/* Customer Loyalty - always visible */}
       <div className="p-2 border-t border-border/50 bg-secondary/30 shrink-0">
-        <CustomerLoyalty onCustomerSelected={setSelectedCustomer} />
+        <CustomerLoyalty 
+          onCustomerSelected={setSelectedCustomer}
+          selectedCustomer={selectedCustomer}
+        />
       </div>
 
       {/* Footer - always visible */}
