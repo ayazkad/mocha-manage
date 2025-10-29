@@ -482,9 +482,11 @@ const Cart = ({ onClose }: CartProps) => {
         subtotal,
         discount: totalDiscount,
         total,
-        paymentMethod: selectedPaymentMethod || 'cash',
+        paymentMethod: paymentMethod || 'cash',
         customerName: selectedCustomer?.name,
-        pointsEarned: selectedCustomer ? drinkCount : undefined
+        pointsEarned: selectedCustomer ? drinkCount : undefined,
+        amountPaid: paymentMethod === 'cash' ? amountReceived : total,
+        change: paymentMethod === 'cash' ? getChange() : 0
       };
 
       setReceiptData(receiptInfo);

@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer, X } from 'lucide-react';
+import { Printer, X, Globe } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface OrderItem {
   productName: string;
@@ -26,7 +27,102 @@ interface ReceiptData {
   paymentMethod: string;
   customerName?: string;
   pointsEarned?: number;
+  amountPaid?: number;
+  change?: number;
 }
+
+type Language = 'fr' | 'en' | 'ru' | 'ge';
+
+const translations = {
+  fr: {
+    title: 'Coffee Shop',
+    subtitle: 'Votre café, notre passion',
+    orderNumber: 'N° Commande:',
+    date: 'Date:',
+    time: 'Heure:',
+    employee: 'Employé:',
+    customer: 'Client:',
+    subtotal: 'Sous-total:',
+    discount: 'Réduction:',
+    total: 'TOTAL:',
+    payment: 'Mode de paiement:',
+    cash: 'Espèces',
+    card: 'Carte',
+    amountPaid: 'Montant reçu:',
+    change: 'Rendu:',
+    points: 'points de fidélité!',
+    thanks: 'Merci de votre visite!',
+    goodbye: 'À bientôt 😊',
+    printButton: 'Imprimer le ticket',
+    skipButton: 'Passer'
+  },
+  en: {
+    title: 'Coffee Shop',
+    subtitle: 'Your coffee, our passion',
+    orderNumber: 'Order No:',
+    date: 'Date:',
+    time: 'Time:',
+    employee: 'Employee:',
+    customer: 'Customer:',
+    subtotal: 'Subtotal:',
+    discount: 'Discount:',
+    total: 'TOTAL:',
+    payment: 'Payment method:',
+    cash: 'Cash',
+    card: 'Card',
+    amountPaid: 'Amount paid:',
+    change: 'Change:',
+    points: 'loyalty points!',
+    thanks: 'Thank you for your visit!',
+    goodbye: 'See you soon 😊',
+    printButton: 'Print receipt',
+    skipButton: 'Skip'
+  },
+  ru: {
+    title: 'Coffee Shop',
+    subtitle: 'Ваш кофе, наша страсть',
+    orderNumber: '№ Заказа:',
+    date: 'Дата:',
+    time: 'Время:',
+    employee: 'Сотрудник:',
+    customer: 'Клиент:',
+    subtotal: 'Промежуточный итог:',
+    discount: 'Скидка:',
+    total: 'ИТОГО:',
+    payment: 'Способ оплаты:',
+    cash: 'Наличные',
+    card: 'Карта',
+    amountPaid: 'Получено:',
+    change: 'Сдача:',
+    points: 'баллов!',
+    thanks: 'Спасибо за визит!',
+    goodbye: 'До скорой встречи 😊',
+    printButton: 'Распечатать чек',
+    skipButton: 'Пропустить'
+  },
+  ge: {
+    title: 'Coffee Shop',
+    subtitle: 'თქვენი ყავა, ჩვენი გატაცება',
+    orderNumber: 'შეკვეთის №:',
+    date: 'თარიღი:',
+    time: 'დრო:',
+    employee: 'თანამშრომელი:',
+    customer: 'კლიენტი:',
+    subtotal: 'შუალედური ჯამი:',
+    discount: 'ფასდაკლება:',
+    total: 'სულ:',
+    payment: 'გადახდის მეთოდი:',
+    cash: 'ნაღდი',
+    card: 'ბარათი',
+    amountPaid: 'მიღებული:',
+    change: 'ხურდა:',
+    points: 'ქულა!',
+    thanks: 'მადლობა თქვენი ვიზიტისთვის!',
+    goodbye: 'მალე გნახავთ 😊',
+    printButton: 'ბეჭდვა',
+    skipButton: 'გამოტოვება'
+  }
+};
 
 interface PrintReceiptDialogProps {
   open: boolean;
@@ -36,7 +132,10 @@ interface PrintReceiptDialogProps {
 
 const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogProps) => {
   const [countdown, setCountdown] = useState(5);
+  const [language, setLanguage] = useState<Language>('fr');
   const printRef = useRef<HTMLDivElement>(null);
+  
+  const t = translations[language];
 
   useEffect(() => {
     if (open && countdown > 0) {
@@ -57,10 +156,144 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   }, [open]);
 
   const handlePrint = () => {
+    // Add print styles
+    const style = document.createElement('style');
+    style.textContent = `
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .print-content, .print-content * {
+          visibility: visible;
+        }
+        .print-content {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 80mm;
+        }
+        @page {
+          size: 80mm auto;
+          margin: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
     window.print();
+    
+    // Clean up
+    setTimeout(() => {
+      document.head.removeChild(style);
+    }, 100);
   };
 
   if (!receiptData) return null;
+
+  const ReceiptContent = () => (
+    <div className="w-full max-w-[80mm] mx-auto font-mono text-xs space-y-2">
+      <div className="text-center space-y-1 pb-2">
+        <h2 className="text-lg font-bold">{t.title}</h2>
+        <p className="text-[10px]">{t.subtitle}</p>
+        <div className="border-t border-dashed border-current my-2"></div>
+      </div>
+
+      <div className="space-y-0.5 text-[10px]">
+        <div className="flex justify-between">
+          <span>{t.orderNumber}</span>
+          <span className="font-bold">{receiptData.orderNumber}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>{t.date}</span>
+          <span>{receiptData.date}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>{t.time}</span>
+          <span>{receiptData.time}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>{t.employee}</span>
+          <span>{receiptData.employeeName}</span>
+        </div>
+        {receiptData.customerName && (
+          <div className="flex justify-between">
+            <span>{t.customer}</span>
+            <span>{receiptData.customerName}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-dashed border-current my-2"></div>
+
+      <div className="space-y-1.5">
+        {receiptData.items.map((item, index) => (
+          <div key={index} className="text-[10px]">
+            <div className="flex justify-between">
+              <span>{item.quantity}x {item.productName}</span>
+              <span>{item.totalPrice.toFixed(2)} ₾</span>
+            </div>
+            {(item.selectedSize || item.selectedMilk) && (
+              <div className="text-[9px] ml-3 opacity-70">
+                {item.selectedSize && <span>{item.selectedSize.name}</span>}
+                {item.selectedSize && item.selectedMilk && <span>, </span>}
+                {item.selectedMilk && <span>{item.selectedMilk.name}</span>}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t border-dashed border-current my-2"></div>
+
+      <div className="space-y-0.5 text-[10px]">
+        <div className="flex justify-between">
+          <span>{t.subtotal}</span>
+          <span>{receiptData.subtotal.toFixed(2)} ₾</span>
+        </div>
+        {receiptData.discount > 0 && (
+          <div className="flex justify-between">
+            <span>{t.discount}</span>
+            <span>-{receiptData.discount.toFixed(2)} ₾</span>
+          </div>
+        )}
+        <div className="flex justify-between font-bold text-sm mt-1">
+          <span>{t.total}</span>
+          <span>{receiptData.total.toFixed(2)} ₾</span>
+        </div>
+        <div className="flex justify-between">
+          <span>{t.payment}</span>
+          <span>{receiptData.paymentMethod === 'cash' ? t.cash : t.card}</span>
+        </div>
+        {receiptData.amountPaid !== undefined && receiptData.amountPaid > 0 && (
+          <div className="flex justify-between">
+            <span>{t.amountPaid}</span>
+            <span>{receiptData.amountPaid.toFixed(2)} ₾</span>
+          </div>
+        )}
+        {receiptData.change !== undefined && receiptData.change > 0 && (
+          <div className="flex justify-between font-medium">
+            <span>{t.change}</span>
+            <span>{receiptData.change.toFixed(2)} ₾</span>
+          </div>
+        )}
+      </div>
+
+      {receiptData.pointsEarned && receiptData.pointsEarned > 0 && (
+        <>
+          <div className="border-t border-dashed border-current my-2"></div>
+          <div className="text-center text-[10px]">
+            <p>🎁 +{receiptData.pointsEarned} {t.points}</p>
+          </div>
+        </>
+      )}
+
+      <div className="text-center pt-2 space-y-0.5">
+        <div className="border-t border-dashed border-current my-2"></div>
+        <p className="text-[10px]">{t.thanks}</p>
+        <p className="text-[9px]">{t.goodbye}</p>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -81,107 +314,25 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Language Selector */}
+            <div className="flex items-center gap-2">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ru">Русский</SelectItem>
+                  <SelectItem value="ge">ქართული</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Receipt Preview */}
             <div className="bg-muted p-4 rounded-lg max-h-[60vh] overflow-y-auto">
-              <div className="text-center space-y-1">
-                <h2 className="text-xl font-bold">Coffee Shop</h2>
-                <p className="text-xs text-muted-foreground">Votre café, notre passion</p>
-                <Separator className="my-2" />
-              </div>
-
-              <div className="space-y-1 text-xs mb-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">N° Commande:</span>
-                  <span className="font-mono font-bold">{receiptData.orderNumber}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date:</span>
-                  <span>{receiptData.date}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Heure:</span>
-                  <span>{receiptData.time}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Employé:</span>
-                  <span>{receiptData.employeeName}</span>
-                </div>
-                {receiptData.customerName && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Client:</span>
-                    <span>{receiptData.customerName}</span>
-                  </div>
-                )}
-              </div>
-
-              <Separator className="my-2" />
-
-              <div className="space-y-2 mb-3">
-                {receiptData.items.map((item, index) => (
-                  <div key={index} className="space-y-0.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-medium">
-                        {item.quantity}x {item.productName}
-                      </span>
-                      <span className="font-mono">
-                        {item.totalPrice.toFixed(2)} ₾
-                      </span>
-                    </div>
-                    {(item.selectedSize || item.selectedMilk) && (
-                      <div className="text-[10px] text-muted-foreground ml-4">
-                        {item.selectedSize && <span>{item.selectedSize.name}</span>}
-                        {item.selectedSize && item.selectedMilk && <span>, </span>}
-                        {item.selectedMilk && <span>{item.selectedMilk.name}</span>}
-                      </div>
-                    )}
-                    {item.discount && item.discount > 0 && (
-                      <div className="text-[10px] text-destructive ml-4">
-                        Réduction: -{item.discount}%
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <Separator className="my-2" />
-
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sous-total:</span>
-                  <span className="font-mono">{receiptData.subtotal.toFixed(2)} ₾</span>
-                </div>
-                {receiptData.discount > 0 && (
-                  <div className="flex justify-between text-destructive">
-                    <span>Réduction:</span>
-                    <span className="font-mono">-{receiptData.discount.toFixed(2)} ₾</span>
-                  </div>
-                )}
-                <Separator className="my-1" />
-                <div className="flex justify-between text-base font-bold">
-                  <span>TOTAL:</span>
-                  <span className="font-mono">{receiptData.total.toFixed(2)} ₾</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Mode de paiement:</span>
-                  <span className="capitalize">{receiptData.paymentMethod === 'cash' ? 'Espèces' : 'Carte'}</span>
-                </div>
-              </div>
-
-              {receiptData.pointsEarned && receiptData.pointsEarned > 0 && (
-                <>
-                  <Separator className="my-2" />
-                  <div className="text-center text-xs bg-primary/10 p-2 rounded">
-                    <p className="font-medium text-primary">
-                      🎁 +{receiptData.pointsEarned} point{receiptData.pointsEarned > 1 ? 's' : ''} de fidélité!
-                    </p>
-                  </div>
-                </>
-              )}
-
-              <div className="text-center mt-4 space-y-1">
-                <p className="text-xs text-muted-foreground">Merci de votre visite!</p>
-                <p className="text-[10px] text-muted-foreground">À bientôt 😊</p>
-              </div>
+              <ReceiptContent />
             </div>
 
             {/* Actions */}
@@ -192,7 +343,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
                 size="lg"
               >
                 <Printer className="h-4 w-4" />
-                Imprimer le ticket
+                {t.printButton}
               </Button>
               <Button
                 onClick={onClose}
@@ -200,7 +351,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
                 size="lg"
                 className="gap-2"
               >
-                Passer ({countdown}s)
+                {t.skipButton} ({countdown}s)
               </Button>
             </div>
           </div>
@@ -208,97 +359,8 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
       </Dialog>
 
       {/* Print-only version */}
-      <div className="hidden print:block">
-        <div className="max-w-[80mm] mx-auto p-4 font-mono text-xs">
-          <div className="text-center space-y-1 mb-4">
-            <h2 className="text-lg font-bold">Coffee Shop</h2>
-            <p className="text-[10px]">Votre café, notre passion</p>
-            <div className="border-t border-dashed border-black my-2"></div>
-          </div>
-
-          <div className="space-y-0.5 mb-3 text-[10px]">
-            <div className="flex justify-between">
-              <span>N° Commande:</span>
-              <span className="font-bold">{receiptData.orderNumber}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Date:</span>
-              <span>{receiptData.date}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Heure:</span>
-              <span>{receiptData.time}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Employé:</span>
-              <span>{receiptData.employeeName}</span>
-            </div>
-            {receiptData.customerName && (
-              <div className="flex justify-between">
-                <span>Client:</span>
-                <span>{receiptData.customerName}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-dashed border-black my-2"></div>
-
-          <div className="space-y-1.5 mb-3">
-            {receiptData.items.map((item, index) => (
-              <div key={index} className="text-[10px]">
-                <div className="flex justify-between">
-                  <span>{item.quantity}x {item.productName}</span>
-                  <span>{item.totalPrice.toFixed(2)} ₾</span>
-                </div>
-                {(item.selectedSize || item.selectedMilk) && (
-                  <div className="text-[9px] ml-3">
-                    {item.selectedSize && <span>{item.selectedSize.name}</span>}
-                    {item.selectedSize && item.selectedMilk && <span>, </span>}
-                    {item.selectedMilk && <span>{item.selectedMilk.name}</span>}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t border-dashed border-black my-2"></div>
-
-          <div className="space-y-0.5 text-[10px]">
-            <div className="flex justify-between">
-              <span>Sous-total:</span>
-              <span>{receiptData.subtotal.toFixed(2)} ₾</span>
-            </div>
-            {receiptData.discount > 0 && (
-              <div className="flex justify-between">
-                <span>Réduction:</span>
-                <span>-{receiptData.discount.toFixed(2)} ₾</span>
-              </div>
-            )}
-            <div className="flex justify-between font-bold text-sm mt-1">
-              <span>TOTAL:</span>
-              <span>{receiptData.total.toFixed(2)} ₾</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Paiement:</span>
-              <span>{receiptData.paymentMethod === 'cash' ? 'Espèces' : 'Carte'}</span>
-            </div>
-          </div>
-
-          {receiptData.pointsEarned && receiptData.pointsEarned > 0 && (
-            <>
-              <div className="border-t border-dashed border-black my-2"></div>
-              <div className="text-center text-[10px]">
-                <p>+{receiptData.pointsEarned} point(s) de fidélité!</p>
-              </div>
-            </>
-          )}
-
-          <div className="text-center mt-4 space-y-0.5">
-            <div className="border-t border-dashed border-black my-2"></div>
-            <p className="text-[10px]">Merci de votre visite!</p>
-            <p className="text-[9px]">À bientôt</p>
-          </div>
-        </div>
+      <div className="hidden print:block print-content p-4">
+        <ReceiptContent />
       </div>
     </>
   );
