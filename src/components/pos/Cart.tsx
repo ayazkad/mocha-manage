@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import CustomerLoyalty from './CustomerLoyalty';
 import DiscountDialog from './DiscountDialog';
+import PrintReceiptDialog from './PrintReceiptDialog';
 
 interface CartProps {
   onClose?: () => void;
@@ -37,6 +38,8 @@ const Cart = ({ onClose }: CartProps) => {
   const [manualDiscountPercent, setManualDiscountPercent] = useState(0);
   const [appliedOffer, setAppliedOffer] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [showPrintReceipt, setShowPrintReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState<any>(null);
 
   const getRawSubtotal = () => {
     return cart.reduce((total, item) => {
@@ -281,6 +284,9 @@ const Cart = ({ onClose }: CartProps) => {
 
       if (completeError) throw completeError;
 
+      // Calculer drinkCount pour les points de fidélité
+      let drinkCount = 0;
+
       // Update customer loyalty points if customer selected
       if (selectedCustomer) {
         // Calculer uniquement les produits Coffee et Non Coffee pour les points de fidélité
@@ -300,7 +306,7 @@ const Cart = ({ onClose }: CartProps) => {
         console.log('Products with categories:', products);
 
         // Compter seulement les produits des catégories Coffee et Non Coffee
-        const drinkCount = cart.reduce((sum, item) => {
+        drinkCount = cart.reduce((sum, item) => {
           const product = products?.find((p: any) => p.id === item.productId);
           if (product?.categories) {
             // Bien nettoyer les espaces
@@ -452,6 +458,38 @@ const Cart = ({ onClose }: CartProps) => {
       }
 
       toast.success(`Commande ${orderData.order_number} validée`);
+      
+      // Prepare receipt data
+      const now = new Date();
+      const receiptInfo = {
+        orderNumber: orderData.order_number,
+        employeeName: currentEmployee.name,
+        date: now.toLocaleDateString('fr-FR'),
+        time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        items: cart.map(item => ({
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.basePrice + 
+            (item.selectedSize?.priceModifier || 0) + 
+            (item.selectedMilk?.priceModifier || 0),
+          totalPrice: (item.basePrice + 
+            (item.selectedSize?.priceModifier || 0) + 
+            (item.selectedMilk?.priceModifier || 0)) * item.quantity,
+          selectedSize: item.selectedSize,
+          selectedMilk: item.selectedMilk,
+          discount: item.discount
+        })),
+        subtotal,
+        discount: totalDiscount,
+        total,
+        paymentMethod: selectedPaymentMethod || 'cash',
+        customerName: selectedCustomer?.name,
+        pointsEarned: selectedCustomer ? drinkCount : undefined
+      };
+
+      setReceiptData(receiptInfo);
+      setShowPrintReceipt(true);
+      
       clearCart();
       setSelectedCustomer(null);
       setShowPaymentMethod(false);
@@ -471,7 +509,14 @@ const Cart = ({ onClose }: CartProps) => {
   };
 
   return (
-    <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
+    <>
+      <PrintReceiptDialog
+        open={showPrintReceipt}
+        onClose={() => setShowPrintReceipt(false)}
+        receiptData={receiptData}
+      />
+      
+      <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
       {/* Header */}
       <div className="p-3 border-b border-border/50 bg-secondary/30 shrink-0">
         <div className="flex items-center gap-2">
@@ -816,6 +861,7 @@ const Cart = ({ onClose }: CartProps) => {
           )}
         </div>
 
+
       <DiscountDialog
         open={showDiscountDialog}
         onClose={() => setShowDiscountDialog(false)}
@@ -823,6 +869,7 @@ const Cart = ({ onClose }: CartProps) => {
         hasSelection={selectedItems.length > 0}
       />
     </div>
+    </>
   );
 };
 
