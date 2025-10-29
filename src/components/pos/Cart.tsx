@@ -331,11 +331,12 @@ const Cart = ({ onClose }: CartProps) => {
         const shouldRedeem = selectedCustomer.points >= 10;
 
         if (shouldRedeem) {
-          // Redeem reward (reset points to 0, add transaction)
+          // Redeem reward (subtract 10 points and add new points earned)
+          const newPoints = selectedCustomer.points - 10 + drinkCount;
           await supabase
             .from('customers')
             .update({ 
-              points: 0,
+              points: newPoints,
               total_purchases: selectedCustomer.total_purchases + totalItemsCount 
             })
             .eq('id', selectedCustomer.id);
