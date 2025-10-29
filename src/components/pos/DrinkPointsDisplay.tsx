@@ -3,12 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePOS } from '@/contexts/POSContext';
 
 const DrinkPointsDisplay = ({ cart }: { cart: any[] }) => {
+  // Créer une clé qui change à chaque modification du panier (produits ET quantités)
+  const cartKey = cart.map(item => `${item.productId}-${item.quantity}`).join('|');
+  
   const { data: drinkCount, isLoading } = useQuery({
-    queryKey: ['drink-points', cart.map(item => item.productId).join(',')],
+    queryKey: ['drink-points', cartKey],
     queryFn: async () => {
       if (cart.length === 0) return 0;
       
-      const productIds = cart.map(item => item.productId);
+      const productIds = [...new Set(cart.map(item => item.productId))];
       const { data: products } = await supabase
         .from('products')
         .select(`
@@ -21,7 +24,7 @@ const DrinkPointsDisplay = ({ cart }: { cart: any[] }) => {
         `)
         .in('id', productIds);
 
-      // Compter seulement les produits des catégories Coffee et Non Coffee
+      // Compter TOUS les produits (avec leurs quantités) des catégories Coffee et Non Coffee
       const count = cart.reduce((sum, item) => {
         const product = products?.find((p: any) => p.id === item.productId);
         if (product?.categories) {
@@ -32,6 +35,7 @@ const DrinkPointsDisplay = ({ cart }: { cart: any[] }) => {
           const isNonCoffeeCategory = categoryNameEn === 'non coffee' || categoryNameFr === 'non coffee';
           
           if (isCoffeeCategory || isNonCoffeeCategory) {
+            // IMPORTANT: Ajouter la quantité complète de cet item
             return sum + item.quantity;
           }
         }
@@ -40,7 +44,8 @@ const DrinkPointsDisplay = ({ cart }: { cart: any[] }) => {
 
       return count;
     },
-    enabled: cart.length > 0
+    enabled: cart.length > 0,
+    staleTime: 0, // Toujours refetch pour avoir les données fraîches
   });
 
   if (isLoading || !drinkCount) return null;
