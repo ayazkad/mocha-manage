@@ -85,7 +85,7 @@ const Cart = ({ onClose }: CartProps) => {
     }
   }, [cart, subtotal, itemsCount]);
 
-  // Calculer les réductions et total sans TVA
+  // Calculer la réduction automatique des offres
   const automaticDiscount = appliedOffer
     ? appliedOffer.discount_type === 'percentage'
       ? (subtotal * appliedOffer.discount_value) / 100
@@ -101,7 +101,31 @@ const Cart = ({ onClose }: CartProps) => {
     return sum + (itemPrice * discount / 100);
   }, 0);
   
-  const totalDiscount = automaticDiscount + itemDiscounts;
+  // Calculer la boisson gratuite si le client a >= 10 points
+  const freeDrinkDiscount = selectedCustomer && selectedCustomer.points >= 10
+    ? (() => {
+        // Trouver la boisson Coffee/Non Coffee la moins chère
+        const drinks = cart.map((item, index) => ({
+          index,
+          item,
+          unitPrice: item.basePrice + 
+            (item.selectedSize?.priceModifier || 0) + 
+            (item.selectedMilk?.priceModifier || 0)
+        }));
+        
+        // Trouver la boisson la moins chère (seulement les boissons Coffee/Non Coffee)
+        const cheapestDrink = drinks.reduce((cheapest, current) => {
+          if (!cheapest || current.unitPrice < cheapest.unitPrice) {
+            return current;
+          }
+          return cheapest;
+        }, null as { index: number; item: any; unitPrice: number } | null);
+        
+        return cheapestDrink ? cheapestDrink.unitPrice : 0;
+      })()
+    : 0;
+  
+  const totalDiscount = automaticDiscount + itemDiscounts + freeDrinkDiscount;
   const total = Math.max(0, subtotal - totalDiscount);
 
   const handleQuantityChange = (index: number, newQuantity: number) => {
@@ -609,12 +633,18 @@ const Cart = ({ onClose }: CartProps) => {
               <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
             </div>
             
-            {(appliedOffer || itemDiscounts > 0) && (
+            {(appliedOffer || itemDiscounts > 0 || freeDrinkDiscount > 0) && (
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground flex items-center gap-1">
                   {appliedOffer && <Gift className="w-3 h-3" />}
                   {itemDiscounts > 0 && <Percent className="w-3 h-3" />}
+                  {freeDrinkDiscount > 0 && <Gift className="w-3 h-3 text-green-600" />}
                   Discount
+                  {freeDrinkDiscount > 0 && (
+                    <span className="text-green-600 font-medium">
+                      (Boisson offerte!)
+                    </span>
+                  )}
                 </span>
                 <span className="font-semibold text-destructive">
                   -{totalDiscount.toFixed(2)} ₾
