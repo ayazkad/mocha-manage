@@ -58,12 +58,12 @@ const POS = () => {
   const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <Header />
       
       <div className="flex-1 flex overflow-hidden">
         {/* Main content area */}
-        <div className="flex-1 flex flex-col bg-gradient-to-br from-background via-background to-secondary/5">
+        <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-background via-background to-secondary/5">
           <CategoryTabs
             categories={categories}
             selectedCategory={selectedCategory}
@@ -77,7 +77,7 @@ const POS = () => {
         </div>
 
         {/* Desktop Cart - Hidden on mobile/tablet */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block overflow-hidden">
           <Cart />
         </div>
       </div>
