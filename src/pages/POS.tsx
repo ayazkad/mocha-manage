@@ -63,7 +63,7 @@ const POS = () => {
       
       <div className="flex-1 flex overflow-hidden">
         {/* Main content area */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-background via-background to-secondary/5">
+        <div className="flex-1 flex flex-col bg-gradient-to-br from-background via-background to-secondary/5">
           <CategoryTabs
             categories={categories}
             selectedCategory={selectedCategory}
