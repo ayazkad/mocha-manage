@@ -179,7 +179,7 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
                 <X className="h-3 w-3" />
               </Button>
             </div>
-            <div className="rounded-lg overflow-hidden max-h-[150px]">
+            <div className="rounded-lg overflow-hidden aspect-square w-full max-w-sm mx-auto">
               <Scanner
                 onScan={(result) => handleScan(result[0].rawValue)}
                 onError={(error) => {
@@ -188,6 +188,10 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
                 }}
                 allowMultiple={false}
                 scanDelay={500}
+                styles={{
+                  container: { width: '100%', height: '100%' },
+                  video: { width: '100%', height: '100%', objectFit: 'cover' }
+                }}
               />
             </div>
             <p className="text-[10px] text-muted-foreground text-center">
