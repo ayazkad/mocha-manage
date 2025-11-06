@@ -36,7 +36,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
-    }, 800); // 800ms for long press - moins sensible
+    }, 1000); // 1000ms for long press - moins sensible
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -76,7 +76,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
     longPressTimer.current = setTimeout(() => {
       setIsLongPress(true);
       onLongPress();
-    }, 800);
+    }, 1000);
   };
 
   const handleMouseUp = () => {
