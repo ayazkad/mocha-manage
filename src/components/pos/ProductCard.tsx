@@ -21,13 +21,15 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
   const [isLongPress, setIsLongPress] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+  const hasMovedRef = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isAdmin || !onLongPress) return;
-    
     const touch = e.touches[0];
     touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+    hasMovedRef.current = false;
     setIsLongPress(false);
+    
+    if (!isAdmin || !onLongPress) return;
 
     longPressTimer.current = setTimeout(() => {
       setIsLongPress(true);
@@ -46,6 +48,11 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
     const deltaX = Math.abs(touch.clientX - touchStartPos.current.x);
     const deltaY = Math.abs(touch.clientY - touchStartPos.current.y);
 
+    // Mark as moved if user moves finger more than 10px
+    if (deltaX > 10 || deltaY > 10) {
+      hasMovedRef.current = true;
+    }
+
     // Cancel long press if user moves finger more than 30px (scroll detection)
     if (deltaX > 30 || deltaY > 30) {
       if (longPressTimer.current) {
@@ -61,12 +68,14 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
       longPressTimer.current = null;
     }
 
-    if (!isLongPress) {
+    // Only trigger onClick if user didn't move (not a scroll) and not a long press
+    if (!isLongPress && !hasMovedRef.current) {
       onClick();
     }
     
     setIsLongPress(false);
     touchStartPos.current = null;
+    hasMovedRef.current = false;
   };
 
   const handleMouseDown = () => {
