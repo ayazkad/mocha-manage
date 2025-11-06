@@ -36,7 +36,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
-    }, 1000); // 1000ms for long press - moins sensible
+    }, 500); // 500ms for long press
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -46,8 +46,8 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
     const deltaX = Math.abs(touch.clientX - touchStartPos.current.x);
     const deltaY = Math.abs(touch.clientY - touchStartPos.current.y);
 
-    // Cancel long press if user moves finger more than 10px
-    if (deltaX > 10 || deltaY > 10) {
+    // Cancel long press if user moves finger more than 30px (scroll detection)
+    if (deltaX > 30 || deltaY > 30) {
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current);
         longPressTimer.current = null;
@@ -76,7 +76,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
     longPressTimer.current = setTimeout(() => {
       setIsLongPress(true);
       onLongPress();
-    }, 1000);
+    }, 500);
   };
 
   const handleMouseUp = () => {
