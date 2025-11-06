@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Percent, Coffee, Cookie, Trash2 } from 'lucide-react';
+import { Wrench, Percent, Coffee, Cookie, Trash2, Printer, Bluetooth, Wifi } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ToolsDialogProps {
@@ -327,6 +327,60 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     Appliquer
                   </Button>
                 )}
+              </div>
+            </Card>
+          </div>
+
+          {/* Configuration imprimante */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-base">Configuration Imprimante</h3>
+            
+            <Card className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Bluetooth className="w-5 h-5 text-blue-500" />
+                  <div>
+                    <p className="font-medium">Imprimante Bluetooth</p>
+                    <p className="text-xs text-muted-foreground">
+                      Connexion aux imprimantes thermiques 80mm
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled
+                  className="rounded-xl"
+                >
+                  Configurer
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Wifi className="w-5 h-5 text-green-500" />
+                  <div>
+                    <p className="font-medium">Imprimante WiFi</p>
+                    <p className="text-xs text-muted-foreground">
+                      Connexion réseau aux imprimantes
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled
+                  className="rounded-xl"
+                >
+                  Configurer
+                </Button>
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-950 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                <p className="text-xs text-amber-900 dark:text-amber-100">
+                  <strong>Note:</strong> La connexion directe aux imprimantes Bluetooth/WiFi nécessite une application native. 
+                  En PWA, vous devrez utiliser le dialogue d'impression du système.
+                </p>
               </div>
             </Card>
           </div>

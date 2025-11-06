@@ -156,21 +156,37 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   }, [open]);
 
   const handlePrint = () => {
-    // Add print styles
+    // Add print styles for thermal printer 80mm
     const style = document.createElement('style');
     style.textContent = `
       @media print {
-        body * {
-          visibility: hidden;
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
         }
-        .print-content, .print-content * {
-          visibility: visible;
+        body {
+          visibility: hidden;
+          margin: 0;
+          padding: 0;
         }
         .print-content {
-          position: absolute;
+          visibility: visible;
+          position: fixed;
           left: 0;
           top: 0;
-          width: 80mm;
+          width: 80mm !important;
+          max-width: 80mm !important;
+          margin: 0 !important;
+          padding: 2mm 4mm !important;
+          font-family: 'Courier New', monospace !important;
+          font-size: 9pt !important;
+          line-height: 1.3 !important;
+          color: #000 !important;
+          background: #fff !important;
+        }
+        .print-content * {
+          visibility: visible;
         }
         @page {
           size: 80mm auto;
@@ -191,14 +207,16 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   if (!receiptData) return null;
 
   const ReceiptContent = () => (
-    <div className="w-full max-w-[80mm] mx-auto font-mono text-xs space-y-2">
-      <div className="text-center space-y-1 pb-2">
-        <h2 className="text-lg font-bold">{t.title}</h2>
-        <p className="text-[10px]">{t.subtitle}</p>
-        <div className="border-t border-dashed border-current my-2"></div>
+    <div className="w-full max-w-[80mm] mx-auto font-mono text-xs leading-tight">
+      {/* Header */}
+      <div className="text-center space-y-0 pb-1">
+        <h2 className="text-base font-bold tracking-wide">{t.title.toUpperCase()}</h2>
+        <p className="text-[9px]">{t.subtitle}</p>
+        <div className="border-t border-dashed border-gray-400 my-1"></div>
       </div>
 
-      <div className="space-y-0.5 text-[10px]">
+      {/* Order Info */}
+      <div className="space-y-0 text-[9px] leading-tight">
         <div className="flex justify-between">
           <span>{t.orderNumber}</span>
           <span className="font-bold">{receiptData.orderNumber}</span>
@@ -223,29 +241,35 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         )}
       </div>
 
-      <div className="border-t border-dashed border-current my-2"></div>
+      <div className="border-t border-dashed border-gray-400 my-1"></div>
 
-      <div className="space-y-1.5">
+      {/* Items */}
+      <div className="space-y-1">
         {receiptData.items.map((item, index) => (
-          <div key={index} className="text-[10px]">
-            <div className="flex justify-between">
-              <span>{item.quantity}x {item.productName}</span>
-              <span>{item.totalPrice.toFixed(2)} ₾</span>
+          <div key={index} className="text-[9px] leading-tight">
+            <div className="flex justify-between items-start">
+              <span className="flex-1 pr-2">
+                {item.quantity}x {item.productName}
+                {(item.selectedSize || item.selectedMilk) && (
+                  <span className="block text-[8px] opacity-70 ml-2">
+                    {item.selectedSize?.name}
+                    {item.selectedSize && item.selectedMilk && ', '}
+                    {item.selectedMilk?.name}
+                  </span>
+                )}
+              </span>
+              <span className="font-medium whitespace-nowrap">
+                {item.unitPrice.toFixed(2)} ₾  {item.totalPrice.toFixed(2)} ₾
+              </span>
             </div>
-            {(item.selectedSize || item.selectedMilk) && (
-              <div className="text-[9px] ml-3 opacity-70">
-                {item.selectedSize && <span>{item.selectedSize.name}</span>}
-                {item.selectedSize && item.selectedMilk && <span>, </span>}
-                {item.selectedMilk && <span>{item.selectedMilk.name}</span>}
-              </div>
-            )}
           </div>
         ))}
       </div>
 
-      <div className="border-t border-dashed border-current my-2"></div>
+      <div className="border-t border-dashed border-gray-400 my-1"></div>
 
-      <div className="space-y-0.5 text-[10px]">
+      {/* Totals */}
+      <div className="space-y-0 text-[9px] leading-tight">
         <div className="flex justify-between">
           <span>{t.subtotal}</span>
           <span>{receiptData.subtotal.toFixed(2)} ₾</span>
@@ -256,10 +280,16 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             <span>-{receiptData.discount.toFixed(2)} ₾</span>
           </div>
         )}
-        <div className="flex justify-between font-bold text-sm mt-1">
+        <div className="flex justify-between font-bold text-[11px] mt-0.5">
           <span>{t.total}</span>
           <span>{receiptData.total.toFixed(2)} ₾</span>
         </div>
+      </div>
+
+      <div className="border-t border-dashed border-gray-400 my-1"></div>
+
+      {/* Payment */}
+      <div className="space-y-0 text-[9px] leading-tight">
         <div className="flex justify-between">
           <span>{t.payment}</span>
           <span>{receiptData.paymentMethod === 'cash' ? t.cash : t.card}</span>
@@ -278,19 +308,21 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         )}
       </div>
 
+      {/* Loyalty Points */}
       {receiptData.pointsEarned && receiptData.pointsEarned > 0 && (
         <>
-          <div className="border-t border-dashed border-current my-2"></div>
-          <div className="text-center text-[10px]">
-            <p>🎁 +{receiptData.pointsEarned} {t.points}</p>
+          <div className="border-t border-dashed border-gray-400 my-1"></div>
+          <div className="text-center text-[9px]">
+            <p>+{receiptData.pointsEarned} {t.points}</p>
           </div>
         </>
       )}
 
-      <div className="text-center pt-2 space-y-0.5">
-        <div className="border-t border-dashed border-current my-2"></div>
-        <p className="text-[10px]">{t.thanks}</p>
-        <p className="text-[9px]">{t.goodbye}</p>
+      {/* Footer */}
+      <div className="text-center pt-1 space-y-0">
+        <div className="border-t border-dashed border-gray-400 my-1"></div>
+        <p className="text-[9px]">{t.thanks}</p>
+        <p className="text-[8px]">{t.goodbye}</p>
       </div>
     </div>
   );
