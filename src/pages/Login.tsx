@@ -111,10 +111,6 @@ const Login = () => {
             />
           </div>
 
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">Test account: 0000 / 0000</p>
-            <p className="text-xs text-muted-foreground">Admin access</p>
-          </div>
         </div>
       </div>
     </div>
