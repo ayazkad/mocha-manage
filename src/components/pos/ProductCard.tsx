@@ -124,7 +124,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
       }}
       className="cursor-pointer hover:shadow-medium transition-all duration-normal hover:scale-[1.02] active:scale-95 overflow-hidden group touch-manipulation border-border/50 bg-card"
     >
-      <div className="aspect-square bg-gradient-card flex items-center justify-center relative overflow-hidden min-h-[140px] md:min-h-[200px] lg:min-h-[220px]">
+      <div className="aspect-square bg-gradient-card flex items-center justify-center relative overflow-hidden min-h-[100px] md:min-h-[120px]">
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -135,11 +135,11 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
           <Coffee className="w-14 h-14 md:w-20 md:h-20 text-muted-foreground/40 group-hover:scale-105 transition-transform duration-slow" />
         )}
       </div>
-      <div className="p-4 md:p-5 space-y-2">
-        <h3 className="font-semibold text-sm md:text-base text-card-foreground line-clamp-1">
+      <div className="p-2 md:p-3 space-y-1">
+        <h3 className="font-semibold text-xs md:text-sm text-card-foreground line-clamp-1">
           {getProductName(product)}
         </h3>
-        <p className="text-xl md:text-2xl font-bold text-primary">
+        <p className="text-base md:text-lg font-bold text-primary">
           {product.base_price.toFixed(2)} ₾
         </p>
       </div>
