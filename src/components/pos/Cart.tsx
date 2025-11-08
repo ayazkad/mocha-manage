@@ -20,6 +20,7 @@ const Cart = ({ onClose }: CartProps) => {
     cart,
     removeFromCart,
     updateCartItem,
+    updateAllCartItems,
     clearCart,
     getTotalPrice,
     currentSession,
@@ -158,23 +159,21 @@ const Cart = ({ onClose }: CartProps) => {
   };
 
   const applyDiscountToItems = (percentage: number, applyToAll: boolean) => {
-    // Si aucun item n'est sélectionné OU si applyToAll est true, appliquer à tous
-    if (selectedItems.length === 0 || applyToAll) {
-      // Appliquer à TOUS les items du panier
-      const newCart = cart.map(item => ({
+    if (applyToAll) {
+      // Appliquer à TOUS les items du panier en une seule opération
+      const updatedCart = cart.map(item => ({
         ...item,
         discount: percentage
       }));
-      // Mettre à jour tous les items en une seule fois
-      newCart.forEach((item, index) => {
-        updateCartItem(index, item);
-      });
-    } else {
+      updateAllCartItems(updatedCart);
+    } else if (selectedItems.length > 0) {
       // Appliquer seulement aux items sélectionnés
-      selectedItems.forEach(index => {
-        const item = cart[index];
-        updateCartItem(index, { ...item, discount: percentage });
-      });
+      const updatedCart = cart.map((item, index) => 
+        selectedItems.includes(index) 
+          ? { ...item, discount: percentage }
+          : item
+      );
+      updateAllCartItems(updatedCart);
     }
     setSelectedItems([]);
   };

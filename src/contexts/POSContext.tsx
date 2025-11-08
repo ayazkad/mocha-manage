@@ -40,6 +40,7 @@ interface POSContextType {
   addToCart: (item: CartItem) => void;
   removeFromCart: (index: number) => void;
   updateCartItem: (index: number, item: CartItem) => void;
+  updateAllCartItems: (items: CartItem[]) => void;
   clearCart: () => void;
   toggleDarkMode: () => void;
   getTotalPrice: () => number;
@@ -194,6 +195,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCart(newCart);
   };
 
+  const updateAllCartItems = (items: CartItem[]) => {
+    setCart(items);
+  };
+
   const clearCart = () => {
     setCart([]);
     setStaffDiscountActive(false);
@@ -231,6 +236,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addToCart,
         removeFromCart,
         updateCartItem,
+        updateAllCartItems,
         clearCart,
         toggleDarkMode,
         getTotalPrice,
