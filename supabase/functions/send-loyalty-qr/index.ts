@@ -27,7 +27,7 @@ const translations = {
     qrTitle: "Your Personal QR Code:",
     qrInstruction: "Save this QR code on your phone or screenshot this email. Show it at the register to collect points.",
     footer: "Thank you for your loyalty!",
-    regards: "Best regards,<br>Café POS Team",
+    regards: "Best regards,<br>Kava Team",
   },
   ru: {
     subject: "Добро пожаловать в программу лояльности! 🎉",
@@ -41,7 +41,7 @@ const translations = {
     qrTitle: "Ваш персональный QR-код:",
     qrInstruction: "Сохраните этот QR-код на телефоне или сделайте скриншот письма. Покажите его на кассе для накопления баллов.",
     footer: "Спасибо за вашу лояльность!",
-    regards: "С уважением,<br>Команда Café POS",
+    regards: "С уважением,<br>Команда Kava",
   },
   ge: {
     subject: "მოგესალმებით ჩვენს ლოიალურობის პროგრამაში! 🎉",
@@ -55,7 +55,7 @@ const translations = {
     qrTitle: "თქვენი პერსონალური QR კოდი:",
     qrInstruction: "შეინახეთ ეს QR კოდი თქვენს ტელეფონში ან გააკეთეთ ეკრანის ფოტო. აჩვენეთ იგი კასაზე ქულების დასაგროვებლად.",
     footer: "გმადლობთ თქვენი ლოიალურობისთვის!",
-    regards: "პატივისცემით,<br>Café POS გუნდი",
+    regards: "პატივისცემით,<br>Kava გუნდი",
   },
 };
 
@@ -205,7 +205,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "Café POS <onboarding@resend.dev>",
+        from: "Kava <onboarding@resend.dev>",
         to: [customerEmail],
         subject: t.subject,
         html: emailHtml,
