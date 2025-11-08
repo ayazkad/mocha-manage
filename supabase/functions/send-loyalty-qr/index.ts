@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import QRCode from "https://esm.sh/qrcode@1.5.3";
+import QRCode from "npm:qrcode@1.5.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,18 +74,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Generating QR code for customer:", customerEmail);
 
-    // Generate QR code as base64 image
-    const qrCodeDataUrl = await QRCode.toDataURL(qrCode, {
+    // Generate QR code as PNG buffer
+    const qrBuffer = await QRCode.toBuffer(qrCode, {
       width: 400,
       margin: 2,
       color: {
         dark: '#000000',
         light: '#FFFFFF',
       },
+      type: 'png',
     });
 
-    // Extract base64 data without the data URL prefix
-    const base64Data = qrCodeDataUrl.split(',')[1];
+    // Convert buffer to base64
+    const base64Data = btoa(String.fromCharCode(...new Uint8Array(qrBuffer)));
 
     const t = translations[language] || translations.en;
 
