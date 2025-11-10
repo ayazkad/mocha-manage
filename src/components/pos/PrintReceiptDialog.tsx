@@ -137,7 +137,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   const t = translations[language];
 
   const handlePrint = () => {
-    // Add print styles for thermal printer 80mm
+    // Add print styles for full page portrait
     const style = document.createElement('style');
     style.textContent = `
       @media print {
@@ -156,21 +156,25 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           position: fixed;
           left: 0;
           top: 0;
-          width: 80mm !important;
-          max-width: 80mm !important;
+          width: 100% !important;
+          height: 100vh !important;
+          max-width: 100% !important;
           margin: 0 !important;
-          padding: 2mm 4mm !important;
+          padding: 10mm 15mm !important;
           font-family: 'Courier New', monospace !important;
-          font-size: 9pt !important;
-          line-height: 1.3 !important;
+          font-size: 11pt !important;
+          line-height: 1.4 !important;
           color: #000 !important;
           background: #fff !important;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
         }
         .print-content * {
           visibility: visible;
         }
         @page {
-          size: 80mm auto;
+          size: A4 portrait;
           margin: 0;
         }
       }
