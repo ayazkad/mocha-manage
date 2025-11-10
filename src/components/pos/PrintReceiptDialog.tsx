@@ -131,29 +131,10 @@ interface PrintReceiptDialogProps {
 }
 
 const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogProps) => {
-  const [countdown, setCountdown] = useState(5);
   const [language, setLanguage] = useState<Language>('fr');
   const printRef = useRef<HTMLDivElement>(null);
   
   const t = translations[language];
-
-  useEffect(() => {
-    if (open && countdown > 0) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-
-      return () => clearInterval(timer);
-    } else if (countdown === 0) {
-      onClose();
-    }
-  }, [open, countdown, onClose]);
-
-  useEffect(() => {
-    if (open) {
-      setCountdown(5);
-    }
-  }, [open]);
 
   const handlePrint = () => {
     // Add print styles for thermal printer 80mm
@@ -198,9 +179,10 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     
     window.print();
     
-    // Clean up
+    // Clean up and close dialog
     setTimeout(() => {
       document.head.removeChild(style);
+      onClose();
     }, 100);
   };
 
@@ -376,14 +358,6 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
               >
                 <Printer className="h-4 w-4" />
                 {t.printButton}
-              </Button>
-              <Button
-                onClick={onClose}
-                variant="outline"
-                size="lg"
-                className="gap-2"
-              >
-                {t.skipButton} ({countdown}s)
               </Button>
             </div>
           </div>
