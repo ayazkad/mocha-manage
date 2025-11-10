@@ -46,6 +46,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
       .select('*')
       .eq('category_id', categoryId)
       .eq('active', true)
+      .eq('visible_in_categories', true)
       .order('sort_order');
 
     if (data && !error) {

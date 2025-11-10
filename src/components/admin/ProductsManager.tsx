@@ -26,6 +26,8 @@ const ProductsManager = () => {
     has_milk_options: false,
     active: true,
     image_url: '',
+    barcode: '',
+    visible_in_categories: true,
   });
 
   const { data: products } = useQuery({
@@ -126,6 +128,8 @@ const ProductsManager = () => {
       has_milk_options: false,
       active: true,
       image_url: '',
+      barcode: '',
+      visible_in_categories: true,
     });
   };
 
@@ -159,6 +163,8 @@ const ProductsManager = () => {
       has_milk_options: product.has_milk_options || false,
       active: product.active,
       image_url: product.image_url || '',
+      barcode: product.barcode || '',
+      visible_in_categories: product.visible_in_categories !== false,
     });
   };
 
@@ -196,6 +202,8 @@ const ProductsManager = () => {
       has_size_options: isCoffee ? true : formData.has_size_options,
       has_milk_options: isCoffee ? true : formData.has_milk_options,
       active: formData.active,
+      barcode: formData.barcode || null,
+      visible_in_categories: formData.visible_in_categories,
     });
   };
 
@@ -256,6 +264,19 @@ const ProductsManager = () => {
                 value={formData.description_en}
                 onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="barcode">Code-barres (optionnel)</Label>
+              <Input
+                id="barcode"
+                value={formData.barcode}
+                onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                placeholder="Scannez ou saisissez le code-barres"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Les produits avec code-barres peuvent être scannés dans le POS
+              </p>
             </div>
 
             <div>
@@ -331,7 +352,19 @@ const ProductsManager = () => {
                 />
                 <Label htmlFor="active">Active</Label>
               </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="visible_in_categories"
+                  checked={formData.visible_in_categories}
+                  onCheckedChange={(checked) => setFormData({ ...formData, visible_in_categories: checked })}
+                />
+                <Label htmlFor="visible_in_categories">Visible dans catégories</Label>
+              </div>
             </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Si désactivé, le produit ne sera visible que par scan de code-barres
+            </p>
 
             <div className="flex gap-2">
               <Button type="submit">
@@ -360,6 +393,8 @@ const ProductsManager = () => {
                   <p className="text-sm text-muted-foreground">
                     ${product.base_price} • {product.categories?.name_en || 'No category'}
                     {!product.active && ' • Inactive'}
+                    {product.barcode && ` • 📊 ${product.barcode}`}
+                    {!product.visible_in_categories && ' • Scan uniquement'}
                   </p>
                 </div>
                 <div className="flex gap-2">

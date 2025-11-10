@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import AddCustomerDialog from './AddCustomerDialog';
 import ToolsDialog from './ToolsDialog';
+import BarcodeScanner from './BarcodeScanner';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
@@ -53,6 +54,8 @@ const Header = () => {
           </Button>
 
           {!isAdminPage && <AddCustomerDialog />}
+
+          {!isAdminPage && <BarcodeScanner />}
 
           {!isAdminPage && (
             <Button

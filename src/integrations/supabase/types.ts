@@ -490,6 +490,7 @@ export type Database = {
       products: {
         Row: {
           active: boolean | null
+          barcode: string | null
           base_price: number
           category_id: string | null
           created_at: string | null
@@ -507,9 +508,11 @@ export type Database = {
           name_ru: string | null
           sort_order: number | null
           updated_at: string | null
+          visible_in_categories: boolean | null
         }
         Insert: {
           active?: boolean | null
+          barcode?: string | null
           base_price: number
           category_id?: string | null
           created_at?: string | null
@@ -527,9 +530,11 @@ export type Database = {
           name_ru?: string | null
           sort_order?: number | null
           updated_at?: string | null
+          visible_in_categories?: boolean | null
         }
         Update: {
           active?: boolean | null
+          barcode?: string | null
           base_price?: number
           category_id?: string | null
           created_at?: string | null
@@ -547,6 +552,7 @@ export type Database = {
           name_ru?: string | null
           sort_order?: number | null
           updated_at?: string | null
+          visible_in_categories?: boolean | null
         }
         Relationships: [
           {
