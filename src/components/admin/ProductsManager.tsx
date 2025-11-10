@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
+import AdminBarcodeScanner from './AdminBarcodeScanner';
 
 const ProductsManager = () => {
   const { toast } = useToast();
@@ -268,12 +269,18 @@ const ProductsManager = () => {
 
             <div>
               <Label htmlFor="barcode">Code-barres (optionnel)</Label>
-              <Input
-                id="barcode"
-                value={formData.barcode}
-                onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                placeholder="Scannez ou saisissez le code-barres"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="barcode"
+                  value={formData.barcode}
+                  onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                  placeholder="Scannez ou saisissez le code-barres"
+                  className="flex-1"
+                />
+                <AdminBarcodeScanner 
+                  onBarcodeScanned={(barcode) => setFormData({ ...formData, barcode })}
+                />
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Les produits avec code-barres peuvent être scannés dans le POS
               </p>

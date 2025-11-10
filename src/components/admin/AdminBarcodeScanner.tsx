@@ -5,16 +5,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Barcode, Camera } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import { supabase } from '@/integrations/supabase/client';
-import { usePOS } from '@/contexts/POSContext';
-import { useToast } from '@/hooks/use-toast';
 
-const BarcodeScanner = () => {
+interface AdminBarcodeScannerProps {
+  onBarcodeScanned: (barcode: string) => void;
+}
+
+const AdminBarcodeScanner = ({ onBarcodeScanned }: AdminBarcodeScannerProps) => {
   const [open, setOpen] = useState(false);
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
-  const { addToCart } = usePOS();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!open) {
@@ -23,75 +22,24 @@ const BarcodeScanner = () => {
     }
   }, [open]);
 
-  useEffect(() => {
-    // Auto-submit when barcode is long enough (typical barcodes are 8-13 digits)
-    if (barcode.length >= 8) {
-      handleScan();
-    }
-  }, [barcode]);
-
-  const handleScan = async () => {
+  const handleScan = () => {
     if (!barcode) return;
-
-    try {
-      const { data: product, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('barcode', barcode)
-        .eq('active', true)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!product) {
-        toast({
-          title: 'Produit non trouvé',
-          description: `Aucun produit avec le code-barres ${barcode}`,
-          variant: 'destructive',
-        });
-        setBarcode('');
-        return;
-      }
-
-      // If product has options, we need to show the options dialog
-      // For now, we'll add it directly without options
-      const productName = product.name_en || product.name_fr;
-      
-      addToCart({
-        productId: product.id,
-        productName: productName,
-        quantity: 1,
-        basePrice: product.base_price,
-        image_url: product.image_url,
-      });
-
-      toast({
-        title: 'Produit ajouté',
-        description: `${productName} ajouté au panier`,
-      });
-
-      setBarcode('');
-      setOpen(false);
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: error.message,
-        variant: 'destructive',
-      });
-      setBarcode('');
-    }
+    onBarcodeScanned(barcode);
+    setBarcode('');
+    setOpen(false);
   };
 
   return (
     <>
       <Button
+        type="button"
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        className="gap-2 rounded-xl border-border/50"
+        className="gap-2"
       >
-        <Barcode className="w-4 h-4" />
-        <span className="hidden md:inline">Scanner</span>
+        <Camera className="w-4 h-4" />
+        Scanner avec caméra
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -120,7 +68,8 @@ const BarcodeScanner = () => {
                       setScanning(true);
                       setBarcode(code);
                       setTimeout(() => {
-                        handleScan();
+                        onBarcodeScanned(code);
+                        setOpen(false);
                       }, 100);
                     }
                   }}
@@ -157,7 +106,7 @@ const BarcodeScanner = () => {
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleScan} className="flex-1">
-                  Rechercher
+                  Valider
                 </Button>
                 <Button variant="outline" onClick={() => setOpen(false)}>
                   Annuler
@@ -171,4 +120,4 @@ const BarcodeScanner = () => {
   );
 };
 
-export default BarcodeScanner;
+export default AdminBarcodeScanner;
