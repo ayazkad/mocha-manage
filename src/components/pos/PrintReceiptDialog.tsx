@@ -183,10 +183,9 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     
     window.print();
     
-    // Clean up and close dialog
+    // Clean up after printing
     setTimeout(() => {
       document.head.removeChild(style);
-      onClose();
     }, 100);
   };
 
@@ -362,6 +361,14 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
               >
                 <Printer className="h-4 w-4" />
                 {t.printButton}
+              </Button>
+              <Button
+                onClick={onClose}
+                variant="outline"
+                className="flex-1"
+                size="lg"
+              >
+                {t.skipButton}
               </Button>
             </div>
           </div>
