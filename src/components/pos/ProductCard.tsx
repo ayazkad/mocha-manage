@@ -22,8 +22,10 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
   const hasMovedRef = useRef(false);
+  const isTouchDevice = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    isTouchDevice.current = true;
     const touch = e.touches[0];
     touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     hasMovedRef.current = false;
@@ -79,6 +81,9 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
   };
 
   const handleMouseDown = () => {
+    // Prevent mouse events on touch devices to avoid double-click
+    if (isTouchDevice.current) return;
+    
     if (!isAdmin || !onLongPress) return;
     
     setIsLongPress(false);
@@ -89,6 +94,9 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
   };
 
   const handleMouseUp = () => {
+    // Prevent mouse events on touch devices to avoid double-click
+    if (isTouchDevice.current) return;
+    
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;

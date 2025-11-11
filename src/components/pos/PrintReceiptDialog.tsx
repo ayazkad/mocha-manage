@@ -314,8 +314,8 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-md print:hidden">
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <DialogContent className="max-w-md print:hidden" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg">Ticket de caisse</DialogTitle>
