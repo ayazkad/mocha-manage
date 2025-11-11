@@ -183,10 +183,11 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     
     window.print();
     
-    // Clean up after printing
+    // Clean up and close after printing
     setTimeout(() => {
       document.head.removeChild(style);
-    }, 100);
+      onClose();
+    }, 500);
   };
 
   if (!receiptData) return null;
@@ -314,8 +315,13 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-        <DialogContent className="max-w-md print:hidden" onInteractOutside={(e) => e.preventDefault()}>
+      <Dialog open={open}>
+        <DialogContent 
+          className="max-w-md print:hidden" 
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg">Ticket de caisse</DialogTitle>
