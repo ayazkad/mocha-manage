@@ -29,15 +29,17 @@ const Admin = () => {
         <h2 className="text-3xl font-bold mb-6">Admin Panel</h2>
         
         <Tabs defaultValue="statistics" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 max-w-6xl">
-            <TabsTrigger value="statistics">Statistiques</TabsTrigger>
-            <TabsTrigger value="orders">Tickets</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="offers">Offres</TabsTrigger>
-            <TabsTrigger value="employees">Employees</TabsTrigger>
-            <TabsTrigger value="customers">Clients</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-6 px-6 pb-2">
+            <TabsList className="inline-flex w-auto min-w-full md:grid md:grid-cols-7 md:max-w-6xl">
+              <TabsTrigger value="statistics" className="whitespace-nowrap">Statistiques</TabsTrigger>
+              <TabsTrigger value="orders" className="whitespace-nowrap">Tickets</TabsTrigger>
+              <TabsTrigger value="products" className="whitespace-nowrap">Products</TabsTrigger>
+              <TabsTrigger value="categories" className="whitespace-nowrap">Categories</TabsTrigger>
+              <TabsTrigger value="offers" className="whitespace-nowrap">Offres</TabsTrigger>
+              <TabsTrigger value="employees" className="whitespace-nowrap">Employees</TabsTrigger>
+              <TabsTrigger value="customers" className="whitespace-nowrap">Clients</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="statistics" className="mt-6">
             <UnifiedStatistics />

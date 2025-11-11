@@ -491,13 +491,14 @@ const Cart = ({ onClose }: CartProps) => {
       setReceiptData(receiptInfo);
       setShowPrintReceipt(true);
       
-      clearCart();
-      setSelectedCustomer(null);
-      setShowPaymentMethod(false);
-      setSelectedPaymentMethod(null);
-      setShowCashCalculator(false);
-      setAmountReceived(0);
-      setManualDiscountPercent(0);
+      // Ne pas nettoyer immédiatement - attendre que le dialog soit fermé
+      // clearCart();
+      // setSelectedCustomer(null);
+      // setShowPaymentMethod(false);
+      // setSelectedPaymentMethod(null);
+      // setShowCashCalculator(false);
+      // setAmountReceived(0);
+      // setManualDiscountPercent(0);
       setAppliedOffer(null);
       setSelectedItems([]);
       onClose?.();
@@ -509,11 +510,25 @@ const Cart = ({ onClose }: CartProps) => {
     }
   };
 
+  const handleReceiptClose = () => {
+    setShowPrintReceipt(false);
+    // Nettoyer après la fermeture du dialog
+    clearCart();
+    setSelectedCustomer(null);
+    setShowPaymentMethod(false);
+    setSelectedPaymentMethod(null);
+    setShowCashCalculator(false);
+    setAmountReceived(0);
+    setManualDiscountPercent(0);
+    setAppliedOffer(null);
+    setSelectedItems([]);
+  };
+
   return (
     <>
       <PrintReceiptDialog
         open={showPrintReceipt}
-        onClose={() => setShowPrintReceipt(false)}
+        onClose={handleReceiptClose}
         receiptData={receiptData}
       />
       
