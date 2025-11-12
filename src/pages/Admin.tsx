@@ -31,13 +31,13 @@ const Admin = () => {
         <Tabs defaultValue="statistics" className="w-full">
           <div className="overflow-x-auto -mx-6 px-6 pb-2">
             <TabsList className="inline-flex w-auto min-w-full md:grid md:grid-cols-7 md:max-w-6xl">
-              <TabsTrigger value="statistics" className="whitespace-nowrap">Statistiques</TabsTrigger>
-              <TabsTrigger value="orders" className="whitespace-nowrap">Tickets</TabsTrigger>
+              <TabsTrigger value="statistics" className="whitespace-nowrap">Statistics</TabsTrigger>
+              <TabsTrigger value="orders" className="whitespace-nowrap">Orders</TabsTrigger>
               <TabsTrigger value="products" className="whitespace-nowrap">Products</TabsTrigger>
               <TabsTrigger value="categories" className="whitespace-nowrap">Categories</TabsTrigger>
-              <TabsTrigger value="offers" className="whitespace-nowrap">Offres</TabsTrigger>
+              <TabsTrigger value="offers" className="whitespace-nowrap">Offers</TabsTrigger>
               <TabsTrigger value="employees" className="whitespace-nowrap">Employees</TabsTrigger>
-              <TabsTrigger value="customers" className="whitespace-nowrap">Clients</TabsTrigger>
+              <TabsTrigger value="customers" className="whitespace-nowrap">Customers</TabsTrigger>
             </TabsList>
           </div>
           

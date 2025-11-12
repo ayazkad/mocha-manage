@@ -58,7 +58,7 @@ const OffersManager = () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('Erreur lors du chargement des offres');
+      toast.error('Error loading offers');
       return;
     }
 
@@ -101,22 +101,22 @@ const OffersManager = () => {
         .eq('id', editingOffer.id);
 
       if (error) {
-        toast.error('Erreur lors de la modification');
+        toast.error('Error updating offer');
         return;
       }
 
-      toast.success('Offre modifiée');
+      toast.success('Offer updated');
     } else {
       const { error } = await supabase
         .from('offers')
         .insert([offerData]);
 
       if (error) {
-        toast.error('Erreur lors de la création');
+        toast.error('Error creating offer');
         return;
       }
 
-      toast.success('Offre créée');
+      toast.success('Offer created');
     }
 
     resetForm();
@@ -137,7 +137,7 @@ const OffersManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette offre ?')) return;
+    if (!confirm('Delete this offer?')) return;
 
     const { error } = await supabase
       .from('offers')
@@ -145,11 +145,11 @@ const OffersManager = () => {
       .eq('id', id);
 
     if (error) {
-      toast.error('Erreur lors de la suppression');
+      toast.error('Error deleting offer');
       return;
     }
 
-    toast.success('Offre supprimée');
+    toast.success('Offer deleted');
     loadOffers();
   };
 
@@ -185,7 +185,7 @@ const OffersManager = () => {
       .eq('id', offer.id);
 
     if (error) {
-      toast.error('Erreur lors de la modification');
+      toast.error('Error updating offer');
       return;
     }
 
@@ -197,12 +197,12 @@ const OffersManager = () => {
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Gift className="w-5 h-5" />
-          {editingOffer ? 'Modifier l\'offre' : 'Créer une offre'}
+          {editingOffer ? 'Edit Offer' : 'Create Offer'}
         </h3>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="name">Nom de l'offre</Label>
+            <Label htmlFor="name">Offer Name</Label>
             <Input
               id="name"
               value={formData.name}
@@ -213,7 +213,7 @@ const OffersManager = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="discount_type">Type de réduction</Label>
+              <Label htmlFor="discount_type">Discount Type</Label>
               <Select
                 value={formData.discount_type}
                 onValueChange={(value: 'percentage' | 'fixed') =>
@@ -224,15 +224,15 @@ const OffersManager = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="percentage">Pourcentage</SelectItem>
-                  <SelectItem value="fixed">Montant fixe</SelectItem>
+                  <SelectItem value="percentage">Percentage</SelectItem>
+                  <SelectItem value="fixed">Fixed Amount</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <Label htmlFor="discount_value">
-                Valeur {formData.discount_type === 'percentage' ? '(%)' : '(₾)'}
+                Value {formData.discount_type === 'percentage' ? '(%)' : '(₾)'}
               </Label>
               <Input
                 id="discount_value"
@@ -248,7 +248,7 @@ const OffersManager = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="min_items">Articles minimum</Label>
+              <Label htmlFor="min_items">Minimum Items</Label>
               <Input
                 id="min_items"
                 type="number"
@@ -259,7 +259,7 @@ const OffersManager = () => {
             </div>
 
             <div>
-              <Label htmlFor="min_amount">Montant minimum (₾)</Label>
+              <Label htmlFor="min_amount">Minimum Amount (₾)</Label>
               <Input
                 id="min_amount"
                 type="number"
@@ -276,11 +276,11 @@ const OffersManager = () => {
               checked={formData.active}
               onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
             />
-            <Label>Offre active</Label>
+            <Label>Active Offer</Label>
           </div>
 
           <div className="space-y-2">
-            <Label>Produits applicables</Label>
+            <Label>Applicable Products</Label>
             <ScrollArea className="h-48 border rounded-lg p-3">
               <div className="space-y-2">
                 {products.map((product) => (
@@ -302,19 +302,19 @@ const OffersManager = () => {
             </ScrollArea>
             <p className="text-xs text-muted-foreground">
               {selectedProducts.length === 0
-                ? "Aucun produit sélectionné - l'offre s'appliquera à tous les produits"
-                : `${selectedProducts.length} produit(s) sélectionné(s)`}
+                ? "No products selected - offer will apply to all products"
+                : `${selectedProducts.length} product(s) selected`}
             </p>
           </div>
 
           <div className="flex gap-2">
             <Button type="submit" className="flex-1">
               <Plus className="w-4 h-4 mr-2" />
-              {editingOffer ? 'Modifier' : 'Créer'}
+              {editingOffer ? 'Update' : 'Create'}
             </Button>
             {editingOffer && (
               <Button type="button" variant="outline" onClick={resetForm}>
-                Annuler
+                Cancel
               </Button>
             )}
           </div>
@@ -322,7 +322,7 @@ const OffersManager = () => {
       </Card>
 
       <div className="space-y-3">
-        <h3 className="text-xl font-semibold">Offres existantes</h3>
+        <h3 className="text-xl font-semibold">Existing Offers</h3>
         {offers.map((offer) => (
           <Card key={offer.id} className="p-4">
             <div className="flex items-start justify-between">
@@ -336,15 +336,15 @@ const OffersManager = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {offer.discount_type === 'percentage'
-                    ? `${offer.discount_value}% de réduction`
-                    : `${offer.discount_value}₾ de réduction`}
+                    ? `${offer.discount_value}% discount`
+                    : `${offer.discount_value}₾ discount`}
                 </p>
                 {(offer.min_items > 0 || offer.min_amount > 0 || offer.applicable_products?.length > 0) && (
                   <p className="text-xs text-muted-foreground mt-1">
                     {offer.applicable_products?.length > 0 && (
-                      <span>{offer.applicable_products.length} produit(s) • </span>
+                      <span>{offer.applicable_products.length} product(s) • </span>
                     )}
-                    {offer.min_items > 0 && `${offer.min_items} articles min`}
+                    {offer.min_items > 0 && `${offer.min_items} items min`}
                     {offer.min_items > 0 && offer.min_amount > 0 && ' • '}
                     {offer.min_amount > 0 && `${offer.min_amount}₾ min`}
                   </p>

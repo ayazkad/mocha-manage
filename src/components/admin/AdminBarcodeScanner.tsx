@@ -39,23 +39,23 @@ const AdminBarcodeScanner = ({ onBarcodeScanned }: AdminBarcodeScannerProps) => 
         className="gap-2"
       >
         <Camera className="w-4 h-4" />
-        Scanner avec caméra
+        Scan with camera
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Scanner un code-barres</DialogTitle>
+            <DialogTitle>Scan barcode</DialogTitle>
           </DialogHeader>
           <Tabs defaultValue="camera" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="camera">
                 <Camera className="w-4 h-4 mr-2" />
-                Caméra
+                Camera
               </TabsTrigger>
               <TabsTrigger value="manual">
                 <Barcode className="w-4 h-4 mr-2" />
-                Manuel
+                Manual
               </TabsTrigger>
             </TabsList>
             
@@ -85,7 +85,7 @@ const AdminBarcodeScanner = ({ onBarcodeScanned }: AdminBarcodeScannerProps) => 
                 />
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                Positionnez le code-barres devant la caméra
+                Position the barcode in front of the camera
               </p>
             </TabsContent>
             
@@ -94,7 +94,7 @@ const AdminBarcodeScanner = ({ onBarcodeScanned }: AdminBarcodeScannerProps) => 
                 <Barcode className="w-5 h-5 text-muted-foreground" />
                 <Input
                   autoFocus
-                  placeholder="Saisissez le code-barres"
+                  placeholder="Enter barcode"
                   value={barcode}
                   onChange={(e) => setBarcode(e.target.value)}
                   onKeyDown={(e) => {
@@ -106,10 +106,10 @@ const AdminBarcodeScanner = ({ onBarcodeScanned }: AdminBarcodeScannerProps) => 
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleScan} className="flex-1">
-                  Valider
+                  Confirm
                 </Button>
                 <Button variant="outline" onClick={() => setOpen(false)}>
-                  Annuler
+                  Cancel
                 </Button>
               </div>
             </TabsContent>

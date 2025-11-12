@@ -31,31 +31,9 @@ interface ReceiptData {
   change?: number;
 }
 
-type Language = 'fr' | 'en' | 'ru' | 'ge';
+type Language = 'en' | 'ru' | 'ge';
 
 const translations = {
-  fr: {
-    title: 'Coffee Shop',
-    subtitle: 'Votre café, notre passion',
-    orderNumber: 'N° Commande:',
-    date: 'Date:',
-    time: 'Heure:',
-    employee: 'Employé:',
-    customer: 'Client:',
-    subtotal: 'Sous-total:',
-    discount: 'Réduction:',
-    total: 'TOTAL:',
-    payment: 'Mode de paiement:',
-    cash: 'Espèces',
-    card: 'Carte',
-    amountPaid: 'Montant reçu:',
-    change: 'Rendu:',
-    points: 'points de fidélité!',
-    thanks: 'Merci de votre visite!',
-    goodbye: 'À bientôt 😊',
-    printButton: 'Imprimer le ticket',
-    skipButton: 'Passer'
-  },
   en: {
     title: 'Coffee Shop',
     subtitle: 'Your coffee, our passion',
@@ -131,7 +109,7 @@ interface PrintReceiptDialogProps {
 }
 
 const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogProps) => {
-  const [language, setLanguage] = useState<Language>('fr');
+  const [language, setLanguage] = useState<Language>('en');
   const printRef = useRef<HTMLDivElement>(null);
   
   const t = translations[language];
@@ -324,7 +302,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         >
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg">Ticket de caisse</DialogTitle>
+              <DialogTitle className="text-lg">Receipt</DialogTitle>
               <Button
                 variant="ghost"
                 size="icon"
@@ -345,7 +323,6 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fr">Français</SelectItem>
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="ru">Русский</SelectItem>
                   <SelectItem value="ge">ქართული</SelectItem>
