@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Trash2 } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -121,12 +121,37 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
 
       if (error) throw error;
 
-      toast.success('Produit modifié');
+      toast.success('Product updated');
       onSaved();
       onClose();
     } catch (error) {
       console.error('Error updating product:', error);
-      toast.error('Erreur lors de la modification');
+      toast.error('Error updating product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!product) return;
+    
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', product.id);
+
+      if (error) throw error;
+
+      toast.success('Product deleted');
+      onSaved();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Error deleting product');
     } finally {
       setLoading(false);
     }
@@ -140,22 +165,22 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md">
         <DialogHeader>
-          <DialogTitle>Édition rapide</DialogTitle>
+          <DialogTitle>Quick Edit</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div>
-            <Label htmlFor="name">Nom du produit</Label>
+            <Label htmlFor="name">Product Name</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Nom"
+              placeholder="Name"
             />
           </div>
 
           <div>
-            <Label htmlFor="price">Prix (₾)</Label>
+            <Label htmlFor="price">Price (₾)</Label>
             <Input
               id="price"
               type="number"
@@ -167,13 +192,13 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
           </div>
 
           <div>
-            <Label htmlFor="category">Catégorie</Label>
+            <Label htmlFor="category">Category</Label>
             <Select
               value={formData.category_id}
               onValueChange={(value) => setFormData({ ...formData, category_id: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une catégorie" />
+                <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
@@ -186,40 +211,14 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
           </div>
 
           <div>
-            <Label htmlFor="image">Photo du produit</Label>
-            <div className="space-y-2">
-              {(imagePreview || formData.image_url) && (
-                <div className="relative w-24 h-24">
-                  <img
-                    src={imagePreview || formData.image_url}
-                    alt="Product preview"
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                    onClick={removeImage}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Input
-                  id="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
+            <Label htmlFor="image">Product Photo</Label>
+...
                 <Label
                   htmlFor="image"
                   className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
                 >
                   <Upload className="w-4 h-4" />
-                  Changer la photo
+                  Change Photo
                 </Label>
               </div>
             </div>
@@ -231,14 +230,23 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
               disabled={loading}
               className="flex-1"
             >
-              Enregistrer
+              Save
             </Button>
             <Button
               variant="outline"
               onClick={onClose}
               disabled={loading}
+              className="flex-1"
             >
-              Annuler
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading}
+              size="icon"
+            >
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>

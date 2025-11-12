@@ -187,16 +187,39 @@ const ProductsManager = () => {
     return selectedCategory?.name_en?.toLowerCase().includes('coffee') || false;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Auto-capitalize first letter
+    let productName = formData.name_en.trim();
+    if (productName) {
+      productName = productName.charAt(0).toUpperCase() + productName.slice(1);
+    }
+
+    // Check for duplicate product names
+    if (products) {
+      const isDuplicate = products.some(p => 
+        p.name_en?.toLowerCase() === productName.toLowerCase() && 
+        (!editingId || p.id !== editingId)
+      );
+      
+      if (isDuplicate) {
+        toast({ 
+          title: 'Duplicate product', 
+          description: 'A product with this name already exists',
+          variant: 'destructive' 
+        });
+        return;
+      }
+    }
     
     // Force les options pour les catégories Coffee
     const selectedCategory = categories?.find(cat => cat.id === formData.category_id);
     const isCoffee = selectedCategory?.name_en?.toLowerCase().includes('coffee');
     
     saveMutation.mutate({
-      name_en: formData.name_en,
-      name_fr: formData.name_en, // Keep French in sync for now
+      name_en: productName,
+      name_fr: productName,
       base_price: parseFloat(formData.base_price),
       category_id: formData.category_id || null,
       description_en: formData.description_en || null,

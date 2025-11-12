@@ -69,7 +69,7 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
     },
     onSuccess: (customers) => {
       if (customers.length === 0) {
-        toast.error('Aucun client trouvé');
+        toast.error('No customer found');
         setSearchResults([]);
         setShowResults(false);
       } else if (customers.length === 1) {
@@ -77,15 +77,15 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
         onCustomerSelected?.(customers[0]);
         setSearchResults([]);
         setShowResults(false);
-        toast.success(`Client trouvé: ${customers[0].name}`);
+        toast.success(`Customer found: ${customers[0].name}`);
       } else {
         setSearchResults(customers);
         setShowResults(true);
-        toast.info(`${customers.length} clients trouvés`);
+        toast.info(`${customers.length} customers found`);
       }
     },
     onError: () => {
-      toast.error('Erreur lors de la recherche');
+      toast.error('Search error');
     },
   });
 
@@ -101,7 +101,7 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
     setSearchResults([]);
     setShowResults(false);
     setSearchInput('');
-    toast.success(`Client sélectionné: ${customer.name}`);
+    toast.success(`Customer selected: ${customer.name}`);
   };
 
   const clearCustomer = () => {
@@ -128,10 +128,10 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
       <CardHeader className="p-2 pb-1">
         <CardTitle className="flex items-center gap-1.5 text-sm">
           <Gift className="h-3.5 w-3.5" />
-          Programme de fidélité
+          Loyalty Program
         </CardTitle>
         <CardDescription className="text-xs">
-          Scannez le QR code client pour accumuler des points
+          Scan customer QR code to accumulate points
         </CardDescription>
       </CardHeader>
       <CardContent className="p-2 space-y-2">
@@ -139,69 +139,31 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
           <form onSubmit={handleSearch} className="space-y-1.5">
             <div className="flex gap-1.5">
               <Input
-                placeholder="Nom, téléphone ou QR code..."
+                placeholder="Name, phone or QR code..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="flex-1 h-8 text-xs"
               />
-              <Button 
-                type="submit" 
-                disabled={searchCustomerMutation.isPending}
-                className="touch-manipulation h-8 w-8 p-0"
-                size="icon"
-              >
-                <Search className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowScanner(true)}
-                className="touch-manipulation h-8 w-8 p-0"
-                size="icon"
-              >
-                <ScanLine className="h-3.5 w-3.5" />
-              </Button>
+...
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Recherchez par nom, numéro de téléphone ou scannez le QR code
+              Search by name, phone number or scan QR code
             </p>
           </form>
         ) : showScanner ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-xs">Scanner le QR code</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowScanner(false)}
-                className="h-6 w-6"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-            <div className="rounded-lg overflow-hidden aspect-square w-full max-w-sm mx-auto">
-              <Scanner
-                onScan={(result) => handleScan(result[0].rawValue)}
-                onError={(error) => {
-                  console.error(error);
-                  toast.error('Erreur lors du scan');
-                }}
-                allowMultiple={false}
-                scanDelay={500}
-                styles={{
-                  container: { width: '100%', height: '100%' },
-                  video: { width: '100%', height: '100%', objectFit: 'cover' }
-                }}
-              />
+              <h3 className="font-semibold text-xs">Scan QR Code</h3>
+...
             </div>
             <p className="text-[10px] text-muted-foreground text-center">
-              Positionnez le QR code devant la caméra
+              Position the QR code in front of the camera
             </p>
           </div>
         ) : showResults ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-xs">Résultats de recherche</h3>
+              <h3 className="font-semibold text-xs">Search Results</h3>
               <Button
                 variant="ghost"
                 size="icon"
@@ -225,9 +187,9 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
                     <p className="font-semibold text-xs">{customer.name}</p>
                     <p className="text-[10px] text-muted-foreground">{customer.email}</p>
                     <p className="text-[10px] text-muted-foreground">{customer.phone}</p>
-                    <p className="text-[10px] text-primary font-medium">
-                      {customer.points} points • {customer.total_purchases} achats
-                    </p>
+                     <p className="text-[10px] text-primary font-medium">
+                       {customer.points} points • {customer.total_purchases} purchases
+                     </p>
                   </div>
                 </div>
               ))}
@@ -266,10 +228,10 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
               <div className="p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
                 <p className="text-[10px] font-medium text-green-800 dark:text-green-200 flex items-center gap-1">
                   <Gift className="h-3 w-3" />
-                  🎉 Boisson offerte !
+                  🎉 Free Drink!
                 </p>
                 <p className="text-[10px] text-green-700 dark:text-green-300">
-                  Boisson gratuite disponible
+                  Free drink available
                 </p>
               </div>
             )}

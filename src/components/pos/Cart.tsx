@@ -180,7 +180,7 @@ const Cart = ({ onClose }: CartProps) => {
 
   const handlePaymentMethodClick = () => {
     if (cart.length === 0) {
-      toast.error('Le panier est vide');
+      toast.error('Cart is empty');
       return;
     }
     setShowPaymentMethod(true);
@@ -220,7 +220,7 @@ const Cart = ({ onClose }: CartProps) => {
 
   const handleCompleteOrder = async (paymentMethod: 'cash' | 'card') => {
     if (!currentSession || !currentEmployee) {
-      toast.error('Session invalide');
+      toast.error('Invalid session');
       return;
     }
 
@@ -456,7 +456,7 @@ const Cart = ({ onClose }: CartProps) => {
           .eq('benefit_date', today);
       }
 
-      toast.success(`Commande ${orderData.order_number} validée`);
+      toast.success(`Order ${orderData.order_number} completed`);
       
       // Prepare receipt data
       const now = new Date();
@@ -504,7 +504,7 @@ const Cart = ({ onClose }: CartProps) => {
       onClose?.();
     } catch (error) {
       console.error('Error completing order:', error);
-      toast.error('Erreur lors de la validation de la commande');
+      toast.error('Error completing order');
     } finally {
       setProcessing(false);
     }
@@ -537,19 +537,19 @@ const Cart = ({ onClose }: CartProps) => {
       <div className="p-3 border-b border-border/50 bg-secondary/30 shrink-0">
         <div className="flex items-center gap-2">
           <ShoppingCart className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold text-card-foreground">Panier</h2>
+          <h2 className="text-base font-semibold text-card-foreground">Cart</h2>
           <span className="ml-auto text-xs text-muted-foreground">
-            {cart.length} article{cart.length !== 1 ? 's' : ''}
+            {cart.length} item{cart.length !== 1 ? 's' : ''}
           </span>
         </div>
       </div>
 
       {/* Cart Items */}
-      <ScrollArea className="flex-1 max-h-[400px]">
+      <ScrollArea className="flex-1">
         {cart.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground py-12 min-h-[300px]">
             <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
-            <p className="text-sm">Votre panier est vide</p>
+            <p className="text-sm">Your cart is empty</p>
           </div>
         ) : (
           <div className="p-3 space-y-2">
@@ -562,11 +562,11 @@ const Cart = ({ onClose }: CartProps) => {
                   onChange={toggleSelectAll}
                   className="w-3.5 h-3.5 rounded border-border accent-primary"
                 />
-                <span>Tout sélectionner</span>
+                <span>Select All</span>
               </label>
               {selectedItems.length > 0 && (
                 <span className="text-xs text-primary font-medium">
-                  {selectedItems.length} sélectionné{selectedItems.length > 1 ? 's' : ''}
+                  {selectedItems.length} selected
                 </span>
               )}
             </div>
@@ -682,19 +682,12 @@ const Cart = ({ onClose }: CartProps) => {
         )}
       </ScrollArea>
 
-      {/* Customer Loyalty - always visible */}
-      <div className="p-2 border-t border-border/50 bg-secondary/30 shrink-0">
-        <CustomerLoyalty 
-          onCustomerSelected={setSelectedCustomer}
-          selectedCustomer={selectedCustomer}
-        />
-      </div>
-
       {/* Footer - always visible */}
-      <div className="p-3 border-t border-border/50 bg-secondary/30 shrink-0 space-y-2">
+      <div className="mt-auto border-t border-border/50 bg-secondary/30 shrink-0">
+        <div className="p-3 space-y-2">
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Sub Total</span>
+              <span className="text-muted-foreground">Subtotal</span>
               <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
             </div>
             
@@ -707,7 +700,7 @@ const Cart = ({ onClose }: CartProps) => {
                   Discount
                   {freeDrinkDiscount > 0 && (
                     <span className="text-green-600 font-medium">
-                      (Boisson offerte!)
+                      (Free Drink!)
                     </span>
                   )}
                 </span>
@@ -734,16 +727,14 @@ const Cart = ({ onClose }: CartProps) => {
                 <span className="flex items-center gap-1.5">
                   <Percent className="w-3 h-3" />
                   {selectedItems.length > 0 
-                    ? `Réduction (${selectedItems.length})`
-                    : 'Réduction'
+                    ? `Discount (${selectedItems.length})`
+                    : 'Discount'
                   }
                 </span>
               </Button>
               <Button
                 variant="outline"
                 onClick={() => {
-                  // Si des items sont sélectionnés, retirer seulement ceux-là
-                  // Sinon, retirer toutes les réductions
                   if (selectedItems.length > 0) {
                     selectedItems.forEach(index => {
                       const item = cart[index];
@@ -757,7 +748,7 @@ const Cart = ({ onClose }: CartProps) => {
                 className="rounded-lg h-9 text-xs text-destructive hover:text-destructive"
                 disabled={cart.length === 0 || itemDiscounts === 0}
               >
-                Retirer
+                Remove
               </Button>
             </div>
           </div>
@@ -775,7 +766,7 @@ const Cart = ({ onClose }: CartProps) => {
           {showPaymentMethod && !showCashCalculator && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-center text-muted-foreground">
-                Choisissez le mode de paiement
+                Choose payment method
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <Button
@@ -785,7 +776,7 @@ const Cart = ({ onClose }: CartProps) => {
                   variant="outline"
                 >
                   <Banknote className="w-6 h-6" />
-                  <span className="text-xs font-semibold">Espèces</span>
+                  <span className="text-xs font-semibold">Cash</span>
                 </Button>
                 <Button
                   onClick={handleCardPayment}
@@ -794,7 +785,7 @@ const Cart = ({ onClose }: CartProps) => {
                   variant="outline"
                 >
                   <CreditCard className="w-6 h-6" />
-                  <span className="text-xs font-semibold">Carte</span>
+                  <span className="text-xs font-semibold">Card</span>
                 </Button>
               </div>
               <Button
@@ -803,7 +794,7 @@ const Cart = ({ onClose }: CartProps) => {
                 className="w-full rounded-lg h-8 text-xs"
                 disabled={processing}
               >
-                Retour
+                Back
               </Button>
             </div>
           )}
@@ -812,37 +803,24 @@ const Cart = ({ onClose }: CartProps) => {
             <div className="space-y-2">
               <div className="space-y-2 p-2 bg-muted/50 rounded-lg">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">Total à payer</span>
+                  <span className="text-xs text-muted-foreground">Total to pay</span>
                   <span className="text-sm font-bold text-card-foreground">{total.toFixed(2)} ₾</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">Montant reçu</span>
+                  <span className="text-xs text-muted-foreground">Amount received</span>
                   <span className="text-sm font-bold text-primary">{amountReceived.toFixed(2)} ₾</span>
                 </div>
                 {amountReceived >= total && (
                   <div className="flex justify-between items-center pt-1 border-t">
-                    <span className="text-xs font-semibold text-card-foreground">Rendu à donner</span>
+                    <span className="text-xs font-semibold text-card-foreground">Change to give</span>
                     <span className="text-base font-bold text-green-600">{getChange().toFixed(2)} ₾</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-1">
-                <p className="text-xs font-medium text-center text-muted-foreground">Billets géorgiens</p>
-                <div className="grid grid-cols-4 gap-1">
-                  {[200, 100, 50, 20, 10, 5, 2, 1].map((bill) => (
-                    <Button
-                      key={bill}
-                      onClick={() => addBill(bill)}
-                      variant="outline"
-                      className="h-10 text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      {bill} ₾
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
+                <p className="text-xs font-medium text-center text-muted-foreground">Georgian bills</p>
+...
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={resetCash}
@@ -850,14 +828,14 @@ const Cart = ({ onClose }: CartProps) => {
                   className="rounded-lg h-9 text-xs"
                   disabled={processing}
                 >
-                  Effacer
+                  Clear
                 </Button>
                 <Button
                   onClick={completeCashPayment}
                   disabled={!canCompleteCashPayment() || processing}
                   className="bg-gradient-primary hover:opacity-90 transition-opacity rounded-lg h-9 text-xs"
                 >
-                  {processing ? 'Traitement...' : 'Valider'}
+                  {processing ? 'Processing...' : 'Confirm'}
                 </Button>
               </div>
 
@@ -871,12 +849,20 @@ const Cart = ({ onClose }: CartProps) => {
                 className="w-full rounded-lg h-8 text-xs"
                 disabled={processing}
               >
-                ← Retour aux modes de paiement
+                ← Back to payment methods
               </Button>
             </div>
           )}
         </div>
 
+        {/* Customer Loyalty - moved to bottom */}
+        <div className="p-2 border-t border-border/50 shrink-0">
+          <CustomerLoyalty 
+            onCustomerSelected={setSelectedCustomer}
+            selectedCustomer={selectedCustomer}
+          />
+        </div>
+      </div>
 
       <DiscountDialog
         open={showDiscountDialog}
