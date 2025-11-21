@@ -212,7 +212,29 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
 
           <div>
             <Label htmlFor="image">Product Photo</Label>
-...
+            <Input
+              id="image"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <div className="mt-2">
+              {imagePreview ? (
+                <div className="relative w-full h-32 rounded-md overflow-hidden bg-muted">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
                 <Label
                   htmlFor="image"
                   className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
@@ -220,7 +242,7 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
                   <Upload className="w-4 h-4" />
                   Change Photo
                 </Label>
-              </div>
+              )}
             </div>
           </div>
 
