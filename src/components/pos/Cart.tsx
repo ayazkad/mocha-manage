@@ -820,7 +820,21 @@ const Cart = ({ onClose }: CartProps) => {
 
               <div className="space-y-1">
                 <p className="text-xs font-medium text-center text-muted-foreground">Georgian bills</p>
-...
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[1, 2, 5, 10, 20, 50, 100, 200].map(amount => (
+                    <Button
+                      key={amount}
+                      onClick={() => addBill(amount)}
+                      variant="outline"
+                      className="h-12 text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-colors rounded-lg"
+                      disabled={processing}
+                    >
+                      {amount} ₾
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={resetCash}
@@ -863,6 +877,7 @@ const Cart = ({ onClose }: CartProps) => {
           />
         </div>
       </div>
+      </div>
 
       <DiscountDialog
         open={showDiscountDialog}
@@ -870,7 +885,6 @@ const Cart = ({ onClose }: CartProps) => {
         onApply={applyDiscountToItems}
         hasSelection={selectedItems.length > 0}
       />
-    </div>
     </>
   );
 };
