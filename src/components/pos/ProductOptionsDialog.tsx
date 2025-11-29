@@ -139,8 +139,8 @@ const ProductOptionsDialog = ({
           <DialogTitle className="text-xl md:text-2xl">{getProductName(product)}</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
-          <div className="space-y-4 pb-4">
+        <ScrollArea className="flex-1 px-6 overflow-y-auto" style={{ touchAction: 'pan-y' }}>
+          <div className="space-y-4 pb-4" style={{ touchAction: 'pan-y' }}>
             {/* Toggle Hot/Cold */}
             <div className="bg-muted rounded-lg p-3">
               <div className="flex items-center justify-center gap-2">
