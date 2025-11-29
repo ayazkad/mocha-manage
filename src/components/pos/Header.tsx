@@ -1,11 +1,12 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Coffee, LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench } from 'lucide-react';
+import { Coffee, LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench, QrCode } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import AddCustomerDialog from './AddCustomerDialog';
 import ToolsDialog from './ToolsDialog';
 import BarcodeScanner from './BarcodeScanner';
+import OrderLookupDialog from './OrderLookupDialog';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
@@ -13,6 +14,7 @@ const Header = () => {
   const location = useLocation();
   const isAdminPage = location.pathname === '/admin';
   const [showTools, setShowTools] = useState(false);
+  const [showOrderLookup, setShowOrderLookup] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -40,7 +42,19 @@ const Header = () => {
               className="gap-2 rounded-xl border-border/50"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden md:inline">Retour caisse</span>
+              <span className="hidden md:inline">Back to POS</span>
+            </Button>
+          )}
+
+          {!isAdminPage && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowOrderLookup(true)}
+              className="rounded-xl border-border/50"
+              title="Scan Receipt QR Code"
+            >
+              <QrCode className="w-4 h-4" />
             </Button>
           )}
 
@@ -99,6 +113,7 @@ const Header = () => {
       </div>
 
       <ToolsDialog open={showTools} onClose={() => setShowTools(false)} />
+      <OrderLookupDialog open={showOrderLookup} onClose={() => setShowOrderLookup(false)} />
     </header>
   );
 };

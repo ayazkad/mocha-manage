@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, X, Globe } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import QRCode from 'qrcode';
 
 interface OrderItem {
   productName: string;
@@ -16,6 +17,7 @@ interface OrderItem {
 }
 
 interface ReceiptData {
+  orderId: string;
   orderNumber: string;
   employeeName: string;
   date: string;
@@ -111,8 +113,23 @@ interface PrintReceiptDialogProps {
 const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogProps) => {
   const [language, setLanguage] = useState<Language>('en');
   const printRef = useRef<HTMLDivElement>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   
   const t = translations[language];
+
+  // Generate QR code when receiptData changes
+  useEffect(() => {
+    if (receiptData?.orderId) {
+      QRCode.toDataURL(receiptData.orderId, {
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      }).then(setQrCodeUrl).catch(console.error);
+    }
+  }, [receiptData?.orderId]);
 
   const handlePrint = () => {
     // Add print styles for full page portrait
@@ -172,11 +189,18 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
   const ReceiptContent = () => (
     <div className="w-full max-w-[80mm] mx-auto font-mono text-xs leading-tight">
-      {/* Header */}
-      <div className="text-center space-y-0 pb-1">
-        <h2 className="text-base font-bold tracking-wide">{t.title.toUpperCase()}</h2>
+      {/* Header with Store Info */}
+      <div className="text-center space-y-0.5 pb-2">
+        <h2 className="text-lg font-bold tracking-wide">{t.title.toUpperCase()}</h2>
         <p className="text-[9px]">{t.subtitle}</p>
-        <div className="border-t border-dashed border-gray-400 my-1"></div>
+        <p className="text-[8px] opacity-70">Tbilisi, Georgia</p>
+        <p className="text-[8px] opacity-70">Tel: +995 XXX XXX XXX</p>
+        <p className="text-[8px] opacity-70">VAT: XXXXXXXXXX</p>
+        <div className="border-t border-dashed border-gray-400 my-2"></div>
+        <div className="bg-black text-white py-1.5 px-2 inline-block rounded">
+          <p className="text-sm font-bold">Order# {receiptData.orderNumber}</p>
+        </div>
+        <div className="border-t border-dashed border-gray-400 my-2"></div>
       </div>
 
       {/* Order Info */}
@@ -283,10 +307,22 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
       )}
 
       {/* Footer */}
-      <div className="text-center pt-1 space-y-0">
-        <div className="border-t border-dashed border-gray-400 my-1"></div>
-        <p className="text-[9px]">{t.thanks}</p>
-        <p className="text-[8px]">{t.goodbye}</p>
+      <div className="text-center pt-2 space-y-1">
+        <div className="border-t border-dashed border-gray-400 my-2"></div>
+        <p className="text-[10px] font-medium">{t.thanks}</p>
+        <p className="text-[9px]">{t.goodbye}</p>
+        
+        {/* QR Code */}
+        {qrCodeUrl && (
+          <div className="pt-2">
+            <img 
+              src={qrCodeUrl} 
+              alt="Order QR Code" 
+              className="mx-auto w-32 h-32"
+            />
+            <p className="text-[8px] opacity-70 mt-1">Scan to view order details</p>
+          </div>
+        )}
       </div>
     </div>
   );
