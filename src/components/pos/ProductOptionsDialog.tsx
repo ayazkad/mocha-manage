@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 
 interface Product {
   id: string;
@@ -134,13 +134,13 @@ const ProductOptionsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-2 flex-shrink-0">
           <DialogTitle className="text-xl md:text-2xl">{getProductName(product)}</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 overflow-y-auto" style={{ touchAction: 'pan-y' }}>
-          <div className="space-y-4 pb-4" style={{ touchAction: 'pan-y' }}>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="space-y-4 pb-4">
             {/* Toggle Hot/Cold */}
             <div className="bg-muted rounded-lg p-3">
               <div className="flex items-center justify-center gap-2">
@@ -262,9 +262,9 @@ const ProductOptionsDialog = ({
               />
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-3 px-6 py-4 border-t">
+        <DialogFooter className="flex-col sm:flex-row gap-3 px-6 py-4 border-t flex-shrink-0">
           <div className="flex items-center justify-between w-full gap-3">
             <div className="text-left">
               <p className="text-sm text-muted-foreground">Total</p>
