@@ -461,10 +461,11 @@ const Cart = ({ onClose }: CartProps) => {
       // Prepare receipt data
       const now = new Date();
       const receiptInfo = {
+        orderId: orderData.id,
         orderNumber: orderData.order_number,
         employeeName: currentEmployee.name,
-        date: now.toLocaleDateString('fr-FR'),
-        time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        date: now.toLocaleDateString('en-US'),
+        time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         items: cart.map(item => ({
           productName: item.productName,
           quantity: item.quantity,
