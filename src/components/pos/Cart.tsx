@@ -502,7 +502,6 @@ const Cart = ({ onClose }: CartProps) => {
       // setManualDiscountPercent(0);
       setAppliedOffer(null);
       setSelectedItems([]);
-      onClose?.();
     } catch (error) {
       console.error('Error completing order:', error);
       toast.error('Error completing order');
@@ -523,6 +522,7 @@ const Cart = ({ onClose }: CartProps) => {
     setManualDiscountPercent(0);
     setAppliedOffer(null);
     setSelectedItems([]);
+    onClose?.();
   };
 
   return (
