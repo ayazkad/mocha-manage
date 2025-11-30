@@ -132,7 +132,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   }, [receiptData?.orderId]);
 
   const handlePrint = () => {
-    // Add print styles for full page portrait
+    // Add print styles for 80mm thermal printer (ESC/POS format)
     const style = document.createElement('style');
     style.textContent = `
       @media print {
@@ -151,25 +151,25 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           position: fixed;
           left: 0;
           top: 0;
-          width: 100% !important;
-          height: 100vh !important;
-          max-width: 100% !important;
+          width: 80mm !important;
+          max-width: 80mm !important;
           margin: 0 !important;
-          padding: 10mm 15mm !important;
-          font-family: 'Courier New', monospace !important;
-          font-size: 11pt !important;
-          line-height: 1.4 !important;
+          padding: 2mm !important;
+          font-family: 'Courier New', 'Consolas', monospace !important;
+          font-size: 9pt !important;
+          line-height: 1.3 !important;
           color: #000 !important;
           background: #fff !important;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
         }
         .print-content * {
           visibility: visible;
         }
+        .print-content img {
+          max-width: 100% !important;
+          height: auto !important;
+        }
         @page {
-          size: A4 portrait;
+          size: 80mm auto;
           margin: 0;
         }
       }
@@ -188,34 +188,25 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   if (!receiptData) return null;
 
   const ReceiptContent = () => (
-    <div className="w-full max-w-[80mm] mx-auto font-mono text-xs leading-tight">
+    <div className="w-[80mm] mx-auto font-mono text-xs leading-tight print:w-full">
       {/* Header with Store Info */}
-      <div className="text-center space-y-0.5 pb-2">
-        <h2 className="text-lg font-bold tracking-wide">{t.title.toUpperCase()}</h2>
-        <p className="text-[9px]">{t.subtitle}</p>
-        <p className="text-[8px] opacity-70">Tbilisi, Georgia</p>
-        <p className="text-[8px] opacity-70">Tel: +995 XXX XXX XXX</p>
-        <p className="text-[8px] opacity-70">VAT: XXXXXXXXXX</p>
-        <div className="border-t border-dashed border-gray-400 my-2"></div>
-        <div className="bg-black text-white py-1.5 px-2 inline-block rounded">
-          <p className="text-sm font-bold">Order# {receiptData.orderNumber}</p>
+      <div className="text-center space-y-0 pb-1">
+        <h2 className="text-base font-bold tracking-wide">{t.title.toUpperCase()}</h2>
+        <p className="text-[8px]">{t.subtitle}</p>
+        <p className="text-[7px] opacity-70">Tbilisi, Georgia</p>
+        <p className="text-[7px] opacity-70">Tel: +995 XXX XXX XXX</p>
+        <div className="text-[8px] mt-0.5">{'='.repeat(42)}</div>
+        <div className="py-0.5">
+          <p className="text-xs font-bold">#{receiptData.orderNumber}</p>
         </div>
-        <div className="border-t border-dashed border-gray-400 my-2"></div>
+        <div className="text-[8px]">{'='.repeat(42)}</div>
       </div>
 
       {/* Order Info */}
-      <div className="space-y-0 text-[9px] leading-tight">
-        <div className="flex justify-between">
-          <span>{t.orderNumber}</span>
-          <span className="font-bold">{receiptData.orderNumber}</span>
-        </div>
+      <div className="space-y-0 text-[8px] leading-snug pt-1">
         <div className="flex justify-between">
           <span>{t.date}</span>
-          <span>{receiptData.date}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>{t.time}</span>
-          <span>{receiptData.time}</span>
+          <span>{receiptData.date} {receiptData.time}</span>
         </div>
         <div className="flex justify-between">
           <span>{t.employee}</span>
@@ -229,35 +220,35 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         )}
       </div>
 
-      <div className="border-t border-dashed border-gray-400 my-1"></div>
+      <div className="text-[8px] my-0.5">{'-'.repeat(42)}</div>
 
       {/* Items */}
-      <div className="space-y-1">
+      <div className="space-y-0.5 py-0.5">
         {receiptData.items.map((item, index) => (
-          <div key={index} className="text-[9px] leading-tight">
-            <div className="flex justify-between items-start">
-              <span className="flex-1 pr-2">
+          <div key={index} className="text-[8px] leading-tight">
+            <div className="flex justify-between items-start gap-1">
+              <span className="flex-1 min-w-0">
                 {item.quantity}x {item.productName}
                 {(item.selectedSize || item.selectedMilk) && (
-                  <span className="block text-[8px] opacity-70 ml-2">
+                  <span className="block text-[7px] opacity-70 pl-2">
                     {item.selectedSize?.name}
                     {item.selectedSize && item.selectedMilk && ', '}
                     {item.selectedMilk?.name}
                   </span>
                 )}
               </span>
-              <span className="font-medium whitespace-nowrap">
-                {item.unitPrice.toFixed(2)} ₾  {item.totalPrice.toFixed(2)} ₾
+              <span className="font-medium whitespace-nowrap text-right">
+                {item.totalPrice.toFixed(2)}
               </span>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="border-t border-dashed border-gray-400 my-1"></div>
+      <div className="text-[8px] my-0.5">{'-'.repeat(42)}</div>
 
       {/* Totals */}
-      <div className="space-y-0 text-[9px] leading-tight">
+      <div className="space-y-0 text-[8px] leading-tight">
         <div className="flex justify-between">
           <span>{t.subtotal}</span>
           <span>{receiptData.subtotal.toFixed(2)} ₾</span>
@@ -268,19 +259,20 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             <span>-{receiptData.discount.toFixed(2)} ₾</span>
           </div>
         )}
-        <div className="flex justify-between font-bold text-[11px] mt-0.5">
+        <div className="text-[8px] my-0.5">{'-'.repeat(42)}</div>
+        <div className="flex justify-between font-bold text-[10px]">
           <span>{t.total}</span>
           <span>{receiptData.total.toFixed(2)} ₾</span>
         </div>
       </div>
 
-      <div className="border-t border-dashed border-gray-400 my-1"></div>
+      <div className="text-[8px] my-0.5">{'='.repeat(42)}</div>
 
       {/* Payment */}
-      <div className="space-y-0 text-[9px] leading-tight">
+      <div className="space-y-0 text-[8px] leading-tight">
         <div className="flex justify-between">
           <span>{t.payment}</span>
-          <span>{receiptData.paymentMethod === 'cash' ? t.cash : t.card}</span>
+          <span className="uppercase">{receiptData.paymentMethod === 'cash' ? t.cash : t.card}</span>
         </div>
         {receiptData.amountPaid !== undefined && receiptData.amountPaid > 0 && (
           <div className="flex justify-between">
@@ -299,30 +291,33 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
       {/* Loyalty Points */}
       {receiptData.pointsEarned && receiptData.pointsEarned > 0 && (
         <>
-          <div className="border-t border-dashed border-gray-400 my-1"></div>
-          <div className="text-center text-[9px]">
-            <p>+{receiptData.pointsEarned} {t.points}</p>
+          <div className="text-[8px] my-0.5">{'-'.repeat(42)}</div>
+          <div className="text-center text-[8px] font-medium">
+            <p>★ +{receiptData.pointsEarned} {t.points} ★</p>
           </div>
         </>
       )}
 
       {/* Footer */}
-      <div className="text-center pt-2 space-y-1">
-        <div className="border-t border-dashed border-gray-400 my-2"></div>
-        <p className="text-[10px] font-medium">{t.thanks}</p>
-        <p className="text-[9px]">{t.goodbye}</p>
+      <div className="text-center pt-1 space-y-0.5">
+        <div className="text-[8px] my-1">{'='.repeat(42)}</div>
+        <p className="text-[9px] font-medium">{t.thanks}</p>
+        <p className="text-[8px]">{t.goodbye}</p>
         
         {/* QR Code */}
         {qrCodeUrl && (
-          <div className="pt-2">
+          <div className="pt-1">
             <img 
               src={qrCodeUrl} 
               alt="Order QR Code" 
-              className="mx-auto w-32 h-32"
+              className="mx-auto w-24 h-24 print:w-20 print:h-20"
             />
-            <p className="text-[8px] opacity-70 mt-1">Scan to view order details</p>
+            <p className="text-[7px] opacity-70 mt-0.5">Scan for details</p>
           </div>
         )}
+        <div className="text-[7px] opacity-50 pt-1">
+          <p>Powered by Coffee POS</p>
+        </div>
       </div>
     </div>
   );
@@ -395,7 +390,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
       </Dialog>
 
       {/* Print-only version */}
-      <div className="hidden print:block print-content p-4">
+      <div className="hidden print:block print-content">
         <ReceiptContent />
       </div>
     </>
