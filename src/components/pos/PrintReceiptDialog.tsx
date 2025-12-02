@@ -136,22 +136,26 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     const style = document.createElement('style');
     style.textContent = `
       @media print {
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
+        @page {
+          size: 80mm auto;
+          margin: 0 !important;
+          padding: 0 !important;
         }
-        body {
+        html, body {
           visibility: hidden;
-          margin: 0;
-          padding: 0;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 80mm !important;
+          min-width: 80mm !important;
+          max-width: 80mm !important;
         }
         .print-content {
-          visibility: visible;
-          position: fixed;
+          visibility: visible !important;
+          position: absolute;
           left: 0;
           top: 0;
           width: 80mm !important;
+          min-width: 80mm !important;
           max-width: 80mm !important;
           margin: 0 !important;
           padding: 2mm !important;
@@ -162,15 +166,11 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           background: #fff !important;
         }
         .print-content * {
-          visibility: visible;
+          visibility: visible !important;
         }
         .print-content img {
           max-width: 100% !important;
           height: auto !important;
-        }
-        @page {
-          size: 80mm auto;
-          margin: 0;
         }
       }
     `;
