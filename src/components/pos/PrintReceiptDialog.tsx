@@ -132,8 +132,13 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   }, [receiptData?.orderId]);
 
   const handlePrint = () => {
+    // Remove any existing print styles first
+    const existingStyles = document.querySelectorAll('[data-print-receipt-style]');
+    existingStyles.forEach(el => el.remove());
+
     // Add print styles for 80mm thermal printer (ESC/POS format)
     const style = document.createElement('style');
+    style.setAttribute('data-print-receipt-style', 'true');
     style.textContent = `
       @media print {
         @page {
@@ -142,18 +147,26 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           padding: 0 !important;
         }
         html, body {
-          visibility: hidden;
+          visibility: hidden !important;
           margin: 0 !important;
           padding: 0 !important;
           width: 80mm !important;
           min-width: 80mm !important;
           max-width: 80mm !important;
+          background: #fff !important;
+        }
+        body * {
+          visibility: hidden !important;
+        }
+        .print-content,
+        .print-content * {
+          visibility: visible !important;
         }
         .print-content {
-          visibility: visible !important;
-          position: absolute;
-          left: 0;
-          top: 0;
+          display: block !important;
+          position: absolute !important;
+          left: 0 !important;
+          top: 0 !important;
           width: 80mm !important;
           min-width: 80mm !important;
           max-width: 80mm !important;
@@ -164,9 +177,6 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           line-height: 1.3 !important;
           color: #000 !important;
           background: #fff !important;
-        }
-        .print-content * {
-          visibility: visible !important;
         }
         .print-content img {
           max-width: 100% !important;
@@ -180,7 +190,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     
     // Clean up and close after printing
     setTimeout(() => {
-      document.head.removeChild(style);
+      style.remove();
       onClose();
     }, 500);
   };
