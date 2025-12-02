@@ -154,6 +154,8 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           min-width: 80mm !important;
           max-width: 80mm !important;
           background: #fff !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
         body * {
           visibility: hidden !important;
@@ -181,6 +183,16 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         .print-content img {
           max-width: 100% !important;
           height: auto !important;
+        }
+        /* Hide dialog and all UI elements */
+        [role="dialog"],
+        [data-radix-dialog-overlay],
+        .print\\:hidden,
+        button,
+        header,
+        nav {
+          display: none !important;
+          visibility: hidden !important;
         }
       }
     `;
