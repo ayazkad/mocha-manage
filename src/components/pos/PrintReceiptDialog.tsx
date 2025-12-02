@@ -210,22 +210,26 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   if (!receiptData) return null;
 
   const ReceiptContent = () => (
-    <div className="w-[80mm] mx-auto font-mono text-xs leading-tight print:w-full">
-      {/* Header with Store Info */}
-      <div className="text-center space-y-0 pb-1">
-        <h2 className="text-base font-bold tracking-wide">{t.title.toUpperCase()}</h2>
-        <p className="text-[8px]">{t.subtitle}</p>
-        <p className="text-[7px] opacity-70">Tbilisi, Georgia</p>
-        <p className="text-[7px] opacity-70">Tel: +995 XXX XXX XXX</p>
-        <div className="text-[8px] mt-0.5">{'='.repeat(42)}</div>
-        <div className="py-0.5">
-          <p className="text-xs font-bold">#{receiptData.orderNumber}</p>
-        </div>
-        <div className="text-[8px]">{'='.repeat(42)}</div>
+    <div className="w-[72mm] mx-auto font-mono text-[9px] leading-tight">
+      {/* Header - Shop Info */}
+      <div className="text-center pb-1">
+        <div className="text-[11px] font-bold tracking-wide">{t.title.toUpperCase()}</div>
+        <div className="text-[8px]">{t.subtitle}</div>
+        <div className="text-[7px]">Tbilisi, Georgia</div>
+        <div className="text-[7px]">Tel: +995 XXX XXX XXX</div>
       </div>
 
+      <div className="text-[8px] text-center">{'='.repeat(40)}</div>
+
+      {/* Order Number */}
+      <div className="text-center py-0.5">
+        <div className="text-[10px] font-bold">#{receiptData.orderNumber}</div>
+      </div>
+
+      <div className="text-[8px] text-center">{'='.repeat(40)}</div>
+
       {/* Order Info */}
-      <div className="space-y-0 text-[8px] leading-snug pt-1">
+      <div className="py-0.5 text-[8px]">
         <div className="flex justify-between">
           <span>{t.date}</span>
           <span>{receiptData.date} {receiptData.time}</span>
@@ -242,35 +246,36 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         )}
       </div>
 
-      <div className="text-[8px] my-0.5">{'-'.repeat(42)}</div>
+      <div className="text-[8px] text-center">{'-'.repeat(40)}</div>
 
-      {/* Items */}
-      <div className="space-y-0.5 py-0.5">
+      {/* Items List */}
+      <div className="py-0.5">
         {receiptData.items.map((item, index) => (
-          <div key={index} className="text-[8px] leading-tight">
-            <div className="flex justify-between items-start gap-1">
-              <span className="flex-1 min-w-0">
-                {item.quantity}x {item.productName}
-                {(item.selectedSize || item.selectedMilk) && (
-                  <span className="block text-[7px] opacity-70 pl-2">
-                    {item.selectedSize?.name}
-                    {item.selectedSize && item.selectedMilk && ', '}
-                    {item.selectedMilk?.name}
-                  </span>
-                )}
-              </span>
-              <span className="font-medium whitespace-nowrap text-right">
-                {item.totalPrice.toFixed(2)}
-              </span>
+          <div key={index} className="text-[8px] py-0.5">
+            <div className="flex justify-between">
+              <span>{item.quantity}x {item.productName}</span>
+              <span>{item.totalPrice.toFixed(2)}</span>
             </div>
+            {(item.selectedSize || item.selectedMilk) && (
+              <div className="text-[7px] pl-3 opacity-70">
+                {item.selectedSize?.name}
+                {item.selectedSize && item.selectedMilk && ', '}
+                {item.selectedMilk?.name}
+              </div>
+            )}
+            {item.quantity > 1 && (
+              <div className="text-[7px] pl-3 opacity-70">
+                @ {item.unitPrice.toFixed(2)} ₾
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      <div className="text-[8px] my-0.5">{'-'.repeat(42)}</div>
+      <div className="text-[8px] text-center">{'-'.repeat(40)}</div>
 
       {/* Totals */}
-      <div className="space-y-0 text-[8px] leading-tight">
+      <div className="py-0.5 text-[8px]">
         <div className="flex justify-between">
           <span>{t.subtotal}</span>
           <span>{receiptData.subtotal.toFixed(2)} ₾</span>
@@ -281,17 +286,20 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             <span>-{receiptData.discount.toFixed(2)} ₾</span>
           </div>
         )}
-        <div className="text-[8px] my-0.5">{'-'.repeat(42)}</div>
-        <div className="flex justify-between font-bold text-[10px]">
-          <span>{t.total}</span>
-          <span>{receiptData.total.toFixed(2)} ₾</span>
-        </div>
       </div>
 
-      <div className="text-[8px] my-0.5">{'='.repeat(42)}</div>
+      <div className="text-[8px] text-center">{'-'.repeat(40)}</div>
 
-      {/* Payment */}
-      <div className="space-y-0 text-[8px] leading-tight">
+      {/* TOTAL */}
+      <div className="flex justify-between text-[11px] font-bold py-0.5">
+        <span>{t.total}</span>
+        <span>{receiptData.total.toFixed(2)} ₾</span>
+      </div>
+
+      <div className="text-[8px] text-center">{'='.repeat(40)}</div>
+
+      {/* Payment Info */}
+      <div className="py-0.5 text-[8px]">
         <div className="flex justify-between">
           <span>{t.payment}</span>
           <span className="uppercase">{receiptData.paymentMethod === 'cash' ? t.cash : t.card}</span>
@@ -303,7 +311,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           </div>
         )}
         {receiptData.change !== undefined && receiptData.change > 0 && (
-          <div className="flex justify-between font-medium">
+          <div className="flex justify-between font-bold">
             <span>{t.change}</span>
             <span>{receiptData.change.toFixed(2)} ₾</span>
           </div>
@@ -313,33 +321,35 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
       {/* Loyalty Points */}
       {receiptData.pointsEarned && receiptData.pointsEarned > 0 && (
         <>
-          <div className="text-[8px] my-0.5">{'-'.repeat(42)}</div>
-          <div className="text-center text-[8px] font-medium">
-            <p>★ +{receiptData.pointsEarned} {t.points} ★</p>
+          <div className="text-[8px] text-center">{'-'.repeat(40)}</div>
+          <div className="text-center text-[8px] font-medium py-0.5">
+            ★ +{receiptData.pointsEarned} {t.points} ★
           </div>
         </>
       )}
 
+      <div className="text-[8px] text-center">{'='.repeat(40)}</div>
+
       {/* Footer */}
-      <div className="text-center pt-1 space-y-0.5">
-        <div className="text-[8px] my-1">{'='.repeat(42)}</div>
-        <p className="text-[9px] font-medium">{t.thanks}</p>
-        <p className="text-[8px]">{t.goodbye}</p>
-        
-        {/* QR Code */}
-        {qrCodeUrl && (
-          <div className="pt-1">
-            <img 
-              src={qrCodeUrl} 
-              alt="Order QR Code" 
-              className="mx-auto w-24 h-24 print:w-20 print:h-20"
-            />
-            <p className="text-[7px] opacity-70 mt-0.5">Scan for details</p>
-          </div>
-        )}
-        <div className="text-[7px] opacity-50 pt-1">
-          <p>Powered by Coffee POS</p>
+      <div className="text-center py-1">
+        <div className="text-[9px] font-medium">{t.thanks}</div>
+        <div className="text-[8px]">{t.goodbye}</div>
+      </div>
+
+      {/* QR Code */}
+      {qrCodeUrl && (
+        <div className="text-center py-1">
+          <img 
+            src={qrCodeUrl} 
+            alt="QR" 
+            className="mx-auto w-20 h-20"
+          />
+          <div className="text-[7px] opacity-70">Scan for details</div>
         </div>
+      )}
+
+      <div className="text-[6px] text-center opacity-50 pt-1">
+        Powered by Coffee POS
       </div>
     </div>
   );
@@ -384,7 +394,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             </div>
 
             {/* Receipt Preview */}
-            <div className="bg-muted p-4 rounded-lg max-h-[60vh] overflow-y-auto">
+            <div className="bg-white text-black p-4 rounded-lg max-h-[60vh] overflow-y-auto">
               <ReceiptContent />
             </div>
 
