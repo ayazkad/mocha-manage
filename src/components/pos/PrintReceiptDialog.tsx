@@ -37,7 +37,7 @@ type Language = 'en' | 'ru' | 'ge';
 
 const translations = {
   en: {
-    title: 'Coffee Shop',
+    title: 'Latte',
     subtitle: 'Your coffee, our passion',
     orderNumber: 'Order No:',
     date: 'Date:',
@@ -59,7 +59,7 @@ const translations = {
     skipButton: 'Skip'
   },
   ru: {
-    title: 'Coffee Shop',
+    title: 'Latte',
     subtitle: 'Ваш кофе, наша страсть',
     orderNumber: '№ Заказа:',
     date: 'Дата:',
@@ -81,7 +81,7 @@ const translations = {
     skipButton: 'Пропустить'
   },
   ge: {
-    title: 'Coffee Shop',
+    title: 'Latte',
     subtitle: 'თქვენი ყავა, ჩვენი გატაცება',
     orderNumber: 'შეკვეთის №:',
     date: 'თარიღი:',
