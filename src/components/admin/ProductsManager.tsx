@@ -9,9 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Upload, X, Settings2 } from 'lucide-react';
+import { Pencil, Trash2, Upload, X } from 'lucide-react';
 import AdminBarcodeScanner from './AdminBarcodeScanner';
-import ProductOptionsEditor from './ProductOptionsEditor';
 
 const ProductsManager = () => {
   const { toast } = useToast();
@@ -19,7 +18,6 @@ const ProductsManager = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [optionsProduct, setOptionsProduct] = useState<{ id: string; name: string } | null>(null);
   const [formData, setFormData] = useState({
     name_en: '',
     base_price: '',
@@ -431,16 +429,6 @@ const ProductsManager = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  {(product.has_size_options || product.has_milk_options) && (
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => setOptionsProduct({ id: product.id, name: product.name_en || '' })}
-                      title="Edit options"
-                    >
-                      <Settings2 className="w-4 h-4" />
-                    </Button>
-                  )}
                   <Button
                     size="icon"
                     variant="outline"
@@ -461,15 +449,6 @@ const ProductsManager = () => {
           </div>
         </CardContent>
       </Card>
-
-      {optionsProduct && (
-        <ProductOptionsEditor
-          productId={optionsProduct.id}
-          productName={optionsProduct.name}
-          open={!!optionsProduct}
-          onClose={() => setOptionsProduct(null)}
-        />
-      )}
     </div>
   );
 };
