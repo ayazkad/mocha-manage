@@ -69,7 +69,7 @@ const Login = () => {
               <Coffee className="w-10 h-10 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Kava</h1>
+              <h1 className="text-3xl font-bold text-foreground">Latte</h1>
               <p className="text-muted-foreground mt-2">Employee Login</p>
             </div>
           </div>

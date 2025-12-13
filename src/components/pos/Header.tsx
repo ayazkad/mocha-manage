@@ -28,7 +28,7 @@ const Header = () => {
             <Coffee className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg md:text-xl font-bold text-foreground">Kava</h1>
+            <h1 className="text-lg md:text-xl font-bold text-foreground">Latte</h1>
             <p className="text-xs text-muted-foreground hidden md:block">Point of Sale</p>
           </div>
         </div>
