@@ -105,19 +105,61 @@ const Cart = ({ onClose }: CartProps) => {
     return sum + (itemPrice * discount / 100);
   }, 0);
   
-  // Calculer la boisson gratuite si le client a >= 10 points
+  // État pour stocker les boissons (Coffee/Non Coffee)
+  const [drinkProductIds, setDrinkProductIds] = useState<string[]>([]);
+
+  // Charger les produits de catégorie Coffee/Non Coffee
+  useEffect(() => {
+    const loadDrinkCategories = async () => {
+      const productIds = cart.map(item => item.productId).filter(Boolean);
+      if (productIds.length === 0) {
+        setDrinkProductIds([]);
+        return;
+      }
+
+      const { data: products } = await supabase
+        .from('products')
+        .select(`
+          id,
+          category_id,
+          categories!inner (
+            name_en,
+            name_fr
+          )
+        `)
+        .in('id', productIds);
+
+      if (products) {
+        const drinkIds = products.filter((p: any) => {
+          const categoryNameEn = (p.categories?.name_en || '').trim().toLowerCase();
+          const categoryNameFr = (p.categories?.name_fr || '').trim().toLowerCase();
+          return categoryNameEn === 'coffee' || categoryNameEn === 'non coffee' ||
+                 categoryNameFr === 'coffee' || categoryNameFr === 'non coffee';
+        }).map((p: any) => p.id);
+        setDrinkProductIds(drinkIds);
+      }
+    };
+
+    loadDrinkCategories();
+  }, [cart]);
+
+  // Calculer la boisson gratuite si le client a >= 10 points (seulement pour Coffee/Non Coffee)
   const freeDrinkDiscount = selectedCustomer && selectedCustomer.points >= 10
     ? (() => {
-        // Trouver la boisson Coffee/Non Coffee la moins chère
-        const drinks = cart.map((item, index) => ({
-          index,
-          item,
-          unitPrice: item.basePrice + 
-            (item.selectedSize?.priceModifier || 0) + 
-            (item.selectedMilk?.priceModifier || 0)
-        }));
+        // Filtrer seulement les boissons Coffee/Non Coffee
+        const drinks = cart
+          .filter(item => drinkProductIds.includes(item.productId))
+          .map((item, index) => ({
+            index,
+            item,
+            unitPrice: item.basePrice + 
+              (item.selectedSize?.priceModifier || 0) + 
+              (item.selectedMilk?.priceModifier || 0)
+          }));
         
-        // Trouver la boisson la moins chère (seulement les boissons Coffee/Non Coffee)
+        if (drinks.length === 0) return 0;
+        
+        // Trouver la boisson la moins chère
         const cheapestDrink = drinks.reduce((cheapest, current) => {
           if (!cheapest || current.unitPrice < cheapest.unitPrice) {
             return current;
@@ -554,24 +596,6 @@ const Cart = ({ onClose }: CartProps) => {
           </div>
         ) : (
           <div className="p-3 space-y-2">
-            {/* Select All checkbox */}
-            <div className="flex items-center justify-between mb-2 pb-2 border-b border-border/30">
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium">
-                <input
-                  type="checkbox"
-                  checked={selectedItems.length === cart.length && cart.length > 0}
-                  onChange={toggleSelectAll}
-                  className="w-3.5 h-3.5 rounded border-border accent-primary"
-                />
-                <span>Select All</span>
-              </label>
-              {selectedItems.length > 0 && (
-                <span className="text-xs text-primary font-medium">
-                  {selectedItems.length} selected
-                </span>
-              )}
-            </div>
-
             {/* Cart items list */}
             {cart.map((item, index) => {
               const itemPrice = item.basePrice +
@@ -582,19 +606,14 @@ const Cart = ({ onClose }: CartProps) => {
               const discountedTotal = itemTotal * (1 - itemDiscount / 100);
 
               return (
-                <div key={index} className={`bg-card/50 rounded-lg p-2 border-2 transition-colors ${
-                  selectedItems.includes(index) ? 'border-primary' : 'border-border/30'
-                }`}>
+                <div 
+                  key={index} 
+                  className={`bg-card/50 rounded-lg p-2 border-2 transition-colors cursor-pointer ${
+                    selectedItems.includes(index) ? 'border-primary bg-primary/10' : 'border-border/30 hover:border-primary/50'
+                  }`}
+                  onClick={() => toggleItemSelection(index)}
+                >
                   <div className="flex gap-2">
-                    <label className="flex items-center shrink-0 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(index)}
-                        onChange={() => toggleItemSelection(index)}
-                        className="w-3.5 h-3.5 rounded border-border accent-primary"
-                      />
-                    </label>
-
                     {/* Product image */}
                     <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                       {item.image_url ? (
@@ -617,7 +636,7 @@ const Cart = ({ onClose }: CartProps) => {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 shrink-0 text-destructive hover:bg-destructive/10 rounded-md"
-                          onClick={() => removeFromCart(index)}
+                          onClick={(e) => { e.stopPropagation(); removeFromCart(index); }}
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -652,7 +671,7 @@ const Cart = ({ onClose }: CartProps) => {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-0.5">
+                        <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="outline"
                             size="icon"
