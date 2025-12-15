@@ -144,7 +144,15 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="flex-1 h-8 text-xs"
               />
-...
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => setShowScanner(true)}
+              >
+                <ScanLine className="h-4 w-4" />
+              </Button>
             </div>
             <p className="text-[10px] text-muted-foreground">
               Search by name, phone number or scan QR code
@@ -154,7 +162,33 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-xs">Scan QR Code</h3>
-...
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowScanner(false)}
+                className="h-6 w-6"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="rounded-lg overflow-hidden bg-muted aspect-square max-h-[200px]">
+              <Scanner
+                onScan={(detectedCodes) => {
+                  const code = detectedCodes[0]?.rawValue;
+                  if (code) {
+                    handleScan(code);
+                  }
+                }}
+                styles={{
+                  container: {
+                    width: '100%',
+                    height: '100%',
+                  },
+                }}
+                components={{
+                  finder: true,
+                }}
+              />
             </div>
             <p className="text-[10px] text-muted-foreground text-center">
               Position the QR code in front of the camera
