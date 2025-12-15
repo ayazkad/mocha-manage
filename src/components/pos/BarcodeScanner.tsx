@@ -9,12 +9,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePOS } from '@/contexts/POSContext';
 import { useToast } from '@/hooks/use-toast';
 
-const BarcodeScanner = () => {
-  const [open, setOpen] = useState(false);
+interface BarcodeScannerProps {
+  externalOpen?: boolean;
+  onExternalClose?: () => void;
+}
+
+const BarcodeScanner = ({ externalOpen, onExternalClose }: BarcodeScannerProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
   const { addToCart } = usePOS();
   const { toast } = useToast();
+
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (externalOpen !== undefined) {
+      if (!value && onExternalClose) onExternalClose();
+    } else {
+      setInternalOpen(value);
+    }
+  };
 
   useEffect(() => {
     if (!open) {
@@ -84,15 +98,17 @@ const BarcodeScanner = () => {
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(true)}
-        className="gap-2 rounded-xl border-border/50"
-      >
-        <Barcode className="w-4 h-4" />
-        <span className="hidden md:inline">Scanner</span>
-      </Button>
+      {externalOpen === undefined && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setOpen(true)}
+          className="gap-2 rounded-xl border-border/50"
+        >
+          <Barcode className="w-4 h-4" />
+          <span className="hidden md:inline">Scanner</span>
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">

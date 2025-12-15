@@ -685,6 +685,14 @@ const Cart = ({ onClose }: CartProps) => {
 
       {/* Footer - always visible */}
       <div className="mt-auto border-t border-border/50 bg-secondary/30 shrink-0">
+        {/* Customer Loyalty - moved above subtotal */}
+        <div className="p-2 border-b border-border/50">
+          <CustomerLoyalty 
+            onCustomerSelected={setSelectedCustomer}
+            selectedCustomer={selectedCustomer}
+          />
+        </div>
+
         <div className="p-3 space-y-2">
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
@@ -869,17 +877,8 @@ const Cart = ({ onClose }: CartProps) => {
             </div>
           )}
         </div>
-
-        {/* Customer Loyalty - moved to bottom */}
-        <div className="p-2 border-t border-border/50 shrink-0">
-          <CustomerLoyalty 
-            onCustomerSelected={setSelectedCustomer}
-            selectedCustomer={selectedCustomer}
-          />
-        </div>
       </div>
       </div>
-
       <DiscountDialog
         open={showDiscountDialog}
         onClose={() => setShowDiscountDialog(false)}

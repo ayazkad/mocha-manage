@@ -1,12 +1,18 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Coffee, LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench, QrCode } from 'lucide-react';
+import { Coffee, LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench, ScanLine } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import AddCustomerDialog from './AddCustomerDialog';
 import ToolsDialog from './ToolsDialog';
 import BarcodeScanner from './BarcodeScanner';
 import OrderLookupDialog from './OrderLookupDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
@@ -15,6 +21,7 @@ const Header = () => {
   const isAdminPage = location.pathname === '/admin';
   const [showTools, setShowTools] = useState(false);
   const [showOrderLookup, setShowOrderLookup] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -47,15 +54,26 @@ const Header = () => {
           )}
 
           {!isAdminPage && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowOrderLookup(true)}
-              className="rounded-xl border-border/50"
-              title="Scan Receipt QR Code"
-            >
-              <QrCode className="w-4 h-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 rounded-xl border-border/50"
+                >
+                  <ScanLine className="w-4 h-4" />
+                  <span className="hidden md:inline">Scanner</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setShowBarcodeScanner(true)}>
+                  Scan Produit (Barcode)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowOrderLookup(true)}>
+                  Scan Ticket (QR Code)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           <Button
@@ -68,8 +86,6 @@ const Header = () => {
           </Button>
 
           {!isAdminPage && <AddCustomerDialog />}
-
-          {!isAdminPage && <BarcodeScanner />}
 
           {!isAdminPage && (
             <Button
@@ -114,6 +130,7 @@ const Header = () => {
 
       <ToolsDialog open={showTools} onClose={() => setShowTools(false)} />
       <OrderLookupDialog open={showOrderLookup} onClose={() => setShowOrderLookup(false)} />
+      <BarcodeScanner externalOpen={showBarcodeScanner} onExternalClose={() => setShowBarcodeScanner(false)} />
     </header>
   );
 };
