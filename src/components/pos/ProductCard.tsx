@@ -1,4 +1,3 @@
-import { Card } from '@/components/ui/card';
 import { Coffee } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -118,7 +117,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
   }, []);
 
   return (
-    <Card
+    <div
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -130,28 +129,38 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
           longPressTimer.current = null;
         }
       }}
-      className="cursor-pointer hover:shadow-medium transition-all duration-normal hover:scale-[1.02] active:scale-95 overflow-hidden group touch-manipulation border-border/50 bg-card"
+      className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-95 overflow-hidden group touch-manipulation rounded-3xl relative aspect-[3/4] min-h-[140px] md:min-h-[180px]"
     >
-      <div className="aspect-square bg-gradient-card flex items-center justify-center relative overflow-hidden min-h-[100px] md:min-h-[120px]">
+      {/* Background image or gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/40">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={getProductName(product)}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-slow"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
-          <Coffee className="w-14 h-14 md:w-20 md:h-20 text-muted-foreground/40 group-hover:scale-105 transition-transform duration-slow" />
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-400 to-amber-600">
+            <Coffee className="w-16 h-16 md:w-20 md:h-20 text-white/60 group-hover:scale-110 transition-transform duration-500" />
+          </div>
         )}
       </div>
-      <div className="p-2 md:p-3 space-y-1">
-        <h3 className="font-semibold text-xs md:text-sm text-card-foreground line-clamp-1">
-          {getProductName(product)}
-        </h3>
-        <p className="text-base md:text-lg font-bold text-primary">
-          {product.base_price.toFixed(2)} ₾
-        </p>
+      
+      {/* Overlay gradient for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      
+      {/* Content overlay */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+        <div className="flex items-end justify-between gap-2">
+          <h3 className="font-bold text-sm md:text-base text-white line-clamp-2 flex-1">
+            {getProductName(product)}
+          </h3>
+          <span className="bg-foreground/80 text-background px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap backdrop-blur-sm">
+            {product.base_price.toFixed(2)} ₾
+          </span>
+        </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
