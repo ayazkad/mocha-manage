@@ -150,12 +150,12 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
       
       {/* Content overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-        <div className="flex items-end justify-between gap-2">
-          <h3 className="font-bold text-sm md:text-base text-white line-clamp-2 flex-1">
+      <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="font-bold text-xs md:text-base text-white leading-tight">
             {getProductName(product)}
           </h3>
-          <span className="bg-foreground/80 text-background px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap backdrop-blur-sm">
+          <span className="bg-foreground/80 text-background px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-sm font-semibold w-fit backdrop-blur-sm">
             {product.base_price.toFixed(2)} ₾
           </span>
         </div>
