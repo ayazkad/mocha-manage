@@ -4,7 +4,7 @@ import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import NumPad from '@/components/login/NumPad';
-import logoLatte from '@/assets/logo-latte.jpg';
+import logoLatte from '@/assets/logo-latte.png';
 
 const Login = () => {
   const [employeeCode, setEmployeeCode] = useState('');

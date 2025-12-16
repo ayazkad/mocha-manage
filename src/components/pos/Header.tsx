@@ -6,7 +6,7 @@ import { useState } from 'react';
 import AddCustomerDialog from './AddCustomerDialog';
 import ToolsDialog from './ToolsDialog';
 import UnifiedScanner from './UnifiedScanner';
-import logoLatte from '@/assets/logo-latte.jpg';
+import logoLatte from '@/assets/logo-latte.png';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();

@@ -5,6 +5,7 @@ import { Printer, X, Globe } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import QRCode from 'qrcode';
+import logoLatte from '@/assets/logo-latte.png';
 
 interface OrderItem {
   productName: string;
@@ -211,9 +212,9 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
   const ReceiptContent = () => (
     <div className="w-[72mm] mx-auto font-mono text-[9px] leading-tight">
-      {/* Header - Shop Info */}
+      {/* Header - Shop Info with Logo */}
       <div className="text-center pb-1">
-        <div className="text-[11px] font-bold tracking-wide">{t.title.toUpperCase()}</div>
+        <img src={logoLatte} alt="Latte" className="h-8 mx-auto mb-1" />
         <div className="text-[8px]">{t.subtitle}</div>
         <div className="text-[7px]">Tbilisi, Georgia</div>
         <div className="text-[7px]">Tel: +995 XXX XXX XXX</div>

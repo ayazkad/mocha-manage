@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import CustomerLoyalty from './CustomerLoyalty';
 import DiscountDialog from './DiscountDialog';
 import PrintReceiptDialog from './PrintReceiptDialog';
+import CashPaymentDialog from './CashPaymentDialog';
 
 interface CartProps {
   onClose?: () => void;
@@ -231,7 +232,11 @@ const Cart = ({ onClose }: CartProps) => {
   const handleCashPayment = () => {
     setShowPaymentMethod(false);
     setShowCashCalculator(true);
-    setAmountReceived(0);
+  };
+
+  const handleCashConfirm = (amountPaid: number) => {
+    setAmountReceived(amountPaid);
+    handleCompleteOrder('cash');
   };
 
   const handleCardPayment = () => {
@@ -575,6 +580,17 @@ const Cart = ({ onClose }: CartProps) => {
         receiptData={receiptData}
       />
       
+      <CashPaymentDialog
+        open={showCashCalculator}
+        onClose={() => {
+          setShowCashCalculator(false);
+          setShowPaymentMethod(true);
+        }}
+        total={total}
+        onConfirm={handleCashConfirm}
+        processing={processing}
+      />
+      
       <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
       {/* Header */}
       <div className="p-3 border-b border-border/50 bg-secondary/30 shrink-0">
@@ -781,7 +797,7 @@ const Cart = ({ onClose }: CartProps) => {
             </div>
           </div>
 
-          {!showPaymentMethod && !showCashCalculator && (
+          {!showPaymentMethod && (
             <Button
               onClick={handlePaymentMethodClick}
               disabled={processing}
@@ -791,7 +807,7 @@ const Cart = ({ onClose }: CartProps) => {
             </Button>
           )}
 
-          {showPaymentMethod && !showCashCalculator && (
+          {showPaymentMethod && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-center text-muted-foreground">
                 Choose payment method
@@ -823,75 +839,6 @@ const Cart = ({ onClose }: CartProps) => {
                 disabled={processing}
               >
                 Back
-              </Button>
-            </div>
-          )}
-
-          {showCashCalculator && (
-            <div className="space-y-2">
-              <div className="space-y-2 p-2 bg-muted/50 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">Total to pay</span>
-                  <span className="text-sm font-bold text-card-foreground">{total.toFixed(2)} ₾</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">Amount received</span>
-                  <span className="text-sm font-bold text-primary">{amountReceived.toFixed(2)} ₾</span>
-                </div>
-                {amountReceived >= total && (
-                  <div className="flex justify-between items-center pt-1 border-t">
-                    <span className="text-xs font-semibold text-card-foreground">Change to give</span>
-                    <span className="text-base font-bold text-green-600">{getChange().toFixed(2)} ₾</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-center text-muted-foreground">Georgian bills</p>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {[1, 2, 5, 10, 20, 50, 100, 200].map(amount => (
-                    <Button
-                      key={amount}
-                      onClick={() => addBill(amount)}
-                      variant="outline"
-                      className="h-12 text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-colors rounded-lg"
-                      disabled={processing}
-                    >
-                      {amount} ₾
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  onClick={resetCash}
-                  variant="outline"
-                  className="rounded-lg h-9 text-xs"
-                  disabled={processing}
-                >
-                  Clear
-                </Button>
-                <Button
-                  onClick={completeCashPayment}
-                  disabled={!canCompleteCashPayment() || processing}
-                  className="bg-gradient-primary hover:opacity-90 transition-opacity rounded-lg h-9 text-xs"
-                >
-                  {processing ? 'Processing...' : 'Confirm'}
-                </Button>
-              </div>
-
-              <Button
-                onClick={() => {
-                  setShowCashCalculator(false);
-                  setShowPaymentMethod(true);
-                  setAmountReceived(0);
-                }}
-                variant="ghost"
-                className="w-full rounded-lg h-8 text-xs"
-                disabled={processing}
-              >
-                ← Back to payment methods
               </Button>
             </div>
           )}
