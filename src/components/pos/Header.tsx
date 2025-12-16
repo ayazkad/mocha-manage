@@ -5,14 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import AddCustomerDialog from './AddCustomerDialog';
 import ToolsDialog from './ToolsDialog';
-import BarcodeScanner from './BarcodeScanner';
-import OrderLookupDialog from './OrderLookupDialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import UnifiedScanner from './UnifiedScanner';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
@@ -20,8 +13,7 @@ const Header = () => {
   const location = useLocation();
   const isAdminPage = location.pathname === '/admin';
   const [showTools, setShowTools] = useState(false);
-  const [showOrderLookup, setShowOrderLookup] = useState(false);
-  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -54,26 +46,15 @@ const Header = () => {
           )}
 
           {!isAdminPage && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 rounded-xl border-border/50"
-                >
-                  <ScanLine className="w-4 h-4" />
-                  <span className="hidden md:inline">Scanner</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => setShowBarcodeScanner(true)}>
-                  Scan Produit (Barcode)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowOrderLookup(true)}>
-                  Scan Ticket (QR Code)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowScanner(true)}
+              className="gap-2 rounded-xl border-border/50"
+            >
+              <ScanLine className="w-4 h-4" />
+              <span className="hidden md:inline">Scanner</span>
+            </Button>
           )}
 
           <Button
@@ -129,8 +110,7 @@ const Header = () => {
       </div>
 
       <ToolsDialog open={showTools} onClose={() => setShowTools(false)} />
-      <OrderLookupDialog open={showOrderLookup} onClose={() => setShowOrderLookup(false)} />
-      <BarcodeScanner externalOpen={showBarcodeScanner} onExternalClose={() => setShowBarcodeScanner(false)} />
+      <UnifiedScanner open={showScanner} onClose={() => setShowScanner(false)} />
     </header>
   );
 };

@@ -61,6 +61,34 @@ const SalesStatistics = () => {
     },
   });
 
+  // Top 3 most sold products overall
+  const { data: topSoldProducts, isLoading: loadingTopSold } = useQuery({
+    queryKey: ['top-sold-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('product_id, product_name, quantity');
+      
+      if (error) throw error;
+      
+      const productMap = new Map<string, { name: string; quantity: number }>();
+      
+      data.forEach((item: any) => {
+        const key = item.product_id || item.product_name;
+        if (!productMap.has(key)) {
+          productMap.set(key, { name: item.product_name, quantity: 0 });
+        }
+        productMap.get(key)!.quantity += item.quantity;
+      });
+      
+      const sorted = Array.from(productMap.values()).sort((a, b) => b.quantity - a.quantity);
+      return {
+        top3: sorted.slice(0, 3),
+        least3: sorted.slice(-3).reverse(),
+      };
+    },
+  });
+
   // Top 3 products by category
   const { data: topProducts, isLoading: loadingProducts } = useQuery({
     queryKey: ['top-products-by-category'],
@@ -121,7 +149,7 @@ const SalesStatistics = () => {
     },
   });
 
-  if (loadingGlobal || loadingEmployees || loadingProducts) {
+  if (loadingGlobal || loadingEmployees || loadingProducts || loadingTopSold) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-32 w-full" />
@@ -198,7 +226,63 @@ const SalesStatistics = () => {
         </CardContent>
       </Card>
 
-      {/* Top 3 Products by Category */}
+      {/* Top 3 Most Sold and Least Sold Products */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-green-600">🔥 Top 3 produits les plus vendus</CardTitle>
+            <CardDescription>Tous les temps</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Position</TableHead>
+                  <TableHead>Produit</TableHead>
+                  <TableHead className="text-right">Quantité</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topSoldProducts?.top3.map((product, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">#{index + 1}</TableCell>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell className="text-right font-semibold text-green-600">{product.quantity}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-orange-600">📉 Top 3 produits les moins vendus</CardTitle>
+            <CardDescription>Tous les temps</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Position</TableHead>
+                  <TableHead>Produit</TableHead>
+                  <TableHead className="text-right">Quantité</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topSoldProducts?.least3.map((product, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">#{index + 1}</TableCell>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell className="text-right font-semibold text-orange-600">{product.quantity}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Top 3 produits par catégorie</CardTitle>
