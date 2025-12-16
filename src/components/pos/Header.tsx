@@ -1,11 +1,12 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Coffee, LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench, ScanLine } from 'lucide-react';
+import { LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench, ScanLine } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import AddCustomerDialog from './AddCustomerDialog';
 import ToolsDialog from './ToolsDialog';
 import UnifiedScanner from './UnifiedScanner';
+import logoLatte from '@/assets/logo-latte.jpg';
 
 const Header = () => {
   const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
@@ -23,13 +24,11 @@ const Header = () => {
     <header className="bg-card border-b border-border/50 shadow-soft backdrop-blur-sm">
       <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-soft">
-            <Coffee className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-lg md:text-xl font-bold text-foreground">Latte</h1>
-            <p className="text-xs text-muted-foreground hidden md:block">Point of Sale</p>
-          </div>
+          <img 
+            src={logoLatte} 
+            alt="Latte Logo" 
+            className="h-10 w-auto object-contain"
+          />
         </div>
 
         <div className="flex items-center gap-2">

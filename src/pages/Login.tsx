@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { Coffee } from 'lucide-react';
 import { toast } from 'sonner';
 import NumPad from '@/components/login/NumPad';
+import logoLatte from '@/assets/logo-latte.jpg';
 
 const Login = () => {
   const [employeeCode, setEmployeeCode] = useState('');
@@ -65,13 +65,14 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-strong p-8 space-y-8">
           <div className="text-center space-y-4">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-espresso shadow-medium">
-              <Coffee className="w-10 h-10 text-primary-foreground" />
+            <div className="flex justify-center">
+              <img 
+                src={logoLatte} 
+                alt="Latte Logo" 
+                className="h-24 w-auto object-contain"
+              />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Latte</h1>
-              <p className="text-muted-foreground mt-2">Employee Login</p>
-            </div>
+            <p className="text-muted-foreground">Employee Login</p>
           </div>
 
           <div className="space-y-6">
