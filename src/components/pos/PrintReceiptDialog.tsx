@@ -1,11 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer, X, Globe } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Printer, X, Globe, Copy, Check } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import QRCode from 'qrcode';
-import logoLatte from '@/assets/logo-latte.png';
+import { toast } from 'sonner';
 
 interface OrderItem {
   productName: string;
@@ -38,7 +36,7 @@ type Language = 'en' | 'ru' | 'ge';
 
 const translations = {
   en: {
-    title: 'Latte',
+    title: 'LATTE',
     subtitle: 'Your coffee, our passion',
     orderNumber: 'Order No:',
     date: 'Date:',
@@ -48,60 +46,66 @@ const translations = {
     subtotal: 'Subtotal:',
     discount: 'Discount:',
     total: 'TOTAL:',
-    payment: 'Payment method:',
-    cash: 'Cash',
-    card: 'Card',
-    amountPaid: 'Amount paid:',
+    payment: 'Payment:',
+    cash: 'CASH',
+    card: 'CARD',
+    amountPaid: 'Paid:',
     change: 'Change:',
     points: 'loyalty points!',
     thanks: 'Thank you for your visit!',
-    goodbye: 'See you soon 😊',
+    goodbye: 'See you soon!',
     printButton: 'Print receipt',
-    skipButton: 'Skip'
+    skipButton: 'Skip',
+    copyButton: 'Copy',
+    copied: 'Copied!'
   },
   ru: {
-    title: 'Latte',
+    title: 'LATTE',
     subtitle: 'Ваш кофе, наша страсть',
     orderNumber: '№ Заказа:',
     date: 'Дата:',
     time: 'Время:',
     employee: 'Сотрудник:',
     customer: 'Клиент:',
-    subtotal: 'Промежуточный итог:',
+    subtotal: 'Промежуточно:',
     discount: 'Скидка:',
     total: 'ИТОГО:',
-    payment: 'Способ оплаты:',
-    cash: 'Наличные',
-    card: 'Карта',
+    payment: 'Оплата:',
+    cash: 'НАЛИЧНЫЕ',
+    card: 'КАРТА',
     amountPaid: 'Получено:',
     change: 'Сдача:',
     points: 'баллов!',
     thanks: 'Спасибо за визит!',
-    goodbye: 'До скорой встречи 😊',
-    printButton: 'Распечатать чек',
-    skipButton: 'Пропустить'
+    goodbye: 'До скорой встречи!',
+    printButton: 'Распечатать',
+    skipButton: 'Пропустить',
+    copyButton: 'Копировать',
+    copied: 'Скопировано!'
   },
   ge: {
-    title: 'Latte',
+    title: 'LATTE',
     subtitle: 'თქვენი ყავა, ჩვენი გატაცება',
-    orderNumber: 'შეკვეთის №:',
+    orderNumber: 'შეკვეთა №:',
     date: 'თარიღი:',
     time: 'დრო:',
     employee: 'თანამშრომელი:',
     customer: 'კლიენტი:',
-    subtotal: 'შუალედური ჯამი:',
+    subtotal: 'შუალედური:',
     discount: 'ფასდაკლება:',
     total: 'სულ:',
-    payment: 'გადახდის მეთოდი:',
+    payment: 'გადახდა:',
     cash: 'ნაღდი',
     card: 'ბარათი',
     amountPaid: 'მიღებული:',
     change: 'ხურდა:',
     points: 'ქულა!',
-    thanks: 'მადლობა თქვენი ვიზიტისთვის!',
-    goodbye: 'მალე გნახავთ 😊',
+    thanks: 'მადლობა!',
+    goodbye: 'მალე გნახავთ!',
     printButton: 'ბეჭდვა',
-    skipButton: 'გამოტოვება'
+    skipButton: 'გამოტოვება',
+    copyButton: 'კოპირება',
+    copied: 'კოპირებულია!'
   }
 };
 
@@ -111,322 +115,286 @@ interface PrintReceiptDialogProps {
   receiptData: ReceiptData | null;
 }
 
+// ESC/POS Commands as text representations
+const ESC = '\x1B';
+const GS = '\x1D';
+
+// Generate pure text receipt (can be sent to ESC/POS printer)
+const generateTextReceipt = (data: ReceiptData, t: typeof translations.en): string => {
+  const WIDTH = 42; // Character width for 80mm thermal printer
+  const LINE = '='.repeat(WIDTH);
+  const DASHED = '-'.repeat(WIDTH);
+  
+  const center = (text: string): string => {
+    const padding = Math.max(0, Math.floor((WIDTH - text.length) / 2));
+    return ' '.repeat(padding) + text;
+  };
+  
+  const leftRight = (left: string, right: string): string => {
+    const spaces = Math.max(1, WIDTH - left.length - right.length);
+    return left + ' '.repeat(spaces) + right;
+  };
+  
+  const formatPrice = (price: number): string => `${price.toFixed(2)} GEL`;
+  
+  let receipt = '';
+  
+  // Header
+  receipt += '\n';
+  receipt += center('╔══════════════════════════╗') + '\n';
+  receipt += center('║       ' + t.title + '           ║') + '\n';
+  receipt += center('╚══════════════════════════╝') + '\n';
+  receipt += center(t.subtitle) + '\n';
+  receipt += center('Tbilisi, Georgia') + '\n';
+  receipt += center('Tel: +995 XXX XXX XXX') + '\n';
+  receipt += '\n';
+  receipt += LINE + '\n';
+  
+  // Order Number (big and centered)
+  receipt += '\n';
+  receipt += center('*** ORDER ***') + '\n';
+  receipt += center('#' + data.orderNumber) + '\n';
+  receipt += '\n';
+  receipt += LINE + '\n';
+  
+  // Order Info
+  receipt += leftRight(t.date, data.date + ' ' + data.time) + '\n';
+  receipt += leftRight(t.employee, data.employeeName) + '\n';
+  if (data.customerName) {
+    receipt += leftRight(t.customer, data.customerName) + '\n';
+  }
+  receipt += DASHED + '\n';
+  
+  // Items
+  receipt += '\n';
+  data.items.forEach(item => {
+    const itemLine = `${item.quantity}x ${item.productName}`;
+    const priceLine = formatPrice(item.totalPrice);
+    receipt += leftRight(itemLine, priceLine) + '\n';
+    
+    // Options (size, milk)
+    if (item.selectedSize || item.selectedMilk) {
+      const options = [item.selectedSize?.name, item.selectedMilk?.name]
+        .filter(Boolean)
+        .join(', ');
+      receipt += '   -> ' + options + '\n';
+    }
+    
+    // Unit price if quantity > 1
+    if (item.quantity > 1) {
+      receipt += `   @ ${item.unitPrice.toFixed(2)} GEL each\n`;
+    }
+  });
+  receipt += '\n';
+  receipt += DASHED + '\n';
+  
+  // Totals
+  receipt += leftRight(t.subtotal, formatPrice(data.subtotal)) + '\n';
+  if (data.discount > 0) {
+    receipt += leftRight(t.discount, '-' + formatPrice(data.discount)) + '\n';
+  }
+  receipt += DASHED + '\n';
+  
+  // Grand Total (emphasized)
+  receipt += '\n';
+  receipt += leftRight('>>> ' + t.total, formatPrice(data.total) + ' <<<') + '\n';
+  receipt += '\n';
+  receipt += LINE + '\n';
+  
+  // Payment Info
+  const paymentText = data.paymentMethod === 'cash' ? t.cash : t.card;
+  receipt += leftRight(t.payment, paymentText) + '\n';
+  
+  if (data.amountPaid !== undefined && data.amountPaid > 0) {
+    receipt += leftRight(t.amountPaid, formatPrice(data.amountPaid)) + '\n';
+  }
+  if (data.change !== undefined && data.change > 0) {
+    receipt += leftRight('*** ' + t.change, formatPrice(data.change) + ' ***') + '\n';
+  }
+  
+  // Loyalty Points
+  if (data.pointsEarned && data.pointsEarned > 0) {
+    receipt += DASHED + '\n';
+    receipt += center('* +' + data.pointsEarned + ' ' + t.points + ' *') + '\n';
+  }
+  
+  receipt += LINE + '\n';
+  
+  // Footer
+  receipt += '\n';
+  receipt += center(t.thanks) + '\n';
+  receipt += center(t.goodbye) + '\n';
+  receipt += '\n';
+  
+  // Order ID for reference
+  receipt += center('ID: ' + data.orderId.slice(0, 8)) + '\n';
+  receipt += '\n';
+  receipt += center('---') + '\n';
+  receipt += '\n\n\n'; // Paper feed
+  
+  return receipt;
+};
+
 const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogProps) => {
   const [language, setLanguage] = useState<Language>('en');
-  const printRef = useRef<HTMLDivElement>(null);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [receiptText, setReceiptText] = useState<string>('');
+  const [copied, setCopied] = useState(false);
   
   const t = translations[language];
 
-  // Generate QR code when receiptData changes
+  // Generate text receipt when data or language changes
   useEffect(() => {
-    if (receiptData?.orderId) {
-      QRCode.toDataURL(receiptData.orderId, {
-        width: 200,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      }).then(setQrCodeUrl).catch(console.error);
+    if (receiptData) {
+      const text = generateTextReceipt(receiptData, t);
+      setReceiptText(text);
     }
-  }, [receiptData?.orderId]);
+  }, [receiptData, t]);
 
   const handlePrint = () => {
-    // Remove any existing print styles first
-    const existingStyles = document.querySelectorAll('[data-print-receipt-style]');
-    existingStyles.forEach(el => el.remove());
-
-    // Add print styles for 80mm thermal printer (ESC/POS format)
-    const style = document.createElement('style');
-    style.setAttribute('data-print-receipt-style', 'true');
-    style.textContent = `
-      @media print {
-        @page {
-          size: 80mm auto;
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-        html, body {
-          visibility: hidden !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 80mm !important;
-          min-width: 80mm !important;
-          max-width: 80mm !important;
-          background: #fff !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        body * {
-          visibility: hidden !important;
-        }
-        .print-content,
-        .print-content * {
-          visibility: visible !important;
-        }
-        .print-content {
-          display: block !important;
-          position: absolute !important;
-          left: 0 !important;
-          top: 0 !important;
-          width: 80mm !important;
-          min-width: 80mm !important;
-          max-width: 80mm !important;
-          margin: 0 !important;
-          padding: 2mm !important;
-          font-family: 'Courier New', 'Consolas', monospace !important;
-          font-size: 9pt !important;
-          line-height: 1.3 !important;
-          color: #000 !important;
-          background: #fff !important;
-        }
-        .print-content img {
-          max-width: 100% !important;
-          height: auto !important;
-        }
-        /* Hide dialog and all UI elements */
-        [role="dialog"],
-        [data-radix-dialog-overlay],
-        .print\\:hidden,
-        button,
-        header,
-        nav {
-          display: none !important;
-          visibility: hidden !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
+    // Create a new window with just the text receipt
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    if (!printWindow) {
+      toast.error('Please allow popups for printing');
+      return;
+    }
     
-    window.print();
+    // Write plain text content to new window
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Receipt #${receiptData?.orderNumber}</title>
+          <style>
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
+            body {
+              font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+              font-size: 12px;
+              line-height: 1.2;
+              margin: 0;
+              padding: 5mm;
+              width: 70mm;
+              white-space: pre;
+              background: white;
+              color: black;
+            }
+            @media print {
+              body {
+                width: 80mm;
+                padding: 2mm;
+              }
+            }
+          </style>
+        </head>
+        <body>${receiptText}</body>
+      </html>
+    `);
     
-    // Clean up and close after printing
+    printWindow.document.close();
+    
+    // Wait for content to load then print
     setTimeout(() => {
-      style.remove();
-      onClose();
-    }, 500);
+      printWindow.focus();
+      printWindow.print();
+      
+      // Close after print dialog
+      setTimeout(() => {
+        printWindow.close();
+        onClose();
+      }, 1000);
+    }, 250);
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(receiptText);
+      setCopied(true);
+      toast.success(t.copied);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error('Failed to copy');
+    }
   };
 
   if (!receiptData) return null;
 
-  const ReceiptContent = () => (
-    <div className="w-[72mm] mx-auto font-mono text-[9px] leading-tight">
-      {/* Header - Shop Info with Logo */}
-      <div className="text-center pb-1">
-        <img src={logoLatte} alt="Latte" className="h-8 mx-auto mb-1" />
-        <div className="text-[8px]">{t.subtitle}</div>
-        <div className="text-[7px]">Tbilisi, Georgia</div>
-        <div className="text-[7px]">Tel: +995 XXX XXX XXX</div>
-      </div>
-
-      <div className="text-[8px] text-center">{'='.repeat(40)}</div>
-
-      {/* Order Number */}
-      <div className="text-center py-0.5">
-        <div className="text-[10px] font-bold">#{receiptData.orderNumber}</div>
-      </div>
-
-      <div className="text-[8px] text-center">{'='.repeat(40)}</div>
-
-      {/* Order Info */}
-      <div className="py-0.5 text-[8px]">
-        <div className="flex justify-between">
-          <span>{t.date}</span>
-          <span>{receiptData.date} {receiptData.time}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>{t.employee}</span>
-          <span>{receiptData.employeeName}</span>
-        </div>
-        {receiptData.customerName && (
-          <div className="flex justify-between">
-            <span>{t.customer}</span>
-            <span>{receiptData.customerName}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="text-[8px] text-center">{'-'.repeat(40)}</div>
-
-      {/* Items List */}
-      <div className="py-0.5">
-        {receiptData.items.map((item, index) => (
-          <div key={index} className="text-[8px] py-0.5">
-            <div className="flex justify-between">
-              <span>{item.quantity}x {item.productName}</span>
-              <span>{item.totalPrice.toFixed(2)}</span>
-            </div>
-            {(item.selectedSize || item.selectedMilk) && (
-              <div className="text-[7px] pl-3 opacity-70">
-                {item.selectedSize?.name}
-                {item.selectedSize && item.selectedMilk && ', '}
-                {item.selectedMilk?.name}
-              </div>
-            )}
-            {item.quantity > 1 && (
-              <div className="text-[7px] pl-3 opacity-70">
-                @ {item.unitPrice.toFixed(2)} ₾
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="text-[8px] text-center">{'-'.repeat(40)}</div>
-
-      {/* Totals */}
-      <div className="py-0.5 text-[8px]">
-        <div className="flex justify-between">
-          <span>{t.subtotal}</span>
-          <span>{receiptData.subtotal.toFixed(2)} ₾</span>
-        </div>
-        {receiptData.discount > 0 && (
-          <div className="flex justify-between">
-            <span>{t.discount}</span>
-            <span>-{receiptData.discount.toFixed(2)} ₾</span>
-          </div>
-        )}
-      </div>
-
-      <div className="text-[8px] text-center">{'-'.repeat(40)}</div>
-
-      {/* TOTAL */}
-      <div className="flex justify-between text-[11px] font-bold py-0.5">
-        <span>{t.total}</span>
-        <span>{receiptData.total.toFixed(2)} ₾</span>
-      </div>
-
-      <div className="text-[8px] text-center">{'='.repeat(40)}</div>
-
-      {/* Payment Info */}
-      <div className="py-0.5 text-[8px]">
-        <div className="flex justify-between">
-          <span>{t.payment}</span>
-          <span className="uppercase">{receiptData.paymentMethod === 'cash' ? t.cash : t.card}</span>
-        </div>
-        {receiptData.amountPaid !== undefined && receiptData.amountPaid > 0 && (
-          <div className="flex justify-between">
-            <span>{t.amountPaid}</span>
-            <span>{receiptData.amountPaid.toFixed(2)} ₾</span>
-          </div>
-        )}
-        {receiptData.change !== undefined && receiptData.change > 0 && (
-          <div className="flex justify-between font-bold">
-            <span>{t.change}</span>
-            <span>{receiptData.change.toFixed(2)} ₾</span>
-          </div>
-        )}
-      </div>
-
-      {/* Loyalty Points */}
-      {receiptData.pointsEarned && receiptData.pointsEarned > 0 && (
-        <>
-          <div className="text-[8px] text-center">{'-'.repeat(40)}</div>
-          <div className="text-center text-[8px] font-medium py-0.5">
-            ★ +{receiptData.pointsEarned} {t.points} ★
-          </div>
-        </>
-      )}
-
-      <div className="text-[8px] text-center">{'='.repeat(40)}</div>
-
-      {/* Footer */}
-      <div className="text-center py-1">
-        <div className="text-[9px] font-medium">{t.thanks}</div>
-        <div className="text-[8px]">{t.goodbye}</div>
-      </div>
-
-      {/* QR Code */}
-      {qrCodeUrl && (
-        <div className="text-center py-1">
-          <img 
-            src={qrCodeUrl} 
-            alt="QR" 
-            className="mx-auto w-20 h-20"
-          />
-          <div className="text-[7px] opacity-70">Scan for details</div>
-        </div>
-      )}
-
-      <div className="text-[6px] text-center opacity-50 pt-1">
-        Powered by Coffee POS
-      </div>
-    </div>
-  );
-
   return (
-    <>
-      <Dialog open={open}>
-        <DialogContent 
-          className="max-w-md print:hidden" 
-          onInteractOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg">Receipt</DialogTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="h-8 w-8"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Language Selector */}
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ru">Русский</SelectItem>
-                  <SelectItem value="ge">ქართული</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Receipt Preview */}
-            <div className="bg-white text-black p-4 rounded-lg max-h-[60vh] overflow-y-auto">
-              <ReceiptContent />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2">
-              <Button
-                onClick={handlePrint}
-                className="flex-1 gap-2"
-                size="lg"
-              >
-                <Printer className="h-4 w-4" />
-                {t.printButton}
-              </Button>
-              <Button
-                onClick={onClose}
-                variant="outline"
-                className="flex-1"
-                size="lg"
-              >
-                {t.skipButton}
-              </Button>
-            </div>
+    <Dialog open={open}>
+      <DialogContent 
+        className="max-w-md" 
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-lg">Receipt #{receiptData.orderNumber}</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DialogHeader>
 
-      {/* Print-only version */}
-      <div className="hidden print:block print-content">
-        <ReceiptContent />
-      </div>
-    </>
+        <div className="space-y-4">
+          {/* Language Selector */}
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="ru">Русский</SelectItem>
+                <SelectItem value="ge">ქართული</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Receipt Preview - Pure Text */}
+          <div className="bg-white text-black p-4 rounded-lg max-h-[50vh] overflow-auto">
+            <pre className="font-mono text-[10px] leading-tight whitespace-pre overflow-x-auto">
+              {receiptText}
+            </pre>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <Button
+              onClick={handlePrint}
+              className="flex-1 gap-2"
+              size="lg"
+            >
+              <Printer className="h-4 w-4" />
+              {t.printButton}
+            </Button>
+            <Button
+              onClick={handleCopy}
+              variant="outline"
+              size="lg"
+              className="gap-2"
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {t.copyButton}
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="outline"
+              size="lg"
+            >
+              {t.skipButton}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
