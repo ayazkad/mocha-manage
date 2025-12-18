@@ -120,7 +120,7 @@ const ESC = '\x1B';
 const GS = '\x1D';
 
 // Generate pure text receipt (can be sent to ESC/POS printer)
-const generateTextReceipt = (data: ReceiptData, t: typeof translations.en): string => {
+export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en): string => {
   const WIDTH = 42; // Character width for 80mm thermal printer
   const LINE = '='.repeat(WIDTH);
   const DASHED = '-'.repeat(WIDTH);
@@ -139,12 +139,15 @@ const generateTextReceipt = (data: ReceiptData, t: typeof translations.en): stri
   
   let receipt = '';
   
-  // Header
+  // ASCII Art Logo
   receipt += '\n';
-  receipt += center('╔══════════════════════════╗') + '\n';
-  receipt += center('║       ' + t.title + '           ║') + '\n';
-  receipt += center('╚══════════════════════════╝') + '\n';
-  receipt += center(t.subtitle) + '\n';
+  receipt += center('    _          _   _       ') + '\n';
+  receipt += center('   | |    __ _| |_| |_ ___ ') + '\n';
+  receipt += center('   | |   / _` | __| __/ _ \\') + '\n';
+  receipt += center('   | |__| (_| | |_| ||  __/') + '\n';
+  receipt += center('   |_____\\__,_|\\__|\\__\\___|') + '\n';
+  receipt += '\n';
+  receipt += center('~ COFFEE & MORE ~') + '\n';
   receipt += center('Tbilisi, Georgia') + '\n';
   receipt += center('Tel: +995 XXX XXX XXX') + '\n';
   receipt += '\n';

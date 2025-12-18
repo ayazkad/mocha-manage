@@ -10,9 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit, Eye } from 'lucide-react';
+import { Trash2, Edit, Eye, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import PrintReceiptDialog from '@/components/pos/PrintReceiptDialog';
 
 const OrdersManager = () => {
   const { toast } = useToast();
@@ -20,6 +21,8 @@ const OrdersManager = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<any>(null);
   const [editForm, setEditForm] = useState({
     status: '',
     subtotal: '',
@@ -138,6 +141,31 @@ const OrdersManager = () => {
     setIsViewDialogOpen(true);
   };
 
+  const handleReprint = (order: any) => {
+    const orderDate = new Date(order.created_at);
+    const receipt = {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      employeeName: order.employees?.name || 'Unknown',
+      date: format(orderDate, 'dd/MM/yyyy'),
+      time: format(orderDate, 'HH:mm'),
+      items: order.order_items?.map((item: any) => ({
+        productName: item.product_name,
+        quantity: item.quantity,
+        unitPrice: Number(item.unit_price),
+        totalPrice: Number(item.total_price),
+        selectedSize: item.selected_options?.size ? { name: item.selected_options.size } : undefined,
+        selectedMilk: item.selected_options?.milk ? { name: item.selected_options.milk } : undefined,
+      })) || [],
+      subtotal: Number(order.subtotal),
+      discount: Number(order.discount_amount || 0),
+      total: Number(order.total),
+      paymentMethod: order.payment_method || 'card',
+    };
+    setReceiptData(receipt);
+    setIsPrintDialogOpen(true);
+  };
+
   const handleUpdate = () => {
     if (!selectedOrder) return;
 
@@ -200,6 +228,14 @@ const OrdersManager = () => {
                 <TableCell className="text-right">{Number(order.total).toFixed(2)} ₾</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleReprint(order)}
+                      title="Réimprimer le ticket"
+                    >
+                      <Printer className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="outline"
                       size="icon"
@@ -413,6 +449,13 @@ const OrdersManager = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Print Receipt Dialog */}
+        <PrintReceiptDialog
+          open={isPrintDialogOpen}
+          onClose={() => setIsPrintDialogOpen(false)}
+          receiptData={receiptData}
+        />
       </CardContent>
     </Card>
   );
