@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer, X, Globe, Copy, Check } from 'lucide-react';
+import { Printer, Globe, Copy, Check } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import logoLatte from '@/assets/logo-latte.png';
@@ -338,25 +338,14 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   if (!receiptData) return null;
 
   return (
-    <Dialog open={open}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent 
-        className="max-w-md" 
+        className="max-w-sm w-full fixed"
         onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg">Receipt #{receiptData.orderNumber}</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-lg">Receipt #{receiptData.orderNumber}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -377,10 +366,10 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
           {/* Receipt Preview with Logo */}
           <div className="bg-white text-black p-4 rounded-lg max-h-[50vh] overflow-auto">
-            <div className="text-center mb-3">
-              <img src={logoLatte} alt="Latte" className="h-16 mx-auto" />
+            <div className="flex justify-center mb-3">
+              <img src={logoLatte} alt="Latte" className="h-14 object-contain" />
             </div>
-            <pre className="font-mono text-[10px] leading-tight whitespace-pre overflow-x-auto">
+            <pre className="font-mono text-[9px] leading-tight whitespace-pre overflow-x-auto text-center">
               {receiptText}
             </pre>
           </div>
