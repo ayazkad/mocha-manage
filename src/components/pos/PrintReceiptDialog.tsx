@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, X, Globe, Copy, Check } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import logoLatte from '@/assets/logo-latte.png';
 
 interface OrderItem {
   productName: string;
@@ -139,15 +140,12 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
   
   let receipt = '';
   
-  // ASCII Art Logo
+  // Header - Simple text for ESC/POS
   receipt += '\n';
-  receipt += center('    _          _   _       ') + '\n';
-  receipt += center('   | |    __ _| |_| |_ ___ ') + '\n';
-  receipt += center('   | |   / _` | __| __/ _ \\') + '\n';
-  receipt += center('   | |__| (_| | |_| ||  __/') + '\n';
-  receipt += center('   |_____\\__,_|\\__|\\__\\___|') + '\n';
-  receipt += '\n';
-  receipt += center('~ COFFEE & MORE ~') + '\n';
+  receipt += center('================================') + '\n';
+  receipt += center('LATTE') + '\n';
+  receipt += center('Coffee & More') + '\n';
+  receipt += center('================================') + '\n';
   receipt += center('Tbilisi, Georgia') + '\n';
   receipt += center('Tel: +995 XXX XXX XXX') + '\n';
   receipt += '\n';
@@ -254,14 +252,14 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   }, [receiptData, t]);
 
   const handlePrint = () => {
-    // Create a new window with just the text receipt
+    // Create a new window with the receipt including logo image
     const printWindow = window.open('', '_blank', 'width=400,height=600');
     if (!printWindow) {
       toast.error('Please allow popups for printing');
       return;
     }
     
-    // Write plain text content to new window
+    // Write content with logo image to new window
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -279,9 +277,20 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
               margin: 0;
               padding: 5mm;
               width: 70mm;
-              white-space: pre;
               background: white;
               color: black;
+            }
+            .logo-container {
+              text-align: center;
+              margin-bottom: 10px;
+            }
+            .logo {
+              max-width: 50mm;
+              height: auto;
+            }
+            .receipt-text {
+              white-space: pre;
+              font-size: 11px;
             }
             @media print {
               body {
@@ -291,7 +300,12 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             }
           </style>
         </head>
-        <body>${receiptText}</body>
+        <body>
+          <div class="logo-container">
+            <img src="${logoLatte}" class="logo" alt="Latte" />
+          </div>
+          <div class="receipt-text">${receiptText}</div>
+        </body>
       </html>
     `);
     
@@ -361,8 +375,11 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             </Select>
           </div>
 
-          {/* Receipt Preview - Pure Text */}
+          {/* Receipt Preview with Logo */}
           <div className="bg-white text-black p-4 rounded-lg max-h-[50vh] overflow-auto">
+            <div className="text-center mb-3">
+              <img src={logoLatte} alt="Latte" className="h-16 mx-auto" />
+            </div>
             <pre className="font-mono text-[10px] leading-tight whitespace-pre overflow-x-auto">
               {receiptText}
             </pre>
