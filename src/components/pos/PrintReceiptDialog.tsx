@@ -328,7 +328,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     try {
       await navigator.clipboard.writeText(receiptText);
       setCopied(true);
-      toast.success(t.copied);
+      toast.success('Copied!');
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast.error('Failed to copy');
@@ -339,27 +339,25 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="text-lg">Receipt #{receiptData.orderNumber}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Language Selector */}
+          {/* Language Selector - only affects receipt text */}
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-muted-foreground" />
-            <div className="flex-1 min-w-0">
-              <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ru">Русский</SelectItem>
-                  <SelectItem value="ge">ქართული</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+              <SelectTrigger className="flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" sideOffset={4}>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="ru">Русский</SelectItem>
+                <SelectItem value="ge">ქართული</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Receipt Preview with Logo */}
@@ -376,18 +374,18 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Actions - Always in English */}
           <div className="flex gap-2">
             <Button onClick={handlePrint} className="flex-1 gap-2" size="lg">
               <Printer className="h-4 w-4" />
-              {t.printButton}
+              Print receipt
             </Button>
             <Button onClick={handleCopy} variant="outline" size="lg" className="gap-2">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {t.copyButton}
+              Copy
             </Button>
             <Button onClick={onClose} variant="outline" size="lg">
-              {t.skipButton}
+              Skip
             </Button>
           </div>
         </div>
