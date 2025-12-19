@@ -339,11 +339,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent 
-        className="max-w-sm w-full fixed"
-        onInteractOutside={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-lg">Receipt #{receiptData.orderNumber}</DialogTitle>
         </DialogHeader>
@@ -352,52 +348,45 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           {/* Language Selector */}
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4 text-muted-foreground" />
-            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="ru">Русский</SelectItem>
-                <SelectItem value="ge">ქართული</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex-1 min-w-0">
+              <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ru">Русский</SelectItem>
+                  <SelectItem value="ge">ქართული</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Receipt Preview with Logo */}
           <div className="bg-white text-black p-4 rounded-lg max-h-[50vh] overflow-auto">
-            <div className="flex justify-center mb-3">
-              <img src={logoLatte} alt="Latte" className="h-14 object-contain" />
+            <div className="mx-auto w-fit">
+              <div className="flex justify-center mb-3">
+                <img
+                  src={logoLatte}
+                  alt="Latte logo"
+                  className="h-14 w-auto object-contain block"
+                />
+              </div>
+              <pre className="font-mono text-[10px] leading-tight whitespace-pre overflow-x-auto">{receiptText}</pre>
             </div>
-            <pre className="font-mono text-[9px] leading-tight whitespace-pre overflow-x-auto text-center">
-              {receiptText}
-            </pre>
           </div>
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button
-              onClick={handlePrint}
-              className="flex-1 gap-2"
-              size="lg"
-            >
+            <Button onClick={handlePrint} className="flex-1 gap-2" size="lg">
               <Printer className="h-4 w-4" />
               {t.printButton}
             </Button>
-            <Button
-              onClick={handleCopy}
-              variant="outline"
-              size="lg"
-              className="gap-2"
-            >
+            <Button onClick={handleCopy} variant="outline" size="lg" className="gap-2">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {t.copyButton}
             </Button>
-            <Button
-              onClick={onClose}
-              variant="outline"
-              size="lg"
-            >
+            <Button onClick={onClose} variant="outline" size="lg">
               {t.skipButton}
             </Button>
           </div>
