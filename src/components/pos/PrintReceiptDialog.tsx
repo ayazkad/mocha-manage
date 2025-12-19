@@ -335,17 +335,17 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-md" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle className="text-lg">Receipt #{receiptData.orderNumber}</DialogTitle>
+      <DialogContent className="max-w-[340px] p-4" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-base">Receipt #{receiptData.orderNumber}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Language Selector - only affects receipt text */}
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-              <SelectTrigger className="flex-1">
+              <SelectTrigger className="flex-1 h-9 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" sideOffset={4}>
@@ -357,30 +357,30 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
           </div>
 
           {/* Receipt Preview with Logo */}
-          <div className="bg-white text-black p-4 rounded-lg max-h-[50vh] overflow-auto">
+          <div className="bg-white text-black p-3 rounded-lg max-h-[45vh] overflow-auto">
             <div className="mx-auto w-fit">
-              <div className="flex justify-center mb-3">
+              <div className="flex justify-center mb-2">
                 <img
                   src={logoLatte}
                   alt="Latte logo"
-                  className="h-14 w-auto object-contain block"
+                  className="h-10 w-auto object-contain block"
                 />
               </div>
-              <pre className="font-mono text-[10px] leading-tight whitespace-pre overflow-x-auto">{receiptText}</pre>
+              <pre className="font-mono text-[9px] leading-tight whitespace-pre overflow-x-auto">{receiptText}</pre>
             </div>
           </div>
 
           {/* Actions - Always in English */}
           <div className="flex gap-2">
-            <Button onClick={handlePrint} className="flex-1 gap-2" size="lg">
-              <Printer className="h-4 w-4" />
-              Print receipt
+            <Button onClick={handlePrint} className="flex-1 gap-1.5 h-9 text-sm">
+              <Printer className="h-3.5 w-3.5" />
+              Print
             </Button>
-            <Button onClick={handleCopy} variant="outline" size="lg" className="gap-2">
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            <Button onClick={handleCopy} variant="outline" className="gap-1.5 h-9 text-sm">
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               Copy
             </Button>
-            <Button onClick={onClose} variant="outline" size="lg">
+            <Button onClick={onClose} variant="outline" className="h-9 text-sm">
               Skip
             </Button>
           </div>
