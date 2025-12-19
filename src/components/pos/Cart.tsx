@@ -236,11 +236,11 @@ const Cart = ({ onClose }: CartProps) => {
 
   const handleCashConfirm = (amountPaid: number) => {
     setAmountReceived(amountPaid);
-    handleCompleteOrder('cash');
+    handleCompleteOrder('cash', amountPaid);
   };
 
   const handleCardPayment = () => {
-    handleCompleteOrder('card');
+    handleCompleteOrder('card', 0);
   };
 
   const addBill = (amount: number) => {
@@ -261,11 +261,11 @@ const Cart = ({ onClose }: CartProps) => {
 
   const completeCashPayment = () => {
     if (canCompleteCashPayment()) {
-      handleCompleteOrder('cash');
+      handleCompleteOrder('cash', amountReceived);
     }
   };
 
-  const handleCompleteOrder = async (paymentMethod: 'cash' | 'card') => {
+  const handleCompleteOrder = async (paymentMethod: 'cash' | 'card', cashAmount: number = 0) => {
     if (!currentSession || !currentEmployee) {
       toast.error('Invalid session');
       return;
@@ -532,8 +532,8 @@ const Cart = ({ onClose }: CartProps) => {
         paymentMethod: paymentMethod || 'cash',
         customerName: selectedCustomer?.name,
         pointsEarned: selectedCustomer ? drinkCount : undefined,
-        amountPaid: paymentMethod === 'cash' ? amountReceived : total,
-        change: paymentMethod === 'cash' ? getChange() : 0
+        amountPaid: paymentMethod === 'cash' ? cashAmount : total,
+        change: paymentMethod === 'cash' ? Math.max(0, cashAmount - total) : 0
       };
 
       setReceiptData(receiptInfo);
