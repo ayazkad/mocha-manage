@@ -140,12 +140,8 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
   
   let receipt = '';
   
-  // Header - Simple text for ESC/POS
+  // Header - Only address info (logo is shown separately)
   receipt += '\n';
-  receipt += center('================================') + '\n';
-  receipt += center('LATTE') + '\n';
-  receipt += center('Coffee & More') + '\n';
-  receipt += center('================================') + '\n';
   receipt += center('Tbilisi, Georgia') + '\n';
   receipt += center('Tel: +995 XXX XXX XXX') + '\n';
   receipt += '\n';
