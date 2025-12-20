@@ -437,6 +437,30 @@ export type Database = {
           },
         ]
       }
+      printer_settings: {
+        Row: {
+          created_at: string
+          id: string
+          printer_name: string | null
+          printer_server_ip: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          printer_name?: string | null
+          printer_server_ip?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          printer_name?: string | null
+          printer_server_ip?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_options: {
         Row: {
           active: boolean | null

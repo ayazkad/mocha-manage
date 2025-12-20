@@ -10,6 +10,7 @@ import UnifiedStatistics from '@/components/admin/UnifiedStatistics';
 import OrdersManager from '@/components/admin/OrdersManager';
 import OffersManager from '@/components/admin/OffersManager';
 import GlobalOptionsManager from '@/components/admin/GlobalOptionsManager';
+import PrinterSettings from '@/components/admin/PrinterSettings';
 
 const Admin = () => {
   const { currentEmployee } = usePOS();
@@ -31,7 +32,7 @@ const Admin = () => {
         
         <Tabs defaultValue="statistics" className="w-full">
           <div className="overflow-x-auto -mx-6 px-6 pb-2">
-            <TabsList className="inline-flex w-auto min-w-full md:grid md:grid-cols-8 md:max-w-6xl">
+            <TabsList className="inline-flex w-auto min-w-full md:grid md:grid-cols-9 md:max-w-7xl">
               <TabsTrigger value="statistics" className="whitespace-nowrap">Statistics</TabsTrigger>
               <TabsTrigger value="orders" className="whitespace-nowrap">Orders</TabsTrigger>
               <TabsTrigger value="products" className="whitespace-nowrap">Products</TabsTrigger>
@@ -40,6 +41,7 @@ const Admin = () => {
               <TabsTrigger value="offers" className="whitespace-nowrap">Offers</TabsTrigger>
               <TabsTrigger value="employees" className="whitespace-nowrap">Employees</TabsTrigger>
               <TabsTrigger value="customers" className="whitespace-nowrap">Customers</TabsTrigger>
+              <TabsTrigger value="printer" className="whitespace-nowrap">Impression</TabsTrigger>
             </TabsList>
           </div>
           
@@ -73,6 +75,10 @@ const Admin = () => {
           
           <TabsContent value="customers" className="mt-6">
             <CustomersManager />
+          </TabsContent>
+
+          <TabsContent value="printer" className="mt-6">
+            <PrinterSettings />
           </TabsContent>
         </Tabs>
       </div>
