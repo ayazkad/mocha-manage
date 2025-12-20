@@ -168,16 +168,16 @@ const PrinterSettings = () => {
       <CardContent className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="printer-ip">Adresse IP du serveur</Label>
+            <Label htmlFor="printer-ip">URL du serveur d'impression</Label>
             <Input
               id="printer-ip"
               type="text"
-              placeholder="192.168.1.187"
+              placeholder="http://192.168.1.187:3000"
               value={printerServerIp}
               onChange={(e) => setPrinterServerIp(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Le port 3000 est utilisé automatiquement
+              Entrez l'URL complète (ex: http://192.168.1.187:3000)
             </p>
           </div>
 
