@@ -48,26 +48,69 @@ export interface PrintResult {
 
 export async function sendPrintRequest(text: string): Promise<PrintResult> {
   try {
-    const response = await supabase.functions.invoke('print-relay', {
-      body: { text },
-    });
-
-    if (response.error) {
-      console.error('Edge function error:', response.error);
+    // Get printer settings to get the local server URL
+    const settings = await getPrinterSettings();
+    
+    if (!settings || !settings.printer_server_ip) {
       return {
         success: false,
-        message: response.error.message || "Erreur lors de l'appel au serveur d'impression",
+        message: "Serveur d'impression non configuré. Allez dans Admin → Impression.",
       };
     }
 
-    const data = response.data as { success: boolean; message: string };
-    return {
-      success: data.success,
-      message: data.message,
-    };
+    // Build the print URL - use the configured IP exactly as entered
+    const baseUrl = settings.printer_server_ip.trim().replace(/\/+$/, '');
+    // Add http:// if not present
+    const normalizedUrl = baseUrl.includes('://') ? baseUrl : `http://${baseUrl}`;
+    // Add port 3000 if not present
+    const urlWithPort = normalizedUrl.includes(':3000') ? normalizedUrl : `${normalizedUrl}:3000`;
+    const printUrl = `${urlWithPort}/print`;
+
+    console.log('[PrintService] Sending direct print request to:', printUrl);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    const response = await fetch(printUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json().catch(() => ({}));
+      console.log('[PrintService] Print success:', data);
+      return {
+        success: true,
+        message: data.message || "Impression envoyée avec succès",
+      };
+    } else {
+      const errorText = await response.text().catch(() => '');
+      console.error('[PrintService] Print error:', response.status, errorText);
+      return {
+        success: false,
+        message: `Erreur serveur: ${response.status} ${response.statusText}`,
+      };
+    }
   } catch (error) {
-    console.error('Print request error:', error);
+    console.error('[PrintService] Print request error:', error);
+    
     if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        return {
+          success: false,
+          message: "Timeout: le serveur d'impression ne répond pas (10s)",
+        };
+      }
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        return {
+          success: false,
+          message: "Impossible de joindre le serveur. Vérifiez que vous êtes sur le même réseau.",
+        };
+      }
       return {
         success: false,
         message: `Erreur: ${error.message}`,
