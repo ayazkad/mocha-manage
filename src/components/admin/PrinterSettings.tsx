@@ -157,7 +157,7 @@ const PrinterSettings = () => {
         <div className="rounded-lg border border-border bg-muted/50 p-4">
           <h4 className="mb-2 font-medium text-sm">Configuration actuelle</h4>
           <p className="text-sm text-muted-foreground">
-            URL du serveur: <code className="text-foreground">http://{printerServerIp}:3000/print</code>
+            Serveur: <code className="text-foreground">{printerServerIp || '(non configuré)'}</code>
           </p>
           {printerName && (
             <p className="text-sm text-muted-foreground">
