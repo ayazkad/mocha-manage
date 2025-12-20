@@ -1,1 +1,7 @@
 project_id = "bjccoxqqxoqfnyvqvgct"
+
+[functions.send-loyalty-qr]
+verify_jwt = false
+
+[functions.print-relay]
+verify_jwt = false
