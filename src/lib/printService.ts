@@ -6,6 +6,27 @@ export interface PrinterSettings {
   printer_name: string | null;
 }
 
+/**
+ * Extracts the path from a URL or returns the path as-is.
+ * - Full URL (https://pos.local/print) → /print
+ * - Path (/print) → /print
+ * - Empty/undefined → /print (default)
+ */
+export function getPrintBasePath(rawUrl?: string): string {
+  if (!rawUrl || !rawUrl.trim()) return "/print";
+  
+  const trimmed = rawUrl.trim();
+  
+  try {
+    // If it looks like a full URL, extract the pathname
+    const url = new URL(trimmed);
+    return url.pathname || "/print";
+  } catch {
+    // Not a valid URL, treat as path
+    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  }
+}
+
 export async function getPrinterSettings(): Promise<PrinterSettings | null> {
   const { data, error } = await supabase
     .from('printer_settings')
@@ -46,35 +67,72 @@ export interface PrintResult {
   message: string;
 }
 
-export async function sendPrintRequest(text: string): Promise<PrintResult> {
+/**
+ * Tests if the print server is reachable via /health endpoint.
+ * Uses relative path to go through Caddy reverse proxy.
+ */
+export async function testPrintServer(basePath?: string): Promise<PrintResult> {
+  const path = getPrintBasePath(basePath);
+  const healthUrl = `${path}/health`;
+  
+  console.log('[PrintService] Testing health endpoint:', healthUrl);
+  
   try {
-    // Get printer settings to get the local server URL
-    const settings = await getPrinterSettings();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    if (!settings || !settings.printer_server_ip) {
+    const response = await fetch(healthUrl, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return {
+        success: true,
+        message: data.message || data.status || "Serveur accessible",
+      };
+    } else {
       return {
         success: false,
-        message: "Serveur d'impression non configuré. Allez dans Admin → Impression.",
+        message: `Erreur serveur: ${response.status} ${response.statusText}`,
       };
     }
-
-    // Clean and normalize the URL
-    let baseUrl = settings.printer_server_ip.trim().replace(/\/+$/, '');
+  } catch (error) {
+    const err = error as Error;
+    console.error('[PrintService] Health check error:', err);
     
-    // CRITICAL: Add http:// if no protocol - otherwise browser treats it as relative URL!
-    if (!baseUrl.includes('://')) {
-      baseUrl = `http://${baseUrl}`;
+    if (err.name === 'AbortError') {
+      return {
+        success: false,
+        message: "Timeout: le serveur ne répond pas (5s)",
+      };
     }
     
-    const printUrl = `${baseUrl}/print`;
+    return {
+      success: false,
+      message: `Erreur réseau: ${err.message}`,
+    };
+  }
+}
 
-    console.log('[PrintService] Sending direct print request to:', printUrl);
+/**
+ * Sends a print request to the local print server.
+ * Uses relative path to go through Caddy reverse proxy.
+ */
+export async function sendPrintRequest(text: string): Promise<PrintResult> {
+  try {
+    const settings = await getPrinterSettings();
+    const basePath = getPrintBasePath(settings?.printer_server_ip);
+    
+    console.log('[PrintService] Sending print request to:', basePath);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    // Direct fetch from the browser - NO Edge Function!
-    const response = await fetch(printUrl, {
+    const response = await fetch(basePath, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
@@ -106,12 +164,6 @@ export async function sendPrintRequest(text: string): Promise<PrintResult> {
         return {
           success: false,
           message: "Timeout: le serveur d'impression ne répond pas (10s)",
-        };
-      }
-      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        return {
-          success: false,
-          message: "Impossible de joindre le serveur. Vérifiez que vous êtes sur le même réseau.",
         };
       }
       return {

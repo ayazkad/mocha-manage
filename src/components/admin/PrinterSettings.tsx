@@ -5,10 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Printer, TestTube, Save, Loader2 } from 'lucide-react';
-import { getPrinterSettings, updatePrinterSettings, sendPrintRequest } from '@/lib/printService';
+import { getPrinterSettings, updatePrinterSettings, testPrintServer, getPrintBasePath } from '@/lib/printService';
 
 const PrinterSettings = () => {
-  const [printerServerIp, setPrinterServerIp] = useState('192.168.1.187');
+  const [printerServerIp, setPrinterServerIp] = useState('/print');
   const [printerName, setPrinterName] = useState('Imprimante POS');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -23,24 +23,16 @@ const PrinterSettings = () => {
     setLoading(true);
     const settings = await getPrinterSettings();
     if (settings) {
-      setPrinterServerIp(settings.printer_server_ip);
+      setPrinterServerIp(settings.printer_server_ip || '/print');
       setPrinterName(settings.printer_name || '');
     }
     setLoading(false);
   };
 
   const handleSave = async () => {
-    if (!printerServerIp.trim()) {
-      toast({
-        title: "Erreur",
-        description: "L'adresse IP est requise",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setSaving(true);
-    const success = await updatePrinterSettings(printerServerIp.trim(), printerName.trim());
+    const pathToSave = printerServerIp.trim() || '/print';
+    const success = await updatePrinterSettings(pathToSave, printerName.trim());
     setSaving(false);
 
     if (success) {
@@ -58,84 +50,20 @@ const PrinterSettings = () => {
   };
 
   const handleTestPrint = async () => {
-    if (!printerServerIp.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez entrer une adresse de serveur.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setTesting(true);
     
-    try {
-      // Use the URL exactly as entered, just clean trailing slashes
-      const baseUrl = printerServerIp.trim().replace(/\/+$/, '');
-      const testUrl = `${baseUrl}/`;
-      
-      console.log('[PrinterTest] Testing URL:', testUrl);
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      // Direct fetch from frontend - no Edge Function, no URL modification
-      const response = await fetch(testUrl, { 
-        method: 'GET',
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const text = await response.text();
-        toast({
-          title: "Serveur accessible",
-          description: `Le serveur ${baseUrl} répond: "${text.substring(0, 50)}"`,
-        });
-      } else {
-        toast({
-          title: "Serveur accessible mais erreur",
-          description: `Status: ${response.status} ${response.statusText}`,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      const err = error as Error;
-      console.error('[PrinterTest] Error:', err);
-      
-      if (err.name === 'AbortError') {
-        toast({
-          title: "Timeout",
-          description: "Le serveur ne répond pas (5s timeout).",
-          variant: "destructive",
-        });
-      } else if (err.message.includes('CORS') || err.message.includes('NetworkError')) {
-        // CORS or network error - try with no-cors as fallback
-        try {
-          const baseUrl = printerServerIp.trim().replace(/\/+$/, '');
-          await fetch(`${baseUrl}/`, { method: 'GET', mode: 'no-cors' });
-          toast({
-            title: "Serveur probablement accessible",
-            description: `Réponse reçue de ${baseUrl} (mode no-cors, pas de détails disponibles).`,
-          });
-        } catch {
-          toast({
-            title: "Erreur réseau",
-            description: "Impossible de joindre le serveur. Vérifiez l'adresse et que vous êtes sur le même réseau.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        toast({
-          title: "Erreur",
-          description: `Impossible de joindre le serveur: ${err.message}`,
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setTesting(false);
-    }
+    const basePath = getPrintBasePath(printerServerIp);
+    console.log('[PrinterSettings] Testing with path:', basePath);
+    
+    const result = await testPrintServer(printerServerIp);
+    
+    toast({
+      title: result.success ? "Serveur accessible" : "Erreur",
+      description: result.message,
+      variant: result.success ? "default" : "destructive",
+    });
+    
+    setTesting(false);
   };
 
   if (loading) {
@@ -154,6 +82,8 @@ const PrinterSettings = () => {
     );
   }
 
+  const displayPath = getPrintBasePath(printerServerIp);
+
   return (
     <Card>
       <CardHeader>
@@ -162,22 +92,23 @@ const PrinterSettings = () => {
           Impression / Serveur d'impression
         </CardTitle>
         <CardDescription>
-          Configurez l'adresse IP du serveur d'impression (Android + Termux) sur le réseau local.
+          Configurez le chemin vers le serveur d'impression (via reverse proxy Caddy).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="printer-ip">URL du serveur d'impression</Label>
+            <Label htmlFor="printer-ip">Chemin du serveur d'impression</Label>
             <Input
               id="printer-ip"
               type="text"
-              placeholder="http://192.168.1.187:3000"
+              placeholder="/print"
               value={printerServerIp}
               onChange={(e) => setPrinterServerIp(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Entrez l'URL complète (ex: http://192.168.1.187:3000)
+              Valeur recommandée : <code className="bg-muted px-1 rounded">/print</code><br />
+              Les requêtes iront vers <code className="bg-muted px-1 rounded">/print</code> (POST) et <code className="bg-muted px-1 rounded">/print/health</code> (GET test).
             </p>
           </div>
 
@@ -212,18 +143,24 @@ const PrinterSettings = () => {
             ) : (
               <TestTube className="mr-2 h-4 w-4" />
             )}
-            Tester l'impression
+            Tester la connexion
           </Button>
         </div>
 
         <div className="rounded-lg border border-border bg-muted/50 p-4">
           <h4 className="mb-2 font-medium text-sm">Configuration actuelle</h4>
           <p className="text-sm text-muted-foreground">
-            Serveur: <code className="text-foreground">{printerServerIp || '(non configuré)'}</code>
+            Chemin : <code className="text-foreground">{displayPath}</code>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Test : <code className="text-foreground">{displayPath}/health</code>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Impression : <code className="text-foreground">POST {displayPath}</code>
           </p>
           {printerName && (
-            <p className="text-sm text-muted-foreground">
-              Imprimante: <span className="text-foreground">{printerName}</span>
+            <p className="text-sm text-muted-foreground mt-1">
+              Imprimante : <span className="text-foreground">{printerName}</span>
             </p>
           )}
         </div>
