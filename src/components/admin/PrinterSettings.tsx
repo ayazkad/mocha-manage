@@ -59,20 +59,46 @@ const PrinterSettings = () => {
 
   const handleTestPrint = async () => {
     setTesting(true);
-    const result = await sendPrintRequest("TEST IMPRESSION POS");
-    setTesting(false);
-
-    if (result.success) {
-      toast({
-        title: "Test réussi",
-        description: "Test d'impression envoyé avec succès au serveur d'impression.",
+    
+    try {
+      // Just ping the server to check connectivity
+      const serverUrl = printerServerIp.includes('://') 
+        ? printerServerIp.replace(/\/print\/?$/, '') 
+        : `http://${printerServerIp.replace(/:3000.*$/, '')}:3000`;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(serverUrl, { 
+        method: 'GET',
+        signal: controller.signal,
+        mode: 'no-cors' // Allow cross-origin without CORS headers
       });
-    } else {
+      
+      clearTimeout(timeoutId);
+      
+      // With no-cors mode, we can't read the response but if we get here, server is reachable
       toast({
-        title: "Échec du test",
-        description: result.message,
-        variant: "destructive",
+        title: "Serveur accessible",
+        description: `Le serveur ${serverUrl} répond.`,
       });
+    } catch (error) {
+      const err = error as Error;
+      if (err.name === 'AbortError') {
+        toast({
+          title: "Timeout",
+          description: "Le serveur ne répond pas (5s timeout).",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: `Impossible de joindre le serveur: ${err.message}`,
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setTesting(false);
     }
   };
 
