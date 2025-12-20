@@ -58,9 +58,14 @@ export async function sendPrintRequest(text: string): Promise<PrintResult> {
       };
     }
 
-    // Use the URL exactly as configured - no modifications!
-    // User should enter the full URL like: http://192.168.1.187:3000
-    const baseUrl = settings.printer_server_ip.trim().replace(/\/+$/, '');
+    // Clean and normalize the URL
+    let baseUrl = settings.printer_server_ip.trim().replace(/\/+$/, '');
+    
+    // CRITICAL: Add http:// if no protocol - otherwise browser treats it as relative URL!
+    if (!baseUrl.includes('://')) {
+      baseUrl = `http://${baseUrl}`;
+    }
+    
     const printUrl = `${baseUrl}/print`;
 
     console.log('[PrintService] Sending direct print request to:', printUrl);
