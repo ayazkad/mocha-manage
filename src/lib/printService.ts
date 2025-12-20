@@ -58,19 +58,17 @@ export async function sendPrintRequest(text: string): Promise<PrintResult> {
       };
     }
 
-    // Build the print URL - use the configured IP exactly as entered
+    // Use the URL exactly as configured - no modifications!
+    // User should enter the full URL like: http://192.168.1.187:3000
     const baseUrl = settings.printer_server_ip.trim().replace(/\/+$/, '');
-    // Add http:// if not present
-    const normalizedUrl = baseUrl.includes('://') ? baseUrl : `http://${baseUrl}`;
-    // Add port 3000 if not present
-    const urlWithPort = normalizedUrl.includes(':3000') ? normalizedUrl : `${normalizedUrl}:3000`;
-    const printUrl = `${urlWithPort}/print`;
+    const printUrl = `${baseUrl}/print`;
 
     console.log('[PrintService] Sending direct print request to:', printUrl);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
+    // Direct fetch from the browser - NO Edge Function!
     const response = await fetch(printUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
