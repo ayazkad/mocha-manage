@@ -259,8 +259,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
       }
 
       toast.error(result.message || "Erreur lors de l'envoi au serveur d'impression");
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Erreur lors de l'envoi au serveur d'impression");
     } finally {
       setIsPrinting(false);
@@ -273,7 +272,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
       setCopied(true);
       toast.success('Copied!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error('Failed to copy');
     }
   };
