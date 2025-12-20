@@ -6,6 +6,24 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function buildPrinterUrl(raw: string): string {
+  const value = (raw || "").trim();
+  if (!value) throw new Error("Adresse du serveur d'impression manquante");
+
+  // Accept:
+  // - 192.168.1.187
+  // - 192.168.1.187:3000
+  // - 192.168.1.187:3000/print
+  // - http://192.168.1.187:3000/print
+  const hasScheme = /^https?:\/\//i.test(value);
+  const url = new URL(hasScheme ? value : `http://${value}`);
+
+  if (!url.port) url.port = "3000";
+  if (!url.pathname || url.pathname === "/") url.pathname = "/print";
+
+  return url.toString();
+}
+
 interface PrintRequest {
   text: string;
 }
@@ -55,7 +73,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const printerUrl = `http://${settings.printer_server_ip}:3000/print`;
+    const printerUrl = buildPrinterUrl(settings.printer_server_ip);
     console.log(`Sending print request to: ${printerUrl}`);
 
     // Make the HTTP request to the local print server
