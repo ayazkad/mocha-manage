@@ -5,6 +5,7 @@ import { Printer, Globe, Copy, Check } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import logoLatte from '@/assets/logo-latte.png';
+import { sendPrintRequest } from '@/lib/printService';
 
 interface OrderItem {
   productName: string;
@@ -116,44 +117,40 @@ interface PrintReceiptDialogProps {
   receiptData: ReceiptData | null;
 }
 
-// ESC/POS Commands as text representations
-const ESC = '\x1B';
-const GS = '\x1D';
-
 // Generate pure text receipt (can be sent to ESC/POS printer)
 export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en): string => {
   const WIDTH = 42; // Character width for 80mm thermal printer
   const LINE = '='.repeat(WIDTH);
   const DASHED = '-'.repeat(WIDTH);
-  
+
   const center = (text: string): string => {
     const padding = Math.max(0, Math.floor((WIDTH - text.length) / 2));
     return ' '.repeat(padding) + text;
   };
-  
+
   const leftRight = (left: string, right: string): string => {
     const spaces = Math.max(1, WIDTH - left.length - right.length);
     return left + ' '.repeat(spaces) + right;
   };
-  
+
   const formatPrice = (price: number): string => `${price.toFixed(2)} GEL`;
-  
+
   let receipt = '';
-  
+
   // Header - Only address info (logo is shown separately)
   receipt += '\n';
   receipt += center('Tbilisi, Georgia') + '\n';
   receipt += center('Tel: +995 XXX XXX XXX') + '\n';
   receipt += '\n';
   receipt += LINE + '\n';
-  
+
   // Order Number (big and centered)
   receipt += '\n';
   receipt += center('*** ORDER ***') + '\n';
   receipt += center('#' + data.orderNumber) + '\n';
   receipt += '\n';
   receipt += LINE + '\n';
-  
+
   // Order Info
   receipt += leftRight(t.date, data.date + ' ' + data.time) + '\n';
   receipt += leftRight(t.employee, data.employeeName) + '\n';
@@ -161,14 +158,14 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
     receipt += leftRight(t.customer, data.customerName) + '\n';
   }
   receipt += DASHED + '\n';
-  
+
   // Items
   receipt += '\n';
   data.items.forEach(item => {
     const itemLine = `${item.quantity}x ${item.productName}`;
     const priceLine = formatPrice(item.totalPrice);
     receipt += leftRight(itemLine, priceLine) + '\n';
-    
+
     // Options (size, milk)
     if (item.selectedSize || item.selectedMilk) {
       const options = [item.selectedSize?.name, item.selectedMilk?.name]
@@ -176,7 +173,7 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
         .join(', ');
       receipt += '   -> ' + options + '\n';
     }
-    
+
     // Unit price if quantity > 1
     if (item.quantity > 1) {
       receipt += `   @ ${item.unitPrice.toFixed(2)} GEL each\n`;
@@ -184,51 +181,51 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
   });
   receipt += '\n';
   receipt += DASHED + '\n';
-  
+
   // Totals
   receipt += leftRight(t.subtotal, formatPrice(data.subtotal)) + '\n';
   if (data.discount > 0) {
     receipt += leftRight(t.discount, '-' + formatPrice(data.discount)) + '\n';
   }
   receipt += DASHED + '\n';
-  
+
   // Grand Total (emphasized)
   receipt += '\n';
   receipt += leftRight('>>> ' + t.total, formatPrice(data.total) + ' <<<') + '\n';
   receipt += '\n';
   receipt += LINE + '\n';
-  
+
   // Payment Info
   const paymentText = data.paymentMethod === 'cash' ? t.cash : t.card;
   receipt += leftRight(t.payment, paymentText) + '\n';
-  
+
   if (data.amountPaid !== undefined && data.amountPaid > 0) {
     receipt += leftRight(t.amountPaid, formatPrice(data.amountPaid)) + '\n';
   }
   if (data.change !== undefined && data.change > 0) {
     receipt += leftRight('*** ' + t.change, formatPrice(data.change) + ' ***') + '\n';
   }
-  
+
   // Loyalty Points
   if (data.pointsEarned && data.pointsEarned > 0) {
     receipt += DASHED + '\n';
     receipt += center('* +' + data.pointsEarned + ' ' + t.points + ' *') + '\n';
   }
-  
+
   receipt += LINE + '\n';
-  
+
   // Footer
   receipt += '\n';
   receipt += center(t.thanks) + '\n';
   receipt += center(t.goodbye) + '\n';
   receipt += '\n';
-  
+
   // Order ID for reference
   receipt += center('ID: ' + data.orderId.slice(0, 8)) + '\n';
   receipt += '\n';
   receipt += center('---') + '\n';
   receipt += '\n\n\n'; // Paper feed
-  
+
   return receipt;
 };
 
@@ -236,7 +233,8 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   const [language, setLanguage] = useState<Language>('en');
   const [receiptText, setReceiptText] = useState<string>('');
   const [copied, setCopied] = useState(false);
-  
+  const [isPrinting, setIsPrinting] = useState(false);
+
   const t = translations[language];
 
   // Generate text receipt when data or language changes
@@ -247,77 +245,26 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     }
   }, [receiptData, t]);
 
-  const handlePrint = () => {
-    // Create a new window with the receipt including logo image
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
-    if (!printWindow) {
-      toast.error('Please allow popups for printing');
-      return;
-    }
-    
-    // Write content with logo image to new window
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Receipt #${receiptData?.orderNumber}</title>
-          <style>
-            @page {
-              size: 80mm auto;
-              margin: 0;
-            }
-            body {
-              font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
-              font-size: 12px;
-              line-height: 1.2;
-              margin: 0;
-              padding: 5mm;
-              width: 70mm;
-              background: white;
-              color: black;
-            }
-            .logo-container {
-              text-align: center;
-              margin-bottom: 10px;
-            }
-            .logo {
-              max-width: 50mm;
-              height: auto;
-            }
-            .receipt-text {
-              white-space: pre;
-              font-size: 11px;
-            }
-            @media print {
-              body {
-                width: 80mm;
-                padding: 2mm;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="logo-container">
-            <img src="${logoLatte}" class="logo" alt="Latte" />
-          </div>
-          <div class="receipt-text">${receiptText}</div>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    
-    // Wait for content to load then print
-    setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-      
-      // Close after print dialog
-      setTimeout(() => {
-        printWindow.close();
+  const handlePrint = async () => {
+    if (isPrinting) return;
+
+    try {
+      setIsPrinting(true);
+      const result = await sendPrintRequest(receiptText);
+
+      if (result.success) {
+        toast.success(result.message || 'Impression envoyée');
         onClose();
-      }, 1000);
-    }, 250);
+        return;
+      }
+
+      toast.error(result.message || "Erreur lors de l'envoi au serveur d'impression");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de l'envoi au serveur d'impression");
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const handleCopy = async () => {
@@ -372,9 +319,13 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
           {/* Actions - Always in English */}
           <div className="flex gap-2">
-            <Button onClick={handlePrint} className="flex-1 gap-1.5 h-9 text-sm">
+            <Button
+              onClick={handlePrint}
+              className="flex-1 gap-1.5 h-9 text-sm"
+              disabled={isPrinting || receiptText.trim().length === 0}
+            >
               <Printer className="h-3.5 w-3.5" />
-              Print
+              {isPrinting ? 'Sending…' : 'Print'}
             </Button>
             <Button onClick={handleCopy} variant="outline" className="gap-1.5 h-9 text-sm">
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -391,3 +342,4 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 };
 
 export default PrintReceiptDialog;
+
