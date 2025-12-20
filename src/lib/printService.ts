@@ -92,6 +92,13 @@ export async function sendPrintRequest(text: string): Promise<PrintResult> {
           message: "Timeout: le serveur d'impression ne répond pas",
         };
       }
+      // Check for Mixed Content / CORS errors
+      if (error.message === 'Failed to fetch') {
+        return {
+          success: false,
+          message: "Blocage navigateur: l'app HTTPS ne peut pas appeler un serveur HTTP local. Ouvrez l'app sur le même réseau local ou désactivez la sécurité mixed-content.",
+        };
+      }
       return {
         success: false,
         message: `Erreur de connexion: ${error.message}`,
