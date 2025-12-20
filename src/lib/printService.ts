@@ -47,61 +47,30 @@ export interface PrintResult {
 }
 
 export async function sendPrintRequest(text: string): Promise<PrintResult> {
-  const settings = await getPrinterSettings();
-
-  if (!settings || !settings.printer_server_ip) {
-    return {
-      success: false,
-      message: "Aucun serveur d'impression configuré",
-    };
-  }
-
-  const url = `http://${settings.printer_server_ip}:3000/print`;
-
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
-      signal: controller.signal,
+    const response = await supabase.functions.invoke('print-relay', {
+      body: { text },
     });
 
-    clearTimeout(timeoutId);
-
-    if (response.ok) {
-      return {
-        success: true,
-        message: "Impression envoyée avec succès",
-      };
-    } else {
+    if (response.error) {
+      console.error('Edge function error:', response.error);
       return {
         success: false,
-        message: `Erreur serveur: ${response.status} ${response.statusText}`,
+        message: response.error.message || "Erreur lors de l'appel au serveur d'impression",
       };
     }
+
+    const data = response.data as { success: boolean; message: string };
+    return {
+      success: data.success,
+      message: data.message,
+    };
   } catch (error) {
+    console.error('Print request error:', error);
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        return {
-          success: false,
-          message: "Timeout: le serveur d'impression ne répond pas",
-        };
-      }
-      // Check for Mixed Content / CORS errors
-      if (error.message === 'Failed to fetch') {
-        return {
-          success: false,
-          message: "Blocage navigateur: l'app HTTPS ne peut pas appeler un serveur HTTP local. Ouvrez l'app sur le même réseau local ou désactivez la sécurité mixed-content.",
-        };
-      }
       return {
         success: false,
-        message: `Erreur de connexion: ${error.message}`,
+        message: `Erreur: ${error.message}`,
       };
     }
     return {
