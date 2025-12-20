@@ -58,38 +58,74 @@ const PrinterSettings = () => {
   };
 
   const handleTestPrint = async () => {
+    if (!printerServerIp.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer une adresse de serveur.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setTesting(true);
     
     try {
-      // Just ping the server to check connectivity
-      const serverUrl = printerServerIp.includes('://') 
-        ? printerServerIp.replace(/\/print\/?$/, '') 
-        : `http://${printerServerIp.replace(/:3000.*$/, '')}:3000`;
+      // Use the URL exactly as entered, just clean trailing slashes
+      const baseUrl = printerServerIp.trim().replace(/\/+$/, '');
+      const testUrl = `${baseUrl}/`;
+      
+      console.log('[PrinterTest] Testing URL:', testUrl);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch(serverUrl, { 
+      // Direct fetch from frontend - no Edge Function, no URL modification
+      const response = await fetch(testUrl, { 
         method: 'GET',
         signal: controller.signal,
-        mode: 'no-cors' // Allow cross-origin without CORS headers
       });
       
       clearTimeout(timeoutId);
       
-      // With no-cors mode, we can't read the response but if we get here, server is reachable
-      toast({
-        title: "Serveur accessible",
-        description: `Le serveur ${serverUrl} répond.`,
-      });
+      if (response.ok) {
+        const text = await response.text();
+        toast({
+          title: "Serveur accessible",
+          description: `Le serveur ${baseUrl} répond: "${text.substring(0, 50)}"`,
+        });
+      } else {
+        toast({
+          title: "Serveur accessible mais erreur",
+          description: `Status: ${response.status} ${response.statusText}`,
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       const err = error as Error;
+      console.error('[PrinterTest] Error:', err);
+      
       if (err.name === 'AbortError') {
         toast({
           title: "Timeout",
           description: "Le serveur ne répond pas (5s timeout).",
           variant: "destructive",
         });
+      } else if (err.message.includes('CORS') || err.message.includes('NetworkError')) {
+        // CORS or network error - try with no-cors as fallback
+        try {
+          const baseUrl = printerServerIp.trim().replace(/\/+$/, '');
+          await fetch(`${baseUrl}/`, { method: 'GET', mode: 'no-cors' });
+          toast({
+            title: "Serveur probablement accessible",
+            description: `Réponse reçue de ${baseUrl} (mode no-cors, pas de détails disponibles).`,
+          });
+        } catch {
+          toast({
+            title: "Erreur réseau",
+            description: "Impossible de joindre le serveur. Vérifiez l'adresse et que vous êtes sur le même réseau.",
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "Erreur",
