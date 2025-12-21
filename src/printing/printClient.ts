@@ -4,10 +4,13 @@
  * This module provides a unified interface for printing that works across:
  * - Web (hosted version): shows "not available" messages
  * - Desktop (Electron/Tauri .exe): uses native printing via window.electronAPI
+ * - Capacitor (Android/iOS): uses Capacitor native bridge
  * 
  * The desktop client will inject `window.electronAPI` via its preload script,
  * enabling local ESC/POS printing without changing React code.
  */
+
+import { Capacitor } from '@capacitor/core';
 
 export interface PrintResult {
   success: boolean;
@@ -44,6 +47,13 @@ declare global {
       printReceipt: (text: string) => Promise<void>;
     };
   }
+}
+
+/**
+ * Check if we're running inside Capacitor native app
+ */
+export function isCapacitorNative(): boolean {
+  return Capacitor.isNativePlatform();
 }
 
 /**
@@ -198,17 +208,17 @@ export function isDesktopMode(): boolean {
 }
 
 /**
- * Check if we're running in Capacitor Android mode
+ * Check if we're running in Capacitor Android mode (has print bridge)
  */
 export function isCapacitorMode(): boolean {
   return typeof window !== 'undefined' && !!window.CapacitorPrintBridge;
 }
 
 /**
- * Check if we're running in any native mode (desktop or mobile)
+ * Check if we're running in any native mode (desktop, mobile capacitor, or capacitor with print bridge)
  */
 export function isNativeMode(): boolean {
-  return isDesktopMode() || isCapacitorMode();
+  return isDesktopMode() || isCapacitorMode() || isCapacitorNative();
 }
 
 /**

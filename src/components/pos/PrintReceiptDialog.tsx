@@ -5,7 +5,7 @@ import { Printer, Globe, Copy, Check, AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import logoLatte from '@/assets/logo-latte.png';
-import { getPrintClient, isDesktopMode } from '@/printing/printClient';
+import { getPrintClient, isNativeMode } from '@/printing/printClient';
 
 interface OrderItem {
   productName: string;
@@ -236,7 +236,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   const [isPrinting, setIsPrinting] = useState(false);
 
   const t = translations[language];
-  const isDesktop = isDesktopMode();
+  const isNative = isNativeMode();
   const printClient = getPrintClient();
 
   // Generate text receipt when data or language changes
@@ -293,11 +293,11 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
         <div className="space-y-3">
           {/* Web mode warning */}
-          {!isDesktop && (
+          {!isNative && (
             <div className="flex items-start gap-2 rounded-lg border border-amber-500 bg-amber-500/10 p-3 text-sm">
               <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
               <p className="text-muted-foreground">
-                Impression non disponible en mode web. Utilisez le client desktop.
+                Impression non disponible en mode web. Utilisez le client desktop ou l'app mobile.
               </p>
             </div>
           )}
@@ -336,8 +336,8 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             <Button
               onClick={handlePrint}
               className="flex-1 gap-1.5 h-9 text-sm"
-              disabled={isPrinting || receiptText.trim().length === 0 || !isDesktop}
-              title={!isDesktop ? "Disponible uniquement sur le client desktop" : undefined}
+              disabled={isPrinting || receiptText.trim().length === 0 || !isNative}
+              title={!isNative ? "Disponible uniquement sur le client desktop ou l'app mobile" : undefined}
             >
               <Printer className="h-3.5 w-3.5" />
               {isPrinting ? 'Envoi…' : 'Imprimer'}
