@@ -11,6 +11,7 @@ import OrdersManager from '@/components/admin/OrdersManager';
 import OffersManager from '@/components/admin/OffersManager';
 import GlobalOptionsManager from '@/components/admin/GlobalOptionsManager';
 import PrinterSettings from '@/components/admin/PrinterSettings';
+import BluetoothPrinterSettings from '@/components/admin/BluetoothPrinterSettings';
 
 const Admin = () => {
   const { currentEmployee } = usePOS();
@@ -77,7 +78,8 @@ const Admin = () => {
             <CustomersManager />
           </TabsContent>
 
-          <TabsContent value="printer" className="mt-6">
+          <TabsContent value="printer" className="mt-6 space-y-6">
+            <BluetoothPrinterSettings />
             <PrinterSettings />
           </TabsContent>
         </Tabs>
