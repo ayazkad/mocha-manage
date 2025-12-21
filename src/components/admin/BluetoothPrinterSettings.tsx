@@ -14,8 +14,13 @@ const BluetoothPrinterSettings = () => {
   const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
-    setIsNative(isCapacitorNative());
-    checkConnection();
+    const native = isCapacitorNative();
+    setIsNative(native);
+    
+    // Only check connection if in native mode
+    if (native) {
+      checkConnection();
+    }
   }, []);
 
   const checkConnection = async () => {
@@ -25,7 +30,8 @@ const BluetoothPrinterSettings = () => {
         setConnectedDevice(deviceName);
       }
     } catch (error) {
-      console.log('[BluetoothSettings] Not in native mode or error:', error);
+      // Silently ignore - this happens if Bluetooth permissions not yet granted
+      console.log('[BluetoothSettings] Connection check skipped:', error);
     }
   };
 
