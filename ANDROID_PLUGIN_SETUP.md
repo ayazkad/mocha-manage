@@ -1,10 +1,40 @@
-# Configuration du Plugin Bluetooth Printer pour Android
+# Configuration Android pour LattePOS
 
-Ce guide explique comment configurer le plugin d'impression Bluetooth ESC/POS dans votre projet Android.
+Ce guide explique comment configurer les fonctionnalités natives Android (Bluetooth, Caméra, Icône).
 
-## Étapes d'installation
+## 1. Icône de l'application
 
-### 1. Ajouter le plugin à MainActivity
+Après `npx cap add android`, remplacez les icônes dans ces dossiers :
+- `android/app/src/main/res/mipmap-mdpi/ic_launcher.png` (48x48)
+- `android/app/src/main/res/mipmap-hdpi/ic_launcher.png` (72x72)
+- `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png` (96x96)
+- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png` (144x144)
+- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` (192x192)
+
+Ou utilisez **Android Studio** : `File → New → Image Asset` pour générer automatiquement toutes les tailles à partir d'une image.
+
+## 2. Permissions AndroidManifest.xml
+
+Ouvrez `android/app/src/main/AndroidManifest.xml` et ajoutez ces permissions :
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Bluetooth permissions -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    
+    <!-- Camera permission for QR scanner -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    
+    <!-- ... reste du manifest -->
+</manifest>
+```
+
+## 3. Plugin Bluetooth Printer
 
 Après avoir exécuté `npx cap add android`, ouvrez le fichier suivant dans Android Studio :
 
