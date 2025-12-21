@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer, Globe, Copy, Check } from 'lucide-react';
+import { Printer, Globe, Copy, Check, AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import logoLatte from '@/assets/logo-latte.png';
-import { sendPrintRequest } from '@/lib/printService';
+import { getPrintClient, isDesktopMode } from '@/printing/printClient';
 
 interface OrderItem {
   productName: string;
@@ -236,6 +236,8 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   const [isPrinting, setIsPrinting] = useState(false);
 
   const t = translations[language];
+  const isDesktop = isDesktopMode();
+  const printClient = getPrintClient();
 
   // Generate text receipt when data or language changes
   useEffect(() => {
@@ -250,17 +252,20 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
     try {
       setIsPrinting(true);
-      const result = await sendPrintRequest(receiptText);
+      console.log('[PrintReceiptDialog] Sending receipt via PrintClient...');
+      
+      const result = await printClient.printReceipt(receiptText);
 
       if (result.success) {
-        toast.success(result.message || 'Impression envoyée');
+        toast.success(result.message);
         onClose();
         return;
       }
 
-      toast.error(result.message || "Erreur lors de l'envoi au serveur d'impression");
-    } catch {
-      toast.error("Erreur lors de l'envoi au serveur d'impression");
+      toast.error(result.message);
+    } catch (error) {
+      const err = error as Error;
+      toast.error(`Erreur: ${err.message}`);
     } finally {
       setIsPrinting(false);
     }
@@ -287,6 +292,16 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         </DialogHeader>
 
         <div className="space-y-3">
+          {/* Web mode warning */}
+          {!isDesktop && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500 bg-amber-500/10 p-3 text-sm">
+              <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+              <p className="text-muted-foreground">
+                Impression non disponible en mode web. Utilisez le client desktop.
+              </p>
+            </div>
+          )}
+
           {/* Language Selector - only affects receipt text */}
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -321,17 +336,18 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             <Button
               onClick={handlePrint}
               className="flex-1 gap-1.5 h-9 text-sm"
-              disabled={isPrinting || receiptText.trim().length === 0}
+              disabled={isPrinting || receiptText.trim().length === 0 || !isDesktop}
+              title={!isDesktop ? "Disponible uniquement sur le client desktop" : undefined}
             >
               <Printer className="h-3.5 w-3.5" />
-              {isPrinting ? 'Sending…' : 'Print'}
+              {isPrinting ? 'Envoi…' : 'Imprimer'}
             </Button>
             <Button onClick={handleCopy} variant="outline" className="gap-1.5 h-9 text-sm">
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              Copy
+              Copier
             </Button>
             <Button onClick={onClose} variant="outline" className="h-9 text-sm">
-              Skip
+              Passer
             </Button>
           </div>
         </div>
@@ -341,4 +357,3 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 };
 
 export default PrintReceiptDialog;
-
