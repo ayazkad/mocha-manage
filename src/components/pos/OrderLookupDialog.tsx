@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { QrCode, X } from 'lucide-react';
+import { QrCode } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -74,20 +74,10 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5" />
-              Order Lookup
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5" />
+            Order Lookup
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">

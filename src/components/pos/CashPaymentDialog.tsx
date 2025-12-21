@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Banknote, X, Delete } from 'lucide-react';
+import { Banknote, Delete } from 'lucide-react';
 
 interface CashPaymentDialogProps {
   open: boolean;
@@ -59,15 +59,10 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing }: Cash
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-[340px] p-4">
         <DialogHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Banknote className="w-4 h-4" />
-              Paiement Espèces
-            </DialogTitle>
-            <Button variant="ghost" size="icon" onClick={handleClose} className="h-7 w-7">
-              <X className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Banknote className="w-4 h-4" />
+            Paiement Espèces
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
