@@ -27,6 +27,13 @@ interface CartItem {
   selected?: boolean; // Whether this item is selected for bulk operations
 }
 
+interface OriginalOrder {
+  orderId: string;
+  orderNumber: string;
+  originalTotal: number;
+  items: CartItem[];
+}
+
 interface POSContextType {
   currentEmployee: Employee | null;
   currentSession: Session | null;
@@ -35,6 +42,8 @@ interface POSContextType {
   staffDiscountActive: boolean;
   freeDrinkActive: boolean;
   freeSnackActive: boolean;
+  originalOrder: OriginalOrder | null;
+  isModifyingOrder: boolean;
   login: (code: string, pin: string) => Promise<boolean>;
   logout: () => Promise<void>;
   addToCart: (item: CartItem) => void;
@@ -47,6 +56,9 @@ interface POSContextType {
   setStaffDiscountActive: (active: boolean) => void;
   setFreeDrinkActive: (active: boolean) => void;
   setFreeSnackActive: (active: boolean) => void;
+  loadOrderForModification: (order: OriginalOrder, items: CartItem[]) => void;
+  cancelOrderModification: () => void;
+  getPriceDifference: () => number;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -59,6 +71,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [staffDiscountActive, setStaffDiscountActive] = useState(false);
   const [freeDrinkActive, setFreeDrinkActive] = useState(false);
   const [freeSnackActive, setFreeSnackActive] = useState(false);
+  const [originalOrder, setOriginalOrder] = useState<OriginalOrder | null>(null);
 
   useEffect(() => {
     // Apply dark mode class to document
@@ -204,6 +217,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStaffDiscountActive(false);
     setFreeDrinkActive(false);
     setFreeSnackActive(false);
+    setOriginalOrder(null);
   };
 
   const getTotalPrice = () => {
@@ -221,6 +235,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDarkMode(!darkMode);
   };
 
+  const loadOrderForModification = (order: OriginalOrder, items: CartItem[]) => {
+    setOriginalOrder(order);
+    setCart(items);
+  };
+
+  const cancelOrderModification = () => {
+    setOriginalOrder(null);
+    setCart([]);
+  };
+
+  const getPriceDifference = () => {
+    if (!originalOrder) return 0;
+    return getTotalPrice() - originalOrder.originalTotal;
+  };
+
+  const isModifyingOrder = originalOrder !== null;
+
   return (
     <POSContext.Provider
       value={{
@@ -231,6 +262,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         staffDiscountActive,
         freeDrinkActive,
         freeSnackActive,
+        originalOrder,
+        isModifyingOrder,
         login,
         logout,
         addToCart,
@@ -243,6 +276,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setStaffDiscountActive,
         setFreeDrinkActive,
         setFreeSnackActive,
+        loadOrderForModification,
+        cancelOrderModification,
+        getPriceDifference,
       }}
     >
       {children}

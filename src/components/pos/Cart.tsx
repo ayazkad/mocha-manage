@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Trash2, CheckCircle, CreditCard, Banknote, Percent, Gift, Edit2, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Trash2, CheckCircle, CreditCard, Banknote, Percent, Gift, Edit2, Plus, Minus, AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import CustomerLoyalty from './CustomerLoyalty';
@@ -29,6 +29,10 @@ const Cart = ({ onClose }: CartProps) => {
     staffDiscountActive,
     freeDrinkActive,
     freeSnackActive,
+    isModifyingOrder,
+    originalOrder,
+    cancelOrderModification,
+    getPriceDifference,
   } = usePOS();
   const [processing, setProcessing] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
@@ -596,11 +600,38 @@ const Cart = ({ onClose }: CartProps) => {
       <div className="p-3 border-b border-border/50 bg-secondary/30 shrink-0">
         <div className="flex items-center gap-2">
           <ShoppingCart className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold text-card-foreground">Cart</h2>
+          <h2 className="text-base font-semibold text-card-foreground">
+            {isModifyingOrder ? 'Modification' : 'Cart'}
+          </h2>
           <span className="ml-auto text-xs text-muted-foreground">
             {cart.length} item{cart.length !== 1 ? 's' : ''}
           </span>
         </div>
+        
+        {/* Modification Mode Banner */}
+        {isModifyingOrder && originalOrder && (
+          <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/50">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                  Modif. #{originalOrder.orderNumber}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={cancelOrderModification}
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Original: {originalOrder.originalTotal.toFixed(2)} ₾
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Cart Items */}
@@ -760,6 +791,36 @@ const Cart = ({ onClose }: CartProps) => {
               <span className="text-card-foreground">Total Payment</span>
               <span className="text-primary">{total.toFixed(2)} ₾</span>
             </div>
+
+            {/* Price difference when modifying an order */}
+            {isModifyingOrder && originalOrder && (
+              <div className={`p-2 rounded-lg ${
+                getPriceDifference() > 0 
+                  ? 'bg-red-500/10 border border-red-500/50' 
+                  : getPriceDifference() < 0 
+                    ? 'bg-green-500/10 border border-green-500/50'
+                    : 'bg-muted border border-border'
+              }`}>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-medium">
+                    {getPriceDifference() > 0 
+                      ? '💰 À encaisser' 
+                      : getPriceDifference() < 0 
+                        ? '💵 À rendre'
+                        : '✓ Pas de différence'}
+                  </span>
+                  <span className={`text-sm font-bold ${
+                    getPriceDifference() > 0 
+                      ? 'text-red-600' 
+                      : getPriceDifference() < 0 
+                        ? 'text-green-600'
+                        : 'text-muted-foreground'
+                  }`}>
+                    {getPriceDifference() > 0 ? '+' : ''}{getPriceDifference().toFixed(2)} ₾
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2">
               <Button

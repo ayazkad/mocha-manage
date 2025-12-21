@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import logoLatte from '@/assets/logo-latte.png';
 import { getPrintClient, isNativeMode } from '@/printing/printClient';
+import QRCode from 'qrcode';
 
 interface OrderItem {
   productName: string;
@@ -234,10 +235,29 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   const [receiptText, setReceiptText] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
   const t = translations[language];
   const isNative = isNativeMode();
   const printClient = getPrintClient();
+
+  // Generate QR code for order ID
+  useEffect(() => {
+    if (receiptData?.orderId) {
+      QRCode.toDataURL(receiptData.orderId, {
+        width: 120,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      }).then(url => {
+        setQrCodeDataUrl(url);
+      }).catch(err => {
+        console.error('QR code generation failed:', err);
+      });
+    }
+  }, [receiptData?.orderId]);
 
   // Generate text receipt when data or language changes
   useEffect(() => {
@@ -328,6 +348,20 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
                 />
               </div>
               <pre className="font-mono text-[9px] leading-tight whitespace-pre overflow-x-auto">{receiptText}</pre>
+              
+              {/* QR Code for order lookup */}
+              {qrCodeDataUrl && (
+                <div className="flex flex-col items-center mt-3 pt-3 border-t border-gray-300">
+                  <img 
+                    src={qrCodeDataUrl} 
+                    alt="Order QR Code" 
+                    className="w-24 h-24"
+                  />
+                  <p className="text-[8px] text-gray-500 mt-1 text-center">
+                    Scanner pour modifier
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
