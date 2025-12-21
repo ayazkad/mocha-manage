@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Printer, TestTube, Save, Loader2 } from 'lucide-react';
-import { getPrinterSettings, updatePrinterSettings, testPrintServer, getPrintBasePath } from '@/lib/printService';
+import { getPrinterSettings, updatePrinterSettings, testPrintServer, sendTestPrint, getPrintBasePath } from '@/lib/printService';
 
 const PrinterSettings = () => {
   const [printerServerIp, setPrinterServerIp] = useState('/print');
@@ -13,6 +13,7 @@ const PrinterSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [testingPrint, setTestingPrint] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,11 +50,11 @@ const PrinterSettings = () => {
     }
   };
 
-  const handleTestPrint = async () => {
+  const handleTestConnection = async () => {
     setTesting(true);
     
     const basePath = getPrintBasePath(printerServerIp);
-    console.log('[PrinterSettings] Testing with path:', basePath);
+    console.log('[PrinterSettings] Testing connection with path:', basePath);
     
     const result = await testPrintServer(printerServerIp);
     
@@ -64,6 +65,22 @@ const PrinterSettings = () => {
     });
     
     setTesting(false);
+  };
+
+  const handleTestPrint = async () => {
+    setTestingPrint(true);
+    
+    console.log('[PrinterSettings] Testing print...');
+    
+    const result = await sendTestPrint();
+    
+    toast({
+      title: result.success ? "Impression envoyée" : "Erreur",
+      description: result.message,
+      variant: result.success ? "default" : "destructive",
+    });
+    
+    setTestingPrint(false);
   };
 
   if (loading) {
@@ -108,7 +125,8 @@ const PrinterSettings = () => {
             />
             <p className="text-xs text-muted-foreground">
               Valeur recommandée : <code className="bg-muted px-1 rounded">/print</code><br />
-              Les requêtes iront vers <code className="bg-muted px-1 rounded">/print</code> (POST) et <code className="bg-muted px-1 rounded">/print/health</code> (GET test).
+              Test connexion → <code className="bg-muted px-1 rounded">GET /print/health</code><br />
+              Impression → <code className="bg-muted px-1 rounded">POST /print/print</code>
             </p>
           </div>
 
@@ -137,13 +155,22 @@ const PrinterSettings = () => {
             Sauvegarder
           </Button>
 
-          <Button variant="outline" onClick={handleTestPrint} disabled={testing}>
+          <Button variant="outline" onClick={handleTestConnection} disabled={testing}>
             {testing ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <TestTube className="mr-2 h-4 w-4" />
             )}
             Tester la connexion
+          </Button>
+
+          <Button variant="outline" onClick={handleTestPrint} disabled={testingPrint}>
+            {testingPrint ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Printer className="mr-2 h-4 w-4" />
+            )}
+            Tester l'impression
           </Button>
         </div>
 
@@ -153,10 +180,10 @@ const PrinterSettings = () => {
             Chemin : <code className="text-foreground">{displayPath}</code>
           </p>
           <p className="text-sm text-muted-foreground">
-            Test : <code className="text-foreground">{displayPath}/health</code>
+            Test connexion : <code className="text-foreground">GET {displayPath}/health</code>
           </p>
           <p className="text-sm text-muted-foreground">
-            Impression : <code className="text-foreground">POST {displayPath}</code>
+            Impression : <code className="text-foreground">POST {displayPath}/print</code>
           </p>
           {printerName && (
             <p className="text-sm text-muted-foreground mt-1">

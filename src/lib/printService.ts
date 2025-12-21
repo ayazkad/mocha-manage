@@ -121,18 +121,22 @@ export async function testPrintServer(basePath?: string): Promise<PrintResult> {
 /**
  * Sends a print request to the local print server.
  * Uses relative path to go through Caddy reverse proxy.
+ * Note: With Caddy's handle_path /print*, POST goes to /print/print 
+ * so that Node receives POST /print after stripping.
  */
 export async function sendPrintRequest(text: string): Promise<PrintResult> {
   try {
     const settings = await getPrinterSettings();
     const basePath = getPrintBasePath(settings?.printer_server_ip);
+    const printUrl = `${basePath}/print`;
     
-    console.log('[PrintService] Sending print request to:', basePath);
+    console.log('[PrintService] Sending print request to:', printUrl);
+    console.log('[PrintService] Request body:', { text: text.substring(0, 100) + '...' });
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(basePath, {
+    const response = await fetch(printUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
@@ -176,4 +180,28 @@ export async function sendPrintRequest(text: string): Promise<PrintResult> {
       message: "Erreur inconnue lors de l'envoi",
     };
   }
+}
+
+/**
+ * Sends a test print request with a sample ticket.
+ */
+export async function sendTestPrint(): Promise<PrintResult> {
+  const testTicket = `
+========================================
+         *** TEST IMPRESSION ***
+========================================
+
+Date: ${new Date().toLocaleString('fr-FR')}
+
+Si vous voyez ce message, la connexion
+au serveur d'impression fonctionne !
+
+========================================
+              LATTE POS
+========================================
+
+`;
+
+  console.log('[PrintService] Sending test print...');
+  return sendPrintRequest(testTicket);
 }
