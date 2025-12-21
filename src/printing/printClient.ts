@@ -4,13 +4,15 @@
  * This module provides a unified interface for printing that works across:
  * - Web (hosted version): shows "not available" messages
  * - Desktop (Electron/Tauri .exe): uses native printing via window.electronAPI
- * - Capacitor (Android/iOS): uses Capacitor native bridge
+ * - Capacitor (Android/iOS): uses Bluetooth Printer plugin
  * 
  * The desktop client will inject `window.electronAPI` via its preload script,
  * enabling local ESC/POS printing without changing React code.
  */
 
 import { Capacitor } from '@capacitor/core';
+import { BluetoothPrinter } from '@/plugins/bluetooth-printer';
+import { buildReceipt } from '@/plugins/bluetooth-printer/escpos';
 
 export interface PrintResult {
   success: boolean;
@@ -32,17 +34,22 @@ export interface PrintClient {
    * Send text to be printed (receipt text, not ESC/POS commands)
    */
   printReceipt(text: string): Promise<PrintResult>;
+
+  /**
+   * Get paired Bluetooth devices (for Capacitor mode)
+   */
+  getPairedDevices?(): Promise<{ name: string; address: string }[]>;
+
+  /**
+   * Connect to a Bluetooth printer (for Capacitor mode)
+   */
+  connectToPrinter?(address: string): Promise<PrintResult>;
 }
 
-// Extend Window interface for native APIs (Electron/Tauri/Capacitor)
+// Extend Window interface for native APIs (Electron/Tauri)
 declare global {
   interface Window {
     electronAPI?: {
-      testPrint: () => Promise<void>;
-      printReceipt: (text: string) => Promise<void>;
-    };
-    // Capacitor Android native bridge for printing
-    CapacitorPrintBridge?: {
       testPrint: () => Promise<void>;
       printReceipt: (text: string) => Promise<void>;
     };
@@ -67,14 +74,14 @@ class WebPrintClient implements PrintClient {
   async testConnection(): Promise<PrintResult> {
     return {
       success: false,
-      message: "L'impression locale nécessite le client de caisse installé sur PC.",
+      message: "L'impression locale nécessite le client de caisse installé sur PC ou l'app mobile.",
     };
   }
 
   async printReceipt(_text: string): Promise<PrintResult> {
     return {
       success: false,
-      message: "L'impression locale n'est pas disponible sur ce terminal. Utilisez le client desktop.",
+      message: "L'impression locale n'est pas disponible sur ce terminal.",
     };
   }
 }
@@ -123,43 +130,90 @@ class DesktopPrintClient implements PrintClient {
 }
 
 /**
- * Capacitor Android client implementation - uses window.CapacitorPrintBridge
+ * Capacitor Bluetooth client implementation - uses BluetoothPrinter plugin
  */
-class CapacitorPrintClient implements PrintClient {
+class CapacitorBluetoothPrintClient implements PrintClient {
   isAvailable(): boolean {
     return true;
   }
 
   async testConnection(): Promise<PrintResult> {
     try {
-      await window.CapacitorPrintBridge!.testPrint();
+      const { connected, deviceName } = await BluetoothPrinter.isConnected();
+      if (connected) {
+        return {
+          success: true,
+          message: `Connecté à ${deviceName || 'imprimante'}`,
+        };
+      }
       return {
-        success: true,
-        message: "Connexion à l'imprimante réussie.",
+        success: false,
+        message: "Aucune imprimante connectée. Veuillez en sélectionner une.",
       };
     } catch (error) {
       const err = error as Error;
       return {
         success: false,
-        message: `Erreur de connexion: ${err.message}`,
+        message: `Erreur: ${err.message}`,
       };
     }
   }
 
   async printReceipt(text: string): Promise<PrintResult> {
     try {
-      console.log('[CapacitorPrintClient] Sending receipt to printer...');
-      await window.CapacitorPrintBridge!.printReceipt(text);
-      return {
-        success: true,
-        message: "Ticket envoyé à l'imprimante.",
-      };
+      console.log('[CapacitorBluetoothPrintClient] Checking connection...');
+      
+      // Check if connected
+      const { connected } = await BluetoothPrinter.isConnected();
+      if (!connected) {
+        return {
+          success: false,
+          message: "Aucune imprimante connectée. Connectez-vous d'abord via les paramètres.",
+        };
+      }
+
+      console.log('[CapacitorBluetoothPrintClient] Building ESC/POS receipt...');
+      const escposData = buildReceipt(text);
+      
+      console.log('[CapacitorBluetoothPrintClient] Sending to printer...');
+      const result = await BluetoothPrinter.printRaw({ data: escposData });
+      
+      return result;
     } catch (error) {
       const err = error as Error;
-      console.error('[CapacitorPrintClient] Print error:', err);
+      console.error('[CapacitorBluetoothPrintClient] Print error:', err);
       return {
         success: false,
         message: `Erreur d'impression: ${err.message}`,
+      };
+    }
+  }
+
+  async getPairedDevices(): Promise<{ name: string; address: string }[]> {
+    try {
+      // Request permissions first
+      const { granted } = await BluetoothPrinter.requestPermissions();
+      if (!granted) {
+        console.warn('[CapacitorBluetoothPrintClient] Bluetooth permissions not granted');
+        return [];
+      }
+
+      const { devices } = await BluetoothPrinter.getPairedDevices();
+      return devices.map(d => ({ name: d.name, address: d.address }));
+    } catch (error) {
+      console.error('[CapacitorBluetoothPrintClient] Error getting devices:', error);
+      return [];
+    }
+  }
+
+  async connectToPrinter(address: string): Promise<PrintResult> {
+    try {
+      return await BluetoothPrinter.connect({ address });
+    } catch (error) {
+      const err = error as Error;
+      return {
+        success: false,
+        message: `Erreur de connexion: ${err.message}`,
       };
     }
   }
@@ -173,7 +227,7 @@ let printClientInstance: PrintClient | null = null;
  * 
  * Detection logic:
  * - If window.electronAPI exists → Desktop mode (Electron/Tauri)
- * - If window.CapacitorPrintBridge exists → Capacitor Android mode
+ * - If Capacitor native platform → Bluetooth printer mode
  * - Otherwise → Web mode (no-op client)
  */
 export function getPrintClient(): PrintClient {
@@ -186,10 +240,10 @@ export function getPrintClient(): PrintClient {
     console.log('[PrintClient] Desktop mode detected (electronAPI found)');
     printClientInstance = new DesktopPrintClient();
   } 
-  // Check for Capacitor Android API
-  else if (typeof window !== 'undefined' && window.CapacitorPrintBridge) {
-    console.log('[PrintClient] Capacitor mode detected (CapacitorPrintBridge found)');
-    printClientInstance = new CapacitorPrintClient();
+  // Check for Capacitor native platform
+  else if (isCapacitorNative()) {
+    console.log('[PrintClient] Capacitor native mode detected - using Bluetooth printer');
+    printClientInstance = new CapacitorBluetoothPrintClient();
   } 
   // Fallback to web mode
   else {
@@ -208,17 +262,10 @@ export function isDesktopMode(): boolean {
 }
 
 /**
- * Check if we're running in Capacitor Android mode (has print bridge)
- */
-export function isCapacitorMode(): boolean {
-  return typeof window !== 'undefined' && !!window.CapacitorPrintBridge;
-}
-
-/**
- * Check if we're running in any native mode (desktop, mobile capacitor, or capacitor with print bridge)
+ * Check if we're running in any native mode (desktop or Capacitor)
  */
 export function isNativeMode(): boolean {
-  return isDesktopMode() || isCapacitorMode() || isCapacitorNative();
+  return isDesktopMode() || isCapacitorNative();
 }
 
 /**
