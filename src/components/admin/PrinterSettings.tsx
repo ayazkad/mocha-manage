@@ -125,8 +125,8 @@ const PrinterSettings = () => {
             />
             <p className="text-xs text-muted-foreground">
               Valeur recommandée : <code className="bg-muted px-1 rounded">/print</code><br />
-              Test connexion → <code className="bg-muted px-1 rounded">GET /print/health</code><br />
-              Impression → <code className="bg-muted px-1 rounded">POST /print/print</code>
+              Test → <code className="bg-muted px-1 rounded">GET /print/health</code><br />
+              Impression → <code className="bg-muted px-1 rounded">POST /print</code>
             </p>
           </div>
 
@@ -180,10 +180,10 @@ const PrinterSettings = () => {
             Chemin : <code className="text-foreground">{displayPath}</code>
           </p>
           <p className="text-sm text-muted-foreground">
-            Test connexion : <code className="text-foreground">GET {displayPath}/health</code>
+            Test : <code className="text-foreground">GET {displayPath}/health</code>
           </p>
           <p className="text-sm text-muted-foreground">
-            Impression : <code className="text-foreground">POST {displayPath}/print</code>
+            Impression : <code className="text-foreground">POST {displayPath}</code>
           </p>
           {printerName && (
             <p className="text-sm text-muted-foreground mt-1">

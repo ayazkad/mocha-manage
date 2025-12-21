@@ -121,22 +121,21 @@ export async function testPrintServer(basePath?: string): Promise<PrintResult> {
 /**
  * Sends a print request to the local print server.
  * Uses relative path to go through Caddy reverse proxy.
- * Note: With Caddy's handle_path /print*, POST goes to /print/print 
- * so that Node receives POST /print after stripping.
+ * 
+ * Flow: POST /print → Caddy (handle_path strips /print) → Node receives POST /
  */
 export async function sendPrintRequest(text: string): Promise<PrintResult> {
   try {
     const settings = await getPrinterSettings();
     const basePath = getPrintBasePath(settings?.printer_server_ip);
-    const printUrl = `${basePath}/print`;
     
-    console.log('[PrintService] Sending print request to:', printUrl);
-    console.log('[PrintService] Request body:', { text: text.substring(0, 100) + '...' });
+    console.log('[PrintService] Sending print request to:', basePath);
+    console.log('[PrintService] Request body preview:', text.substring(0, 100) + '...');
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(printUrl, {
+    const response = await fetch(basePath, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
