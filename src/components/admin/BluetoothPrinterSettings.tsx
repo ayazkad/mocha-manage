@@ -12,6 +12,7 @@ const BluetoothPrinterSettings = () => {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [connectedDevice, setConnectedDevice] = useState<string | null>(null);
   const [isNative, setIsNative] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   useEffect(() => {
     const native = isCapacitorNative();
@@ -50,33 +51,39 @@ const BluetoothPrinterSettings = () => {
   };
 
   const loadDevices = async () => {
+    setLastError(null);
     setLoading(true);
     try {
       // Check if Bluetooth is available
       const { available } = await BluetoothPrinter.isAvailable();
       if (!available) {
         toast.error('Bluetooth non disponible ou désactivé');
-        setLoading(false);
         return;
       }
 
       // Request permissions
       const granted = await requestPermissions();
-      if (!granted) {
-        setLoading(false);
-        return;
-      }
+      if (!granted) return;
 
       // Get paired devices
       const { devices: pairedDevices } = await BluetoothPrinter.getPairedDevices();
       setDevices(pairedDevices);
 
       if (pairedDevices.length === 0) {
-        toast.info('Aucun appareil appairé trouvé. Appairez votre imprimante dans les paramètres Bluetooth Android.');
+        toast.info(
+          'Aucun appareil appairé trouvé. Appairez votre imprimante dans les paramètres Bluetooth Android.'
+        );
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       console.error('Error loading devices:', error);
-      toast.error('Erreur lors du chargement des appareils');
+      setLastError(message);
+
+      if (/not implemented|is not implemented|plugin/i.test(message)) {
+        toast.error("Plugin Bluetooth non chargé dans l'APK (MainActivity).");
+      } else {
+        toast.error(`Erreur lors du chargement des appareils: ${message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -192,6 +199,19 @@ const BluetoothPrinterSettings = () => {
           )}
           {loading ? 'Recherche...' : 'Rechercher les imprimantes'}
         </Button>
+
+        {lastError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs">
+            <p className="font-medium text-foreground">Détail de l'erreur :</p>
+            <p className="mt-1 break-words text-muted-foreground">{lastError}</p>
+            {/not implemented|is not implemented|plugin/i.test(lastError) && (
+              <p className="mt-2 text-muted-foreground">
+                Astuce : assurez-vous d'avoir enregistré le plugin Bluetooth dans{' '}
+                <strong>MainActivity</strong>, puis refaites <strong>cap sync</strong>.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Device List */}
         {devices.length > 0 && (
