@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer, Globe, Copy, Check, AlertCircle } from 'lucide-react';
@@ -236,10 +236,29 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   const [copied, setCopied] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const logoBase64Ref = useRef<string>('');
 
   const t = translations[language];
   const isNative = isNativeMode();
   const printClient = getPrintClient();
+
+  // Convert logo to base64 on mount
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const response = await fetch(logoLatte);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          logoBase64Ref.current = reader.result as string;
+        };
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.warn('Failed to load logo for printing:', err);
+      }
+    };
+    loadLogo();
+  }, []);
 
   // Generate QR code for order ID
   useEffect(() => {
@@ -268,13 +287,17 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   }, [receiptData, t]);
 
   const handlePrint = async () => {
-    if (isPrinting) return;
+    if (isPrinting || !receiptData) return;
 
     try {
       setIsPrinting(true);
-      console.log('[PrintReceiptDialog] Sending receipt via PrintClient...');
+      console.log('[PrintReceiptDialog] Sending receipt via PrintClient with images...');
       
-      const result = await printClient.printReceipt(receiptText);
+      const result = await printClient.printReceiptWithImages(
+        receiptText,
+        logoBase64Ref.current || undefined,
+        receiptData.orderId
+      );
 
       if (result.success) {
         toast.success(result.message);

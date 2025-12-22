@@ -12,7 +12,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { BluetoothPrinter } from '@/plugins/bluetooth-printer';
-import { buildReceipt } from '@/plugins/bluetooth-printer/escpos';
+import { buildReceipt, buildReceiptWithImages } from '@/plugins/bluetooth-printer/escpos';
 
 export interface PrintResult {
   success: boolean;
@@ -34,6 +34,11 @@ export interface PrintClient {
    * Send text to be printed (receipt text, not ESC/POS commands)
    */
   printReceipt(text: string): Promise<PrintResult>;
+
+  /**
+   * Send receipt with logo and QR code images
+   */
+  printReceiptWithImages(text: string, logoBase64?: string, qrCodeData?: string): Promise<PrintResult>;
 
   /**
    * Get paired Bluetooth devices (for Capacitor mode)
@@ -84,6 +89,13 @@ class WebPrintClient implements PrintClient {
       message: "L'impression locale n'est pas disponible sur ce terminal.",
     };
   }
+
+  async printReceiptWithImages(_text: string, _logoBase64?: string, _qrCodeData?: string): Promise<PrintResult> {
+    return {
+      success: false,
+      message: "L'impression locale n'est pas disponible sur ce terminal.",
+    };
+  }
 }
 
 /**
@@ -126,6 +138,12 @@ class DesktopPrintClient implements PrintClient {
         message: `Erreur d'impression: ${err.message}`,
       };
     }
+  }
+
+  async printReceiptWithImages(text: string, _logoBase64?: string, _qrCodeData?: string): Promise<PrintResult> {
+    // Desktop mode uses the basic text printing for now
+    // The desktop client (Electron) would need to implement image support separately
+    return this.printReceipt(text);
   }
 }
 
@@ -174,6 +192,36 @@ class CapacitorBluetoothPrintClient implements PrintClient {
 
       console.log('[CapacitorBluetoothPrintClient] Building ESC/POS receipt...');
       const escposData = buildReceipt(text);
+      
+      console.log('[CapacitorBluetoothPrintClient] Sending to printer...');
+      const result = await BluetoothPrinter.printRaw({ data: escposData });
+      
+      return result;
+    } catch (error) {
+      const err = error as Error;
+      console.error('[CapacitorBluetoothPrintClient] Print error:', err);
+      return {
+        success: false,
+        message: `Erreur d'impression: ${err.message}`,
+      };
+    }
+  }
+
+  async printReceiptWithImages(text: string, logoBase64?: string, qrCodeData?: string): Promise<PrintResult> {
+    try {
+      console.log('[CapacitorBluetoothPrintClient] Checking connection...');
+      
+      // Check if connected
+      const { connected } = await BluetoothPrinter.isConnected();
+      if (!connected) {
+        return {
+          success: false,
+          message: "Aucune imprimante connectée. Connectez-vous d'abord via les paramètres.",
+        };
+      }
+
+      console.log('[CapacitorBluetoothPrintClient] Building ESC/POS receipt with images...');
+      const escposData = await buildReceiptWithImages(text, logoBase64, qrCodeData);
       
       console.log('[CapacitorBluetoothPrintClient] Sending to printer...');
       const result = await BluetoothPrinter.printRaw({ data: escposData });
