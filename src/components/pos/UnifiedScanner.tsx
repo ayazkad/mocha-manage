@@ -19,7 +19,7 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
   const [code, setCode] = useState('');
   const [processing, setProcessing] = useState(false);
   const [nativeScanning, setNativeScanning] = useState(false);
-  const { addToCart, clearCart } = usePOS();
+  const { addToCart, clearCart, loadOrderForModification } = usePOS();
   const isNative = nativeScannerService.isNativePlatform();
 
   useEffect(() => {
@@ -113,11 +113,17 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
       };
     });
 
-    // Clear cart and add all items at once
-    clearCart();
-    cartItems.forEach((item: any) => addToCart(item));
+    // Load order for modification - this sets originalOrder and isModifyingOrder
+    const originalOrderData = {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      originalTotal: Number(order.total),
+      items: cartItems,
+    };
+    
+    loadOrderForModification(originalOrderData, cartItems);
 
-    toast.success(`Ticket #${order.order_number} chargé (${cartItems.length} produits)`);
+    toast.success(`Ticket #${order.order_number} chargé pour modification`);
     onClose();
   };
 

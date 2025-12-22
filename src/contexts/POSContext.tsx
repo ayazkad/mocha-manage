@@ -45,7 +45,7 @@ interface POSContextType {
   originalOrder: OriginalOrder | null;
   isModifyingOrder: boolean;
   login: (code: string, pin: string) => Promise<boolean>;
-  logout: () => Promise<void>;
+  logout: () => Promise<boolean>;
   addToCart: (item: CartItem) => void;
   removeFromCart: (index: number) => void;
   updateCartItem: (index: number, item: CartItem) => void;
@@ -141,7 +141,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<boolean> => {
+    // Block logout for non-admin employees when modifying an order
+    if (originalOrder !== null && currentEmployee?.role !== 'admin') {
+      return false;
+    }
+    
     if (currentSession) {
       // Close the session
       await supabase
@@ -153,9 +158,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentEmployee(null);
     setCurrentSession(null);
     setCart([]);
+    setOriginalOrder(null);
     
     localStorage.removeItem('pos_employee');
     localStorage.removeItem('pos_session');
+    
+    return true;
   };
 
   const addToCart = (item: CartItem) => {

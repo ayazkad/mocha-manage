@@ -10,7 +10,7 @@ import UnifiedScanner from './UnifiedScanner';
 import logoLatte from '@/assets/logo-latte.png';
 
 const Header = () => {
-  const { currentEmployee, logout, darkMode, toggleDarkMode, isModifyingOrder } = usePOS();
+  const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminPage = location.pathname === '/admin';
@@ -18,12 +18,10 @@ const Header = () => {
   const [showScanner, setShowScanner] = useState(false);
 
   const handleLogout = async () => {
-    // Block logout for non-admin employees when modifying an order
-    if (isModifyingOrder && currentEmployee?.role !== 'admin') {
+    const success = await logout();
+    if (!success) {
       toast.error('Vous devez terminer la modification du ticket avant de vous déconnecter');
-      return;
     }
-    await logout();
   };
 
   return (
