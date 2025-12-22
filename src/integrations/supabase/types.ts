@@ -373,6 +373,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          cash_received: number | null
           completed_at: string | null
           created_at: string | null
           discount_amount: number | null
@@ -389,6 +390,7 @@ export type Database = {
           total: number
         }
         Insert: {
+          cash_received?: number | null
           completed_at?: string | null
           created_at?: string | null
           discount_amount?: number | null
@@ -405,6 +407,7 @@ export type Database = {
           total: number
         }
         Update: {
+          cash_received?: number | null
           completed_at?: string | null
           created_at?: string | null
           discount_amount?: number | null
