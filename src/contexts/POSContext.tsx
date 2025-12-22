@@ -164,38 +164,41 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ? { ...item, discount: 30 }
       : item;
     
-    // Vérifier si un produit identique existe déjà dans le panier
-    const existingItemIndex = cart.findIndex((cartItem) => {
-      // Comparer le produit de base
-      if (cartItem.productId !== itemWithDiscount.productId) return false;
+    // Use functional update to ensure we have the latest cart state
+    setCart((prevCart) => {
+      // Vérifier si un produit identique existe déjà dans le panier
+      const existingItemIndex = prevCart.findIndex((cartItem) => {
+        // Comparer le produit de base
+        if (cartItem.productId !== itemWithDiscount.productId) return false;
+        
+        // Comparer les options de taille
+        if (cartItem.selectedSize?.name !== itemWithDiscount.selectedSize?.name) return false;
+        
+        // Comparer les options de lait
+        if (cartItem.selectedMilk?.name !== itemWithDiscount.selectedMilk?.name) return false;
+        
+        // Comparer les notes
+        if (cartItem.notes !== itemWithDiscount.notes) return false;
+        
+        // Comparer la réduction
+        if ((cartItem.discount || 0) !== (itemWithDiscount.discount || 0)) return false;
+        
+        return true;
+      });
       
-      // Comparer les options de taille
-      if (cartItem.selectedSize?.name !== itemWithDiscount.selectedSize?.name) return false;
-      
-      // Comparer les options de lait
-      if (cartItem.selectedMilk?.name !== itemWithDiscount.selectedMilk?.name) return false;
-      
-      // Comparer les notes
-      if (cartItem.notes !== itemWithDiscount.notes) return false;
-      
-      // Comparer la réduction
-      if ((cartItem.discount || 0) !== (itemWithDiscount.discount || 0)) return false;
-      
-      return true;
+      if (existingItemIndex !== -1) {
+        // Le produit existe déjà, augmenter la quantité
+        const newCart = [...prevCart];
+        newCart[existingItemIndex] = {
+          ...newCart[existingItemIndex],
+          quantity: newCart[existingItemIndex].quantity + itemWithDiscount.quantity
+        };
+        return newCart;
+      } else {
+        // Nouveau produit, l'ajouter au panier
+        return [...prevCart, itemWithDiscount];
+      }
     });
-    
-    if (existingItemIndex !== -1) {
-      // Le produit existe déjà, augmenter la quantité
-      const newCart = [...cart];
-      newCart[existingItemIndex] = {
-        ...newCart[existingItemIndex],
-        quantity: newCart[existingItemIndex].quantity + itemWithDiscount.quantity
-      };
-      setCart(newCart);
-    } else {
-      // Nouveau produit, l'ajouter au panier
-      setCart([...cart, itemWithDiscount]);
-    }
   };
 
   const removeFromCart = (index: number) => {
