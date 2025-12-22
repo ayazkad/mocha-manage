@@ -109,3 +109,14 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Scanner overlay styles for native Capacitor camera */
+body.scanner-active {
+  background: transparent !important;
+}
+
+body.scanner-active #root,
+body.scanner-active #root > *,
+body.scanner-active .app-container {
+  background: transparent !important;
+}
