@@ -96,15 +96,13 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
       return;
     }
 
-    // Clear current cart and add all items from the order
-    clearCart();
-
-    for (const item of order.order_items) {
+    // Build all cart items first
+    const cartItems = order.order_items.map((item: any) => {
       const options = item.selected_options 
         ? (typeof item.selected_options === 'string' ? JSON.parse(item.selected_options) : item.selected_options) 
         : null;
       
-      addToCart({
+      return {
         productId: item.product_id || '',
         productName: item.product_name,
         quantity: item.quantity,
@@ -112,10 +110,14 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
         selectedSize: options?.size,
         selectedMilk: options?.milk,
         notes: item.notes || undefined,
-      });
-    }
+      };
+    });
 
-    toast.success(`Ticket #${order.order_number} chargé dans le panier`);
+    // Clear cart and add all items at once
+    clearCart();
+    cartItems.forEach((item: any) => addToCart(item));
+
+    toast.success(`Ticket #${order.order_number} chargé (${cartItems.length} produits)`);
     onClose();
   };
 
