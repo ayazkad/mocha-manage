@@ -291,6 +291,7 @@ const Cart = ({ onClose }: CartProps) => {
           discount_amount: totalDiscount,
           total,
           payment_method: paymentMethod,
+          cash_received: paymentMethod === 'cash' ? cashAmount : null,
           notes: appliedOffer ? `Offre appliquée: ${appliedOffer.name}` : undefined,
         }])
         .select()

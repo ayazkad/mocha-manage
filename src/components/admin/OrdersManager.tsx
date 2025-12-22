@@ -298,6 +298,16 @@ const OrdersManager = () => {
                     <p className="text-sm text-muted-foreground">Statut</p>
                     {getStatusBadge(selectedOrder.status)}
                   </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Mode de paiement</p>
+                    <p className="font-medium capitalize">{selectedOrder.payment_method || 'N/A'}</p>
+                  </div>
+                  {selectedOrder.payment_method === 'cash' && selectedOrder.cash_received && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Montant reçu</p>
+                      <p className="font-medium">{Number(selectedOrder.cash_received).toFixed(2)} ₾</p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -351,6 +361,18 @@ const OrdersManager = () => {
                     <span>Total</span>
                     <span>{Number(selectedOrder.total).toFixed(2)} ₾</span>
                   </div>
+                  {selectedOrder.payment_method === 'cash' && selectedOrder.cash_received && (
+                    <>
+                      <div className="flex justify-between text-green-600 font-medium">
+                        <span>Reçu en liquide</span>
+                        <span>{Number(selectedOrder.cash_received).toFixed(2)} ₾</span>
+                      </div>
+                      <div className="flex justify-between text-blue-600 font-medium">
+                        <span>Rendu</span>
+                        <span>{(Number(selectedOrder.cash_received) - Number(selectedOrder.total)).toFixed(2)} ₾</span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {selectedOrder.notes && (

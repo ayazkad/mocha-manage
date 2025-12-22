@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 import { LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench, ScanLine } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import AddCustomerDialog from './AddCustomerDialog';
 import ToolsDialog from './ToolsDialog';
 import UnifiedScanner from './UnifiedScanner';
 import logoLatte from '@/assets/logo-latte.png';
 
 const Header = () => {
-  const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
+  const { currentEmployee, logout, darkMode, toggleDarkMode, isModifyingOrder } = usePOS();
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminPage = location.pathname === '/admin';
@@ -17,6 +18,11 @@ const Header = () => {
   const [showScanner, setShowScanner] = useState(false);
 
   const handleLogout = async () => {
+    // Block logout for non-admin employees when modifying an order
+    if (isModifyingOrder && currentEmployee?.role !== 'admin') {
+      toast.error('Vous devez terminer la modification du ticket avant de vous déconnecter');
+      return;
+    }
     await logout();
   };
 
