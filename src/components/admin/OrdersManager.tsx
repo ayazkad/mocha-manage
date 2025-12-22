@@ -143,6 +143,9 @@ const OrdersManager = () => {
 
   const handleReprint = (order: any) => {
     const orderDate = new Date(order.created_at);
+    const cashReceived = order.cash_received ? Number(order.cash_received) : null;
+    const orderTotal = Number(order.total);
+    
     const receipt = {
       orderId: order.id,
       orderNumber: order.order_number,
@@ -159,8 +162,10 @@ const OrdersManager = () => {
       })) || [],
       subtotal: Number(order.subtotal),
       discount: Number(order.discount_amount || 0),
-      total: Number(order.total),
+      total: orderTotal,
       paymentMethod: order.payment_method || 'card',
+      amountPaid: order.payment_method === 'cash' && cashReceived !== null ? cashReceived : orderTotal,
+      change: order.payment_method === 'cash' && cashReceived !== null ? Math.max(0, cashReceived - orderTotal) : 0,
     };
     setReceiptData(receipt);
     setIsPrintDialogOpen(true);

@@ -269,6 +269,116 @@ const Cart = ({ onClose }: CartProps) => {
     }
   };
 
+  const handleUpdateModifiedOrder = async (paymentMethod: 'cash' | 'card', cashAmount: number = 0) => {
+    if (!originalOrder || !currentSession || !currentEmployee) return;
+    
+    try {
+      const priceDiff = getPriceDifference();
+      
+      // Delete old order items
+      await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', originalOrder.orderId);
+      
+      // Insert new order items
+      const orderItems = cart.map((item) => ({
+        order_id: originalOrder.orderId,
+        product_id: item.productId,
+        product_name: item.productName,
+        quantity: item.quantity,
+        unit_price: item.basePrice +
+          (item.selectedSize?.priceModifier || 0) +
+          (item.selectedMilk?.priceModifier || 0),
+        total_price: (item.basePrice +
+          (item.selectedSize?.priceModifier || 0) +
+          (item.selectedMilk?.priceModifier || 0)) * item.quantity,
+        selected_options: JSON.stringify({
+          size: item.selectedSize,
+          milk: item.selectedMilk,
+        }),
+        notes: item.notes,
+      }));
+
+      await supabase.from('order_items').insert(orderItems);
+      
+      // Update order totals
+      await supabase
+        .from('orders')
+        .update({
+          subtotal,
+          discount_amount: totalDiscount,
+          total,
+          notes: `Modifié: différence ${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)} ₾`,
+        })
+        .eq('id', originalOrder.orderId);
+      
+      // Update session totals with the difference
+      if (priceDiff !== 0) {
+        const { data: sessionData } = await supabase
+          .from('sessions')
+          .select('total_sales')
+          .eq('id', currentSession.id)
+          .single();
+
+        if (sessionData) {
+          await supabase
+            .from('sessions')
+            .update({
+              total_sales: (sessionData.total_sales || 0) + priceDiff,
+            })
+            .eq('id', currentSession.id);
+        }
+      }
+
+      const now = new Date();
+      const receiptInfo = {
+        orderId: originalOrder.orderId,
+        orderNumber: originalOrder.orderNumber,
+        employeeName: currentEmployee.name,
+        date: now.toLocaleDateString('en-US'),
+        time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        items: cart.map(item => ({
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.basePrice + 
+            (item.selectedSize?.priceModifier || 0) + 
+            (item.selectedMilk?.priceModifier || 0),
+          totalPrice: (item.basePrice + 
+            (item.selectedSize?.priceModifier || 0) + 
+            (item.selectedMilk?.priceModifier || 0)) * item.quantity,
+          selectedSize: item.selectedSize,
+          selectedMilk: item.selectedMilk,
+          discount: item.discount
+        })),
+        subtotal,
+        discount: totalDiscount,
+        total,
+        paymentMethod: paymentMethod,
+        amountPaid: priceDiff >= 0 ? cashAmount : 0,
+        change: priceDiff >= 0 && paymentMethod === 'cash' ? Math.max(0, cashAmount - priceDiff) : Math.abs(priceDiff)
+      };
+
+      if (priceDiff < 0) {
+        toast.success(`Remboursement: ${Math.abs(priceDiff).toFixed(2)} ₾ à rendre`);
+      } else if (priceDiff > 0) {
+        toast.success(`Encaissé: ${priceDiff.toFixed(2)} ₾`);
+      } else {
+        toast.success('Ticket modifié (pas de différence)');
+      }
+
+      setReceiptData(receiptInfo);
+      setShowPrintReceipt(true);
+      setAppliedOffer(null);
+      setSelectedItems([]);
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast.error('Erreur lors de la modification');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleCompleteOrder = async (paymentMethod: 'cash' | 'card', cashAmount: number = 0) => {
     if (!currentSession || !currentEmployee) {
       toast.error('Invalid session');
@@ -278,6 +388,11 @@ const Cart = ({ onClose }: CartProps) => {
     setProcessing(true);
 
     try {
+      // If modifying an existing order, update it instead of creating new one
+      if (isModifyingOrder && originalOrder) {
+        await handleUpdateModifiedOrder(paymentMethod, cashAmount);
+        return;
+      }
       // Create order
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -591,9 +706,10 @@ const Cart = ({ onClose }: CartProps) => {
           setShowCashCalculator(false);
           setShowPaymentMethod(true);
         }}
-        total={total}
+        total={isModifyingOrder ? getPriceDifference() : total}
         onConfirm={handleCashConfirm}
         processing={processing}
+        isRefund={isModifyingOrder && getPriceDifference() < 0}
       />
       
       <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
