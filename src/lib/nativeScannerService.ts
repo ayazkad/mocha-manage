@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { BarcodeScanner, SupportedFormat } from '@capacitor-community/barcode-scanner';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 
 export interface ScanResult {
   success: boolean;
@@ -15,28 +15,24 @@ class NativeScannerService {
     if (!this.isNative) return true;
 
     try {
-      const status = await BarcodeScanner.checkPermission({ force: false });
-      
-      if (status.granted) {
-        return true;
-      }
+      const { camera } = await BarcodeScanner.checkPermissions();
 
-      if (status.denied) {
-        // User denied permanently, redirect to settings
+      if (camera === 'granted') return true;
+
+      if (camera === 'denied') {
         const shouldOpenSettings = confirm(
-          'Pour utiliser le scanner, veuillez activer la caméra dans les paramètres de l\'application.'
+          "Pour utiliser le scanner, veuillez autoriser l'accès à la caméra dans les paramètres."
         );
         if (shouldOpenSettings) {
-          await BarcodeScanner.openAppSettings();
+          await BarcodeScanner.openSettings();
         }
         return false;
       }
 
-      // Request permission
-      const requestStatus = await BarcodeScanner.checkPermission({ force: true });
-      return requestStatus.granted === true;
+      const { camera: requested } = await BarcodeScanner.requestPermissions();
+      return requested === 'granted';
     } catch (error) {
-      console.error('Error checking camera permission:', error);
+      console.error('[NativeScannerService] Permission error:', error);
       return false;
     }
   }
@@ -47,45 +43,34 @@ class NativeScannerService {
     }
 
     try {
-      // Check permission first
       const hasPermission = await this.checkPermission();
       if (!hasPermission) {
         return { success: false, error: 'Permission caméra refusée' };
       }
 
-      // Make the webview transparent to show camera
-      await BarcodeScanner.hideBackground();
-      document.body.classList.add('scanner-active');
-
-      // Start scanning
-      const result = await BarcodeScanner.startScan({
-        targetedFormats: [
-          SupportedFormat.QR_CODE,
-          SupportedFormat.EAN_13,
-          SupportedFormat.EAN_8,
-          SupportedFormat.CODE_128,
-          SupportedFormat.CODE_39,
-          SupportedFormat.UPC_A,
-          SupportedFormat.UPC_E,
+      const { barcodes } = await BarcodeScanner.scan({
+        formats: [
+          BarcodeFormat.QrCode,
+          BarcodeFormat.Ean13,
+          BarcodeFormat.Ean8,
+          BarcodeFormat.Code128,
+          BarcodeFormat.Code39,
+          BarcodeFormat.UpcA,
+          BarcodeFormat.UpcE,
         ],
       });
 
-      // Restore webview
-      await this.stopScan();
+      const first = barcodes?.[0] as any;
+      const content: string | undefined = first?.rawValue ?? first?.displayValue;
 
-      if (result.hasContent && result.content) {
-        return {
-          success: true,
-          content: result.content,
-          format: result.format,
-        };
+      if (content) {
+        return { success: true, content, format: String(first?.format ?? '') };
       }
 
       return { success: false, error: 'Aucun code détecté' };
     } catch (error: any) {
-      await this.stopScan();
-      console.error('Scan error:', error);
-      return { success: false, error: error.message || 'Erreur de scan' };
+      console.error('[NativeScannerService] Scan error:', error);
+      return { success: false, error: error?.message || 'Erreur de scan' };
     }
   }
 
@@ -93,11 +78,11 @@ class NativeScannerService {
     if (!this.isNative) return;
 
     try {
-      await BarcodeScanner.showBackground();
+      // scan() stops automatically, but keep this safe for cancellation paths
+      await BarcodeScanner.removeAllListeners();
       await BarcodeScanner.stopScan();
-      document.body.classList.remove('scanner-active');
-    } catch (error) {
-      console.error('Error stopping scan:', error);
+    } catch {
+      // ignore
     }
   }
 
