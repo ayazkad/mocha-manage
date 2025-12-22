@@ -735,14 +735,16 @@ const Cart = ({ onClose }: CartProps) => {
                   Modif. #{originalOrder.orderNumber}
                 </span>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={cancelOrderModification}
-              >
-                <X className="w-3 h-3" />
-              </Button>
+              {currentEmployee?.role === 'admin' && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={cancelOrderModification}
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              )}
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">
               Original: {originalOrder.originalTotal.toFixed(2)} ₾
