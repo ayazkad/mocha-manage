@@ -349,16 +349,16 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
               </div>
               <pre className="font-mono text-[9px] leading-tight whitespace-pre overflow-x-auto">{receiptText}</pre>
               
-              {/* QR Code for order lookup */}
+              {/* QR Code integrated in receipt */}
               {qrCodeDataUrl && (
-                <div className="flex flex-col items-center mt-3 pt-3 border-t border-gray-300">
+                <div className="flex flex-col items-center mt-2">
                   <img 
                     src={qrCodeDataUrl} 
                     alt="Order QR Code" 
-                    className="w-24 h-24"
+                    className="w-20 h-20"
                   />
-                  <p className="text-[8px] text-gray-500 mt-1 text-center">
-                    Scanner pour modifier
+                  <p className="font-mono text-[8px] text-gray-600 mt-1 text-center">
+                    Scan to view order
                   </p>
                 </div>
               )}
