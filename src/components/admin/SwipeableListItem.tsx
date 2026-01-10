@@ -20,117 +20,146 @@ const SwipeableListItem = ({
   className,
   onClick,
 }: SwipeableListItemProps) => {
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
   const [offset, setOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [startY, setStartY] = useState(0);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasMoved = useRef(false);
   const itemRef = useRef<HTMLDivElement>(null);
 
-  const minSwipeDistance = 50;
+  const minSwipeDistance = 40;
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    const touch = e.targetTouches[0];
-    setTouchEnd(null);
-    setTouchStart({ x: touch.clientX, y: touch.clientY });
+  const handleStart = useCallback((clientY: number) => {
+    setStartY(clientY);
+    hasMoved.current = false;
     
     longPressTimer.current = setTimeout(() => {
       setIsDragging(true);
-    }, 300);
+      // Vibrate on mobile if available
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }, 200);
   }, []);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchStart) return;
-    
-    const touch = e.targetTouches[0];
-    const diffX = Math.abs(touch.clientX - touchStart.x);
-    const diffY = touch.clientY - touchStart.y;
-    
-    // If horizontal movement is greater, don't allow vertical drag
-    if (diffX > Math.abs(diffY)) {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
+  const handleMove = useCallback((clientY: number) => {
+    if (!isDragging) {
+      // Check if moving too much before long press completes
+      if (Math.abs(clientY - startY) > 10) {
+        if (longPressTimer.current) {
+          clearTimeout(longPressTimer.current);
+          longPressTimer.current = null;
+        }
       }
-      setIsDragging(false);
       return;
     }
 
-    if (isDragging) {
-      e.preventDefault();
-      // Limit the offset
-      const maxOffset = 60;
-      const newOffset = Math.max(-maxOffset, Math.min(maxOffset, diffY));
-      setOffset(newOffset);
-      setTouchEnd({ x: touch.clientX, y: touch.clientY });
-    }
-  }, [touchStart, isDragging]);
+    hasMoved.current = true;
+    const diffY = clientY - startY;
+    const maxOffset = 80;
+    const newOffset = Math.max(-maxOffset, Math.min(maxOffset, diffY));
+    setOffset(newOffset);
+  }, [isDragging, startY]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleEnd = useCallback(() => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
 
-    if (!isDragging) {
-      setTouchStart(null);
-      setTouchEnd(null);
-      setOffset(0);
-      return;
-    }
-
-    if (!touchStart || !touchEnd) {
-      setIsDragging(false);
-      setOffset(0);
-      return;
-    }
-
-    const distanceY = touchEnd.y - touchStart.y;
-
-    if (Math.abs(distanceY) > minSwipeDistance) {
-      if (distanceY > 0 && canMoveDown && onMoveDown) {
-        onMoveDown();
-      } else if (distanceY < 0 && canMoveUp && onMoveUp) {
+    if (isDragging && Math.abs(offset) > minSwipeDistance) {
+      if (offset < 0 && canMoveUp && onMoveUp) {
         onMoveUp();
+      } else if (offset > 0 && canMoveDown && onMoveDown) {
+        onMoveDown();
       }
     }
 
-    setTouchStart(null);
-    setTouchEnd(null);
     setOffset(0);
     setIsDragging(false);
-  }, [touchStart, touchEnd, isDragging, canMoveUp, canMoveDown, onMoveUp, onMoveDown]);
+  }, [isDragging, offset, canMoveUp, canMoveDown, onMoveUp, onMoveDown]);
+
+  const handleClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (hasMoved.current || isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    onClick?.();
+  }, [onClick, isDragging]);
+
+  // Touch events
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    handleStart(e.touches[0].clientY);
+  }, [handleStart]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    handleMove(e.touches[0].clientY);
+    if (isDragging) {
+      e.preventDefault();
+    }
+  }, [handleMove, isDragging]);
+
+  const handleTouchEnd = useCallback(() => {
+    handleEnd();
+  }, [handleEnd]);
+
+  // Mouse events for desktop testing
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    handleStart(e.clientY);
+  }, [handleStart]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (e.buttons !== 1) return; // Only if mouse button is pressed
+    handleMove(e.clientY);
+  }, [handleMove]);
+
+  const handleMouseUp = useCallback(() => {
+    handleEnd();
+  }, [handleEnd]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (isDragging) {
+      handleEnd();
+    }
+  }, [isDragging, handleEnd]);
 
   return (
     <div
       ref={itemRef}
       className={cn(
-        "transition-all duration-150 touch-pan-x select-none",
-        isDragging && "z-10 shadow-lg scale-[1.02] bg-background",
+        "relative select-none",
+        isDragging && "z-10",
         className
       )}
       style={{
         transform: isDragging ? `translateY(${offset}px)` : 'translateY(0)',
+        transition: isDragging ? 'none' : 'transform 0.2s ease-out',
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onClick={onClick}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
     >
       {children}
       {isDragging && (
-        <div className="absolute inset-0 pointer-events-none">
+        <>
+          <div className="absolute inset-0 bg-primary/5 rounded-lg pointer-events-none" />
           {offset < -20 && canMoveUp && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full py-1 px-2 bg-primary text-primary-foreground text-xs rounded-t">
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 py-1 px-3 bg-primary text-primary-foreground text-xs rounded-full font-medium shadow-lg">
               ↑ Move Up
             </div>
           )}
           {offset > 20 && canMoveDown && (
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full py-1 px-2 bg-primary text-primary-foreground text-xs rounded-b">
+            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 py-1 px-3 bg-primary text-primary-foreground text-xs rounded-full font-medium shadow-lg">
               ↓ Move Down
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
