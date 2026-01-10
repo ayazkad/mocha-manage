@@ -20,6 +20,8 @@ interface Product {
   category_id: string;
   has_size_options: boolean;
   has_milk_options: boolean;
+  has_temperature_options?: boolean;
+  sort_order?: number;
 }
 
 interface ProductGridProps {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Trash2, Upload, X } from 'lucide-react';
+import { Pencil, Trash2, Upload, X, ChevronUp, ChevronDown } from 'lucide-react';
 import AdminBarcodeScanner from './AdminBarcodeScanner';
 
 const ProductsManager = () => {
@@ -32,13 +32,13 @@ const ProductsManager = () => {
     visible_in_categories: true,
   });
 
-  const { data: products } = useQuery({
+  const { data: products, refetch: refetchProducts } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('*, categories(name_en)')
-        .order('name_en');
+        .select('*, categories(name_en, sort_order)')
+        .order('sort_order', { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -51,11 +51,43 @@ const ProductsManager = () => {
         .from('categories')
         .select('*')
         .eq('active', true)
-        .order('name_en');
+        .order('sort_order');
       if (error) throw error;
       return data;
     },
   });
+
+  // Group products by category
+  const groupedProducts = useMemo(() => {
+    if (!products) return {};
+    
+    const groups: { [key: string]: { name: string; sortOrder: number; products: any[] } } = {};
+    
+    // Initialize groups from categories
+    categories?.forEach(cat => {
+      groups[cat.id] = { name: cat.name_en || cat.name_fr, sortOrder: cat.sort_order || 0, products: [] };
+    });
+    
+    // Add "No Category" group
+    groups['no-category'] = { name: 'No Category', sortOrder: 9999, products: [] };
+    
+    // Distribute products into groups
+    products.forEach(product => {
+      const categoryId = product.category_id || 'no-category';
+      if (groups[categoryId]) {
+        groups[categoryId].products.push(product);
+      } else {
+        groups['no-category'].products.push(product);
+      }
+    });
+    
+    // Sort products within each group by sort_order
+    Object.values(groups).forEach(group => {
+      group.products.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    });
+    
+    return groups;
+  }, [products, categories]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -116,6 +148,44 @@ const ProductsManager = () => {
       toast({ title: 'Product deleted' });
     },
   });
+
+  const moveProduct = async (productId: string, categoryId: string | null, direction: 'up' | 'down') => {
+    const catKey = categoryId || 'no-category';
+    const group = groupedProducts[catKey];
+    if (!group) return;
+
+    const productIndex = group.products.findIndex((p: any) => p.id === productId);
+    if (productIndex === -1) return;
+
+    const swapIndex = direction === 'up' ? productIndex - 1 : productIndex + 1;
+    if (swapIndex < 0 || swapIndex >= group.products.length) return;
+
+    const currentProduct = group.products[productIndex];
+    const swapProduct = group.products[swapIndex];
+
+    // Swap sort_order values
+    const currentSortOrder = currentProduct.sort_order || productIndex;
+    const swapSortOrder = swapProduct.sort_order || swapIndex;
+
+    try {
+      await Promise.all([
+        supabase
+          .from('products')
+          .update({ sort_order: swapSortOrder })
+          .eq('id', currentProduct.id),
+        supabase
+          .from('products')
+          .update({ sort_order: currentSortOrder })
+          .eq('id', swapProduct.id),
+      ]);
+
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast({ title: 'Order updated' });
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast({ title: 'Error updating order', variant: 'destructive' });
+    }
+  };
 
   const resetForm = () => {
     setEditingId(null);
@@ -407,37 +477,74 @@ const ProductsManager = () => {
           <CardTitle>Products List</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {products?.map((product) => (
-              <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-semibold">{product.name_en}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {product.base_price} ₾ • {product.categories?.name_en || 'No category'}
-                    {!product.active && ' • Inactive'}
-                    {product.barcode && ` • 📊 ${product.barcode}`}
-                    {!product.visible_in_categories && ' • Scan only'}
-                    {(product.has_size_options || product.has_milk_options) && ' • Has options'}
-                  </p>
+          <div className="space-y-6">
+            {Object.entries(groupedProducts)
+              .filter(([_, group]) => group.products.length > 0)
+              .sort((a, b) => a[1].sortOrder - b[1].sortOrder)
+              .map(([categoryId, group]) => (
+                <div key={categoryId} className="space-y-2">
+                  <h3 className="font-semibold text-lg border-b pb-2 text-primary">
+                    {group.name}
+                    <span className="text-sm font-normal text-muted-foreground ml-2">
+                      ({group.products.length} products)
+                    </span>
+                  </h3>
+                  <div className="space-y-2">
+                    {group.products.map((product: any, index: number) => (
+                      <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => moveProduct(product.id, product.category_id, 'up')}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => moveProduct(product.id, product.category_id, 'down')}
+                              disabled={index === group.products.length - 1}
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold">{product.name_en}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {product.base_price} ₾
+                              {!product.active && ' • Inactive'}
+                              {product.barcode && ` • 📊 ${product.barcode}`}
+                              {!product.visible_in_categories && ' • Scan only'}
+                              {(product.has_size_options || product.has_milk_options) && ' • Has options'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => handleEdit(product)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            onClick={() => deleteMutation.mutate(product.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleEdit(product)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    onClick={() => deleteMutation.mutate(product.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </CardContent>
       </Card>
