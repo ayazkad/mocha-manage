@@ -527,6 +527,7 @@ export type Database = {
           description_ru: string | null
           has_milk_options: boolean | null
           has_size_options: boolean | null
+          has_temperature_options: boolean | null
           id: string
           image_url: string | null
           name_en: string | null
@@ -549,6 +550,7 @@ export type Database = {
           description_ru?: string | null
           has_milk_options?: boolean | null
           has_size_options?: boolean | null
+          has_temperature_options?: boolean | null
           id?: string
           image_url?: string | null
           name_en?: string | null
@@ -571,6 +573,7 @@ export type Database = {
           description_ru?: string | null
           has_milk_options?: boolean | null
           has_size_options?: boolean | null
+          has_temperature_options?: boolean | null
           id?: string
           image_url?: string | null
           name_en?: string | null
