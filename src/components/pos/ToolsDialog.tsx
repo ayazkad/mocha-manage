@@ -10,7 +10,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, Percent, Coffee, Cookie, Trash2, Printer, Bluetooth, Wifi } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Wrench, Percent, Coffee, Cookie, Trash2, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ToolsDialogProps {
@@ -25,7 +27,7 @@ interface DailyBenefits {
 }
 
 const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
-  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive, updateCartItem, setFreeDrinkActive, setFreeSnackActive } = usePOS();
+  const { currentEmployee, currentSession, cart, clearCart, setStaffDiscountActive, updateCartItem, setFreeDrinkActive, setFreeSnackActive, darkMode, toggleDarkMode } = usePOS();
   const [benefits, setBenefits] = useState<DailyBenefits>({
     discount_used: false,
     free_drink_used: false,
@@ -84,20 +86,20 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
     if (!currentEmployee || discountTicketsCount >= 3) return;
 
     if (cart.length === 0) {
-      toast.error('Veuillez ajouter des articles au panier d\'abord');
+      toast.error('Please add items to cart first');
       return;
     }
 
-    // Appliquer 30% à tous les articles existants qui n'ont pas déjà 100% de réduction
+    // Apply 30% to all existing items that don't have 100% discount
     cart.forEach((item, index) => {
       if (item.discount !== 100) {
         updateCartItem(index, { ...item, discount: 30 });
       }
     });
 
-    // Active la réduction pour les futurs articles
+    // Activate discount for future items
     setStaffDiscountActive(true);
-    toast.success('Réduction personnel de 30% appliquée sur tous les articles');
+    toast.success('30% staff discount applied to all items');
     onClose();
   };
 
@@ -105,13 +107,13 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
     if (!currentEmployee || benefits.free_drink_used) return;
 
     if (cart.length === 0) {
-      toast.error('Veuillez ajouter une boisson au panier d\'abord');
+      toast.error('Please add a drink to cart first');
       return;
     }
 
     setLoading(true);
     try {
-      // Trouver le dernier article dans le panier qui n'a pas déjà 100% de réduction
+      // Find the last item in cart that doesn't have 100% discount
       let drinkIndex = -1;
       for (let i = cart.length - 1; i >= 0; i--) {
         if (cart[i].discount !== 100) {
@@ -121,23 +123,23 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       }
 
       if (drinkIndex === -1) {
-        toast.error('Tous les articles ont déjà une réduction de 100%');
+        toast.error('All items already have 100% discount');
         setLoading(false);
         return;
       }
 
       const item = cart[drinkIndex];
       
-      // Appliquer 100% de réduction
+      // Apply 100% discount
       updateCartItem(drinkIndex, { ...item, discount: 100 });
 
       setFreeDrinkActive(true);
       
-      toast.success('Boisson offerte appliquée (100% de réduction)');
+      toast.success('Free drink applied (100% discount)');
       onClose();
     } catch (error) {
       console.error('Error applying free drink:', error);
-      toast.error('Erreur lors de l\'application');
+      toast.error('Error applying benefit');
     } finally {
       setLoading(false);
     }
@@ -147,13 +149,13 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
     if (!currentEmployee || benefits.free_snack_used) return;
 
     if (cart.length === 0) {
-      toast.error('Veuillez ajouter un snack au panier d\'abord');
+      toast.error('Please add a snack to cart first');
       return;
     }
 
     setLoading(true);
     try {
-      // Chercher un produit de catégorie Sweet ou Salt
+      // Look for a Sweet or Salt category product
       const categories = await supabase
         .from('categories')
         .select('id, name_en')
@@ -161,7 +163,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
       const sweetSaltCategoryIds = categories.data?.map(cat => cat.id) || [];
 
-      // Trouver le dernier produit Sweet/Salt dans le panier qui n'a pas déjà 100% de réduction
+      // Find the last Sweet/Salt product in cart that doesn't have 100% discount
       let snackIndex = -1;
       for (let i = cart.length - 1; i >= 0; i--) {
         if (cart[i].discount === 100) continue; // Skip items already at 100%
@@ -179,23 +181,23 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       }
 
       if (snackIndex === -1) {
-        toast.error('Aucun produit Sweet/Salt disponible sans réduction de 100%');
+        toast.error('No Sweet/Salt product available without 100% discount');
         setLoading(false);
         return;
       }
 
       const item = cart[snackIndex];
       
-      // Appliquer 100% de réduction
+      // Apply 100% discount
       updateCartItem(snackIndex, { ...item, discount: 100 });
 
       setFreeSnackActive(true);
 
-      toast.success('Snack offert appliqué (100% de réduction)');
+      toast.success('Free snack applied (100% discount)');
       onClose();
     } catch (error) {
       console.error('Error applying free snack:', error);
-      toast.error('Erreur lors de l\'application');
+      toast.error('Error applying benefit');
     } finally {
       setLoading(false);
     }
@@ -203,7 +205,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
   const recordLosses = async () => {
     if (!currentEmployee || !currentSession || cart.length === 0) {
-      toast.error('Le panier est vide');
+      toast.error('Cart is empty');
       return;
     }
 
@@ -235,11 +237,11 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       if (error) throw error;
 
       clearCart();
-      toast.success(`${losses.length} perte(s) enregistrée(s)`);
+      toast.success(`${losses.length} loss(es) recorded`);
       onClose();
     } catch (error) {
       console.error('Error recording losses:', error);
-      toast.error('Erreur lors de l\'enregistrement des pertes');
+      toast.error('Error recording losses');
     } finally {
       setLoading(false);
     }
@@ -251,28 +253,51 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Wrench className="w-5 h-5" />
-            Outils
+            Tools
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Avantages employés */}
+          {/* Dark Mode Toggle */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-base">Avantages Personnel</h3>
+            <h3 className="font-semibold text-base">Display</h3>
+            
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {darkMode ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
+                  <div>
+                    <p className="font-medium">Dark Mode</p>
+                    <p className="text-xs text-muted-foreground">
+                      Switch between light and dark theme
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={darkMode}
+                  onCheckedChange={toggleDarkMode}
+                />
+              </div>
+            </Card>
+          </div>
+
+          {/* Staff Benefits */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-base">Staff Benefits</h3>
             
             <Card className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Percent className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="font-medium">Réduction 30%</p>
+                    <p className="font-medium">30% Discount</p>
                     <p className="text-xs text-muted-foreground">
-                      Max 3 tickets par jour ({discountTicketsCount}/3)
+                      Max 3 tickets per day ({discountTicketsCount}/3)
                     </p>
                   </div>
                 </div>
                 {discountTicketsCount >= 3 ? (
-                  <Badge variant="secondary">Limite atteinte</Badge>
+                  <Badge variant="secondary">Limit reached</Badge>
                 ) : (
                   <Button
                     size="sm"
@@ -280,7 +305,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     disabled={loading || cart.length === 0}
                     className="rounded-xl"
                   >
-                    Appliquer
+                    Apply
                   </Button>
                 )}
               </div>
@@ -289,12 +314,12 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                 <div className="flex items-center gap-3">
                   <Coffee className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="font-medium">Boisson offerte</p>
-                    <p className="text-xs text-muted-foreground">1 fois par jour</p>
+                    <p className="font-medium">Free Drink</p>
+                    <p className="text-xs text-muted-foreground">Once per day</p>
                   </div>
                 </div>
                 {benefits.free_drink_used ? (
-                  <Badge variant="secondary">Utilisé</Badge>
+                  <Badge variant="secondary">Used</Badge>
                 ) : (
                   <Button
                     size="sm"
@@ -302,7 +327,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     disabled={loading}
                     className="rounded-xl"
                   >
-                    Appliquer
+                    Apply
                   </Button>
                 )}
               </div>
@@ -311,12 +336,12 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                 <div className="flex items-center gap-3">
                   <Cookie className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="font-medium">Sweet/Salt offert</p>
-                    <p className="text-xs text-muted-foreground">1 fois par jour</p>
+                    <p className="font-medium">Free Sweet/Salt</p>
+                    <p className="text-xs text-muted-foreground">Once per day</p>
                   </div>
                 </div>
                 {benefits.free_snack_used ? (
-                  <Badge variant="secondary">Utilisé</Badge>
+                  <Badge variant="secondary">Used</Badge>
                 ) : (
                   <Button
                     size="sm"
@@ -324,83 +349,29 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                     disabled={loading}
                     className="rounded-xl"
                   >
-                    Appliquer
+                    Apply
                   </Button>
                 )}
               </div>
             </Card>
           </div>
 
-          {/* Configuration imprimante */}
+          {/* Loss Management */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-base">Configuration Imprimante</h3>
-            
-            <Card className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Bluetooth className="w-5 h-5 text-blue-500" />
-                  <div>
-                    <p className="font-medium">Imprimante Bluetooth</p>
-                    <p className="text-xs text-muted-foreground">
-                      Connexion aux imprimantes thermiques 80mm
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled
-                  className="rounded-xl"
-                >
-                  Configurer
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Wifi className="w-5 h-5 text-green-500" />
-                  <div>
-                    <p className="font-medium">Imprimante WiFi</p>
-                    <p className="text-xs text-muted-foreground">
-                      Connexion réseau aux imprimantes
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled
-                  className="rounded-xl"
-                >
-                  Configurer
-                </Button>
-              </div>
-
-              <div className="bg-amber-50 dark:bg-amber-950 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
-                <p className="text-xs text-amber-900 dark:text-amber-100">
-                  <strong>Note:</strong> La connexion directe aux imprimantes Bluetooth/WiFi nécessite une application native. 
-                  En PWA, vous devrez utiliser le dialogue d'impression du système.
-                </p>
-              </div>
-            </Card>
-          </div>
-
-          {/* Comptage des pertes */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-base">Gestion des Pertes</h3>
+            <h3 className="font-semibold text-base">Loss Management</h3>
             
             <Card className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <Trash2 className="w-5 h-5 text-destructive mt-1" />
                   <div>
-                    <p className="font-medium">Enregistrer les pertes</p>
+                    <p className="font-medium">Record Losses</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Les produits actuellement dans le panier seront enregistrés comme pertes
+                      Products currently in cart will be recorded as losses
                     </p>
                     {cart.length > 0 && (
                       <p className="text-xs text-primary mt-2">
-                        {cart.length} produit(s) dans le panier
+                        {cart.length} product(s) in cart
                       </p>
                     )}
                   </div>
@@ -412,7 +383,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
                   disabled={loading || cart.length === 0}
                   className="rounded-xl whitespace-nowrap"
                 >
-                  Enregistrer
+                  Record
                 </Button>
               </div>
             </Card>

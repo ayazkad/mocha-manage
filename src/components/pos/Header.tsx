@@ -1,26 +1,24 @@
 import { usePOS } from '@/contexts/POSContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Moon, Sun, Settings, ArrowLeft, Wrench, ScanLine } from 'lucide-react';
+import { LogOut, User, Settings, ArrowLeft, Wrench } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import AddCustomerDialog from './AddCustomerDialog';
 import ToolsDialog from './ToolsDialog';
-import UnifiedScanner from './UnifiedScanner';
 import logoLatte from '@/assets/logo-latte.png';
 
 const Header = () => {
-  const { currentEmployee, logout, darkMode, toggleDarkMode } = usePOS();
+  const { currentEmployee, logout } = usePOS();
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminPage = location.pathname === '/admin';
   const [showTools, setShowTools] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
 
   const handleLogout = async () => {
     const success = await logout();
     if (!success) {
-      toast.error('Vous devez terminer la modification du ticket avant de vous déconnecter');
+      toast.error('You must complete the ticket modification before logging out');
     }
   };
 
@@ -48,27 +46,6 @@ const Header = () => {
             </Button>
           )}
 
-          {!isAdminPage && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowScanner(true)}
-              className="gap-2 rounded-xl border-border/50"
-            >
-              <ScanLine className="w-4 h-4" />
-              <span className="hidden md:inline">Scanner</span>
-            </Button>
-          )}
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleDarkMode}
-            className="h-9 w-9 rounded-xl border-border/50"
-          >
-            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </Button>
-
           {!isAdminPage && <AddCustomerDialog />}
 
           {!isAdminPage && (
@@ -79,7 +56,7 @@ const Header = () => {
               className="gap-2 rounded-xl border-border/50"
             >
               <Wrench className="w-4 h-4" />
-              <span className="hidden md:inline">Outils</span>
+              <span className="hidden md:inline">Tools</span>
             </Button>
           )}
 
@@ -113,7 +90,6 @@ const Header = () => {
       </div>
 
       <ToolsDialog open={showTools} onClose={() => setShowTools(false)} />
-      <UnifiedScanner open={showScanner} onClose={() => setShowScanner(false)} />
     </header>
   );
 };
