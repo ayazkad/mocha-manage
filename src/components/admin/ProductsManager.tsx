@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Upload, X, GripVertical } from 'lucide-react';
 import AdminBarcodeScanner from './AdminBarcodeScanner';
-import SwipeableListItem from './SwipeableListItem';
+import SwipeableListItem, { SwipeableList } from './SwipeableListItem';
 
 const ProductsManager = () => {
   const { toast } = useToast();
@@ -491,17 +491,18 @@ const ProductsManager = () => {
                       ({group.products.length} products)
                     </span>
                   </h3>
-                  <div className="space-y-2">
+                  <SwipeableList>
                     {group.products.map((product: any, index: number) => (
                       <SwipeableListItem
                         key={product.id}
+                        index={index}
                         onMoveUp={() => moveProduct(product.id, product.category_id, 'up')}
                         onMoveDown={() => moveProduct(product.id, product.category_id, 'down')}
                         canMoveUp={index > 0}
                         canMoveDown={index < group.products.length - 1}
                         onClick={() => handleEdit(product)}
                       >
-                        <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-background">
                           <div className="flex items-center gap-3">
                             <GripVertical className="w-4 h-4 text-muted-foreground" />
                             <div>
@@ -530,7 +531,7 @@ const ProductsManager = () => {
                         </div>
                       </SwipeableListItem>
                     ))}
-                  </div>
+                  </SwipeableList>
                 </div>
               ))}
           </div>
