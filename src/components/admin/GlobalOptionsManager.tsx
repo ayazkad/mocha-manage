@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Save, X, Plus, Trash2, GripVertical } from 'lucide-react';
-import SwipeableListItem from './SwipeableListItem';
+import SwipeableListItem, { SwipeableList } from './SwipeableListItem';
 
 interface OptionGroup {
   name_en: string;
@@ -213,71 +213,74 @@ const GlobalOptionsManager = () => {
         <p className="text-sm text-muted-foreground">No {type} options configured</p>
       )}
 
-      {optionsList.map((option, index) => (
-        <SwipeableListItem
-          key={`${option.option_type}-${option.name_en}`}
-          onMoveUp={() => handleMoveOption(optionsList, index, 'up')}
-          onMoveDown={() => handleMoveOption(optionsList, index, 'down')}
-          canMoveUp={index > 0}
-          canMoveDown={index < optionsList.length - 1}
-          onClick={() => handleStartEdit(option)}
-          className="relative"
-        >
-          <div className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-            {editingOption?.name_en === option.name_en && editingOption?.option_type === option.option_type ? (
-              <>
-                <Input
-                  value={editedValues.name}
-                  onChange={(e) => setEditedValues({ ...editedValues, name: e.target.value })}
-                  placeholder="Option name"
-                  className="flex-1"
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <div className="flex items-center gap-1">
-                  <span className="text-muted-foreground">+</span>
+      <SwipeableList>
+        {optionsList.map((option, index) => (
+          <SwipeableListItem
+            key={`${option.option_type}-${option.name_en}`}
+            index={index}
+            onMoveUp={() => handleMoveOption(optionsList, index, 'up')}
+            onMoveDown={() => handleMoveOption(optionsList, index, 'down')}
+            canMoveUp={index > 0}
+            canMoveDown={index < optionsList.length - 1}
+            onClick={() => handleStartEdit(option)}
+            className="relative"
+          >
+            <div className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-background">
+              {editingOption?.name_en === option.name_en && editingOption?.option_type === option.option_type ? (
+                <>
                   <Input
-                    type="number"
-                    step="0.01"
-                    value={editedValues.price}
-                    onChange={(e) => setEditedValues({ ...editedValues, price: e.target.value })}
-                    className="w-24"
+                    value={editedValues.name}
+                    onChange={(e) => setEditedValues({ ...editedValues, name: e.target.value })}
+                    placeholder="Option name"
+                    className="flex-1"
+                    autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <span className="text-muted-foreground">₾</span>
-                </div>
-                <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }} disabled={updateMutation.isPending}>
-                  <Save className="w-4 h-4 text-green-600" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingOption(null); }}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </>
-            ) : (
-              <>
-                <GripVertical className="w-4 h-4 text-muted-foreground" />
-                <span className="flex-1 font-medium">{option.name_en}</span>
-                <span className="text-muted-foreground">
-                  {option.price_modifier > 0 ? `+${option.price_modifier} ₾` : 'Base price'}
-                </span>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                  {option.count} products
-                </span>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteMutation.mutate({ name: option.name_en, type: option.option_type });
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </>
-            )}
-          </div>
-        </SwipeableListItem>
-      ))}
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">+</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={editedValues.price}
+                      onChange={(e) => setEditedValues({ ...editedValues, price: e.target.value })}
+                      className="w-24"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span className="text-muted-foreground">₾</span>
+                  </div>
+                  <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }} disabled={updateMutation.isPending}>
+                    <Save className="w-4 h-4 text-green-600" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingOption(null); }}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  <span className="flex-1 font-medium">{option.name_en}</span>
+                  <span className="text-muted-foreground">
+                    {option.price_modifier > 0 ? `+${option.price_modifier} ₾` : 'Base price'}
+                  </span>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                    {option.count} products
+                  </span>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteMutation.mutate({ name: option.name_en, type: option.option_type });
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </SwipeableListItem>
+        ))}
+      </SwipeableList>
 
       {newOption?.type === type && (
         <div className="flex items-center gap-2 p-3 border rounded-lg border-dashed bg-muted/50">

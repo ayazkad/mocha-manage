@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, GripVertical } from 'lucide-react';
-import SwipeableListItem from './SwipeableListItem';
+import SwipeableListItem, { SwipeableList } from './SwipeableListItem';
 
 const CategoriesManager = () => {
   const { toast } = useToast();
@@ -192,10 +192,11 @@ const CategoriesManager = () => {
           <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <SwipeableList>
             {categories?.map((category, index) => (
               <SwipeableListItem
                 key={category.id}
+                index={index}
                 onMoveUp={() => handleMoveUp(index)}
                 onMoveDown={() => handleMoveDown(index)}
                 canMoveUp={index > 0}
@@ -203,7 +204,7 @@ const CategoriesManager = () => {
                 onClick={() => handleEdit(category)}
                 className="relative"
               >
-                <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-background">
                   <div className="flex items-center gap-3">
                     <GripVertical className="w-4 h-4 text-muted-foreground" />
                     <div>
@@ -231,7 +232,7 @@ const CategoriesManager = () => {
                 </div>
               </SwipeableListItem>
             ))}
-          </div>
+          </SwipeableList>
         </CardContent>
       </Card>
     </div>
