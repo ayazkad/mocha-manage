@@ -9,8 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Trash2, Upload, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Trash2, Upload, X, GripVertical } from 'lucide-react';
 import AdminBarcodeScanner from './AdminBarcodeScanner';
+import SwipeableListItem from './SwipeableListItem';
 
 const ProductsManager = () => {
   const { toast } = useToast();
@@ -475,6 +476,7 @@ const ProductsManager = () => {
       <Card>
         <CardHeader>
           <CardTitle>Products List</CardTitle>
+          <p className="text-sm text-muted-foreground">Long press and slide to reorder • Tap to edit</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -491,56 +493,42 @@ const ProductsManager = () => {
                   </h3>
                   <div className="space-y-2">
                     {group.products.map((product: any, index: number) => (
-                      <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="flex flex-col gap-1">
+                      <SwipeableListItem
+                        key={product.id}
+                        onMoveUp={() => moveProduct(product.id, product.category_id, 'up')}
+                        onMoveDown={() => moveProduct(product.id, product.category_id, 'down')}
+                        canMoveUp={index > 0}
+                        canMoveDown={index < group.products.length - 1}
+                        onClick={() => handleEdit(product)}
+                      >
+                        <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <GripVertical className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <h4 className="font-semibold">{product.name_en}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {product.base_price} ₾
+                                {!product.active && ' • Inactive'}
+                                {product.barcode && ` • 📊 ${product.barcode}`}
+                                {!product.visible_in_categories && ' • Scan only'}
+                                {(product.has_size_options || product.has_milk_options) && ' • Has options'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
                             <Button
                               size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              onClick={() => moveProduct(product.id, product.category_id, 'up')}
-                              disabled={index === 0}
+                              variant="destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteMutation.mutate(product.id);
+                              }}
                             >
-                              <ChevronUp className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              onClick={() => moveProduct(product.id, product.category_id, 'down')}
-                              disabled={index === group.products.length - 1}
-                            >
-                              <ChevronDown className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
-                          <div>
-                            <h4 className="font-semibold">{product.name_en}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {product.base_price} ₾
-                              {!product.active && ' • Inactive'}
-                              {product.barcode && ` • 📊 ${product.barcode}`}
-                              {!product.visible_in_categories && ' • Scan only'}
-                              {(product.has_size_options || product.has_milk_options) && ' • Has options'}
-                            </p>
-                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            onClick={() => handleEdit(product)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="destructive"
-                            onClick={() => deleteMutation.mutate(product.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
+                      </SwipeableListItem>
                     ))}
                   </div>
                 </div>
