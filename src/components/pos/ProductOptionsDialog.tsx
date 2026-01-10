@@ -22,6 +22,7 @@ interface Product {
   base_price: number;
   has_size_options: boolean;
   has_milk_options: boolean;
+  has_temperature_options?: boolean;
   image_url?: string;
 }
 
@@ -141,33 +142,35 @@ const ProductOptionsDialog = ({
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-6" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="space-y-4 pb-4">
-            {/* Toggle Hot/Cold */}
-            <div className="bg-muted rounded-lg p-3">
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTemperature('hot')}
-                  className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${
-                    temperature === 'hot'
-                      ? 'bg-primary text-primary-foreground shadow-md'
-                      : 'bg-background hover:bg-primary/10'
-                  }`}
-                >
-                  🔥 Hot
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTemperature('cold')}
-                  className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${
-                    temperature === 'cold'
-                      ? 'bg-primary text-primary-foreground shadow-md'
-                      : 'bg-background hover:bg-primary/10'
-                  }`}
-                >
-                  ❄️ Cold
-                </button>
+            {/* Toggle Hot/Cold - Only show if product has temperature options */}
+            {product.has_temperature_options && (
+              <div className="bg-muted rounded-lg p-3">
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTemperature('hot')}
+                    className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${
+                      temperature === 'hot'
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'bg-background hover:bg-primary/10'
+                    }`}
+                  >
+                    🔥 Hot
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTemperature('cold')}
+                    className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${
+                      temperature === 'cold'
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'bg-background hover:bg-primary/10'
+                    }`}
+                  >
+                    ❄️ Cold
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {product.has_size_options && sizeOptions.length > 0 && (
               <div className="space-y-2">
