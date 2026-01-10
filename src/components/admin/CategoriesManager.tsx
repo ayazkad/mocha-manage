@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Trash2, GripVertical } from 'lucide-react';
+import SwipeableListItem from './SwipeableListItem';
 
 const CategoriesManager = () => {
   const { toast } = useToast();
@@ -80,7 +81,6 @@ const CategoriesManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast({ title: 'Ordre mis à jour' });
     },
   });
 
@@ -107,10 +107,10 @@ const CategoriesManager = () => {
     const maxSortOrder = categories?.reduce((max, cat) => Math.max(max, cat.sort_order || 0), 0) || 0;
     saveMutation.mutate({
       name_en: formData.name_en,
-      name_fr: formData.name_en, // Keep French in sync for now
+      name_fr: formData.name_en,
       icon: formData.icon || null,
       active: formData.active,
-      sort_order: editingId ? undefined : maxSortOrder + 1, // Only set for new categories
+      sort_order: editingId ? undefined : maxSortOrder + 1,
     });
   };
 
@@ -120,9 +120,8 @@ const CategoriesManager = () => {
     const currentCategory = categories[index];
     const previousCategory = categories[index - 1];
     
-    // Swap sort orders
-    reorderMutation.mutate({ categoryId: currentCategory.id, newOrder: previousCategory.sort_order });
-    reorderMutation.mutate({ categoryId: previousCategory.id, newOrder: currentCategory.sort_order });
+    reorderMutation.mutate({ categoryId: currentCategory.id, newOrder: previousCategory.sort_order || 0 });
+    reorderMutation.mutate({ categoryId: previousCategory.id, newOrder: currentCategory.sort_order || 0 });
   };
 
   const handleMoveDown = (index: number) => {
@@ -131,9 +130,8 @@ const CategoriesManager = () => {
     const currentCategory = categories[index];
     const nextCategory = categories[index + 1];
     
-    // Swap sort orders
-    reorderMutation.mutate({ categoryId: currentCategory.id, newOrder: nextCategory.sort_order });
-    reorderMutation.mutate({ categoryId: nextCategory.id, newOrder: currentCategory.sort_order });
+    reorderMutation.mutate({ categoryId: currentCategory.id, newOrder: nextCategory.sort_order || 0 });
+    reorderMutation.mutate({ categoryId: nextCategory.id, newOrder: currentCategory.sort_order || 0 });
   };
 
   return (
@@ -191,59 +189,47 @@ const CategoriesManager = () => {
       <Card>
         <CardHeader>
           <CardTitle>Categories List</CardTitle>
+          <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {categories?.map((category, index) => (
-              <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col gap-1">
+              <SwipeableListItem
+                key={category.id}
+                onMoveUp={() => handleMoveUp(index)}
+                onMoveDown={() => handleMoveDown(index)}
+                canMoveUp={index > 0}
+                canMoveDown={index < (categories?.length || 0) - 1}
+                onClick={() => handleEdit(category)}
+                className="relative"
+              >
+                <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <h3 className="font-semibold flex items-center gap-2">
+                        {category.icon && <span>{category.icon}</span>}
+                        {category.name_en}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {!category.active && 'Inactive'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
                     <Button
                       size="icon"
-                      variant="ghost"
-                      onClick={() => handleMoveUp(index)}
-                      disabled={index === 0}
-                      className="h-6 w-6"
+                      variant="destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteMutation.mutate(category.id);
+                      }}
                     >
-                      <ArrowUp className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleMoveDown(index)}
-                      disabled={index === categories.length - 1}
-                      className="h-6 w-6"
-                    >
-                      <ArrowDown className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  <div>
-                    <h3 className="font-semibold flex items-center gap-2">
-                      {category.icon && <span>{category.icon}</span>}
-                      {category.name_en}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {!category.active && 'Inactive'}
-                    </p>
-                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => handleEdit(category)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    onClick={() => deleteMutation.mutate(category.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+              </SwipeableListItem>
             ))}
           </div>
         </CardContent>
