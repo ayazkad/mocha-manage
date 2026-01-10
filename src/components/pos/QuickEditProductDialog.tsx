@@ -20,6 +20,9 @@ interface Product {
   base_price: number;
   category_id: string;
   image_url?: string;
+  has_size_options?: boolean;
+  has_milk_options?: boolean;
+  has_temperature_options?: boolean;
 }
 
 interface QuickEditProductDialogProps {
@@ -36,6 +39,9 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
     base_price: '',
     category_id: '',
     image_url: '',
+    has_size_options: false,
+    has_milk_options: false,
+    has_temperature_options: false,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -50,6 +56,9 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
           base_price: product.base_price.toString(),
           category_id: product.category_id,
           image_url: product.image_url || '',
+          has_size_options: product.has_size_options || false,
+          has_milk_options: product.has_milk_options || false,
+          has_temperature_options: product.has_temperature_options || false,
         });
         setImagePreview(product.image_url || null);
       }
@@ -116,6 +125,9 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
           base_price: parseFloat(formData.base_price),
           category_id: formData.category_id || null,
           image_url: imageUrl,
+          has_size_options: formData.has_size_options,
+          has_milk_options: formData.has_milk_options,
+          has_temperature_options: formData.has_temperature_options,
         })
         .eq('id', product.id);
 
@@ -161,16 +173,20 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
     return category.name_en || category.name_fr;
   };
 
+  const toggleOption = (option: 'has_size_options' | 'has_milk_options' | 'has_temperature_options') => {
+    setFormData({ ...formData, [option]: !formData[option] });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md">
         <DialogHeader>
-          <DialogTitle>Quick Edit</DialogTitle>
+          <DialogTitle>Edit {product?.name_en || product?.name_fr}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="name">Product Name</Label>
+          <div className="grid grid-cols-[80px_1fr] items-center gap-2">
+            <Label htmlFor="name" className="text-right">Name</Label>
             <Input
               id="name"
               value={formData.name}
@@ -179,8 +195,8 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
             />
           </div>
 
-          <div>
-            <Label htmlFor="price">Price (₾)</Label>
+          <div className="grid grid-cols-[80px_1fr] items-center gap-2">
+            <Label htmlFor="price" className="text-right">Price</Label>
             <Input
               id="price"
               type="number"
@@ -191,8 +207,17 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
             />
           </div>
 
-          <div>
-            <Label htmlFor="category">Category</Label>
+          <div className="grid grid-cols-[80px_1fr] items-center gap-2">
+            <Label className="text-right">Image URL</Label>
+            <Input
+              value={formData.image_url}
+              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+              placeholder="/placeholder.svg"
+            />
+          </div>
+
+          <div className="grid grid-cols-[80px_1fr] items-center gap-2">
+            <Label htmlFor="category" className="text-right">Category</Label>
             <Select
               value={formData.category_id}
               onValueChange={(value) => setFormData({ ...formData, category_id: value })}
@@ -210,8 +235,42 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
             </Select>
           </div>
 
+          {/* Options buttons */}
+          <div className="grid grid-cols-[80px_1fr] items-center gap-2">
+            <Label className="text-right">Options</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={formData.has_size_options ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleOption('has_size_options')}
+                className="min-w-[60px]"
+              >
+                Size
+              </Button>
+              <Button
+                type="button"
+                variant={formData.has_milk_options ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleOption('has_milk_options')}
+                className="min-w-[60px]"
+              >
+                Milk
+              </Button>
+              <Button
+                type="button"
+                variant={formData.has_temperature_options ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleOption('has_temperature_options')}
+                className="w-full"
+              >
+                Hot / Cold
+              </Button>
+            </div>
+          </div>
+
+          {/* Product Photo */}
           <div>
-            <Label htmlFor="image">Product Photo</Label>
             <Input
               id="image"
               type="file"
@@ -220,8 +279,8 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
               className="hidden"
             />
             <div className="mt-2">
-              {imagePreview ? (
-                <div className="relative w-full h-32 rounded-md overflow-hidden bg-muted">
+              {imagePreview && (
+                <div className="relative w-full h-32 rounded-md overflow-hidden bg-muted mb-2">
                   <img
                     src={imagePreview}
                     alt="Preview"
@@ -234,26 +293,11 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-              ) : (
-                <Label
-                  htmlFor="image"
-                  className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  Change Photo
-                </Label>
               )}
             </div>
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button
-              onClick={handleSave}
-              disabled={loading}
-              className="flex-1"
-            >
-              Save
-            </Button>
             <Button
               variant="outline"
               onClick={onClose}
@@ -263,14 +307,23 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
               Cancel
             </Button>
             <Button
-              variant="destructive"
-              onClick={handleDelete}
+              onClick={handleSave}
               disabled={loading}
-              size="icon"
+              className="flex-1"
             >
-              <Trash2 className="w-4 h-4" />
+              Save changes
             </Button>
           </div>
+          
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={loading}
+            className="w-full"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete Product
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

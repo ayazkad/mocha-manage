@@ -25,6 +25,7 @@ const ProductsManager = () => {
     description_en: '',
     has_size_options: false,
     has_milk_options: false,
+    has_temperature_options: false,
     active: true,
     image_url: '',
     barcode: '',
@@ -127,6 +128,7 @@ const ProductsManager = () => {
       description_en: '',
       has_size_options: false,
       has_milk_options: false,
+      has_temperature_options: false,
       active: true,
       image_url: '',
       barcode: '',
@@ -162,6 +164,7 @@ const ProductsManager = () => {
       description_en: product.description_en || '',
       has_size_options: product.has_size_options || false,
       has_milk_options: product.has_milk_options || false,
+      has_temperature_options: product.has_temperature_options || false,
       active: product.active,
       image_url: product.image_url || '',
       barcode: product.barcode || '',
@@ -170,21 +173,10 @@ const ProductsManager = () => {
   };
 
   const handleCategoryChange = (categoryId: string) => {
-    const selectedCategory = categories?.find(cat => cat.id === categoryId);
-    const isCoffeeCategory = selectedCategory?.name_en?.toLowerCase().includes('coffee');
-    
     setFormData({
       ...formData,
       category_id: categoryId,
-      has_size_options: isCoffeeCategory ? true : formData.has_size_options,
-      has_milk_options: isCoffeeCategory ? true : formData.has_milk_options,
     });
-  };
-
-  const isCoffeeCategory = () => {
-    if (!formData.category_id || !categories) return false;
-    const selectedCategory = categories.find(cat => cat.id === formData.category_id);
-    return selectedCategory?.name_en?.toLowerCase().includes('coffee') || false;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -213,18 +205,15 @@ const ProductsManager = () => {
       }
     }
     
-    // Force les options pour les catégories Coffee
-    const selectedCategory = categories?.find(cat => cat.id === formData.category_id);
-    const isCoffee = selectedCategory?.name_en?.toLowerCase().includes('coffee');
-    
     saveMutation.mutate({
       name_en: productName,
       name_fr: productName,
       base_price: parseFloat(formData.base_price),
       category_id: formData.category_id || null,
       description_en: formData.description_en || null,
-      has_size_options: isCoffee ? true : formData.has_size_options,
-      has_milk_options: isCoffee ? true : formData.has_milk_options,
+      has_size_options: formData.has_size_options,
+      has_milk_options: formData.has_milk_options,
+      has_temperature_options: formData.has_temperature_options,
       active: formData.active,
       barcode: formData.barcode || null,
       visible_in_categories: formData.visible_in_categories,
@@ -349,17 +338,14 @@ const ProductsManager = () => {
               </div>
             </div>
 
-            <div className="flex gap-6">
+            <div className="flex flex-wrap gap-6">
               <div className="flex items-center gap-2">
                 <Switch
                   id="has_size_options"
                   checked={formData.has_size_options}
                   onCheckedChange={(checked) => setFormData({ ...formData, has_size_options: checked })}
-                  disabled={isCoffeeCategory()}
                 />
-                <Label htmlFor="has_size_options" className={isCoffeeCategory() ? 'text-muted-foreground' : ''}>
-                  Has Size Options {isCoffeeCategory() && '(Auto for Coffee)'}
-                </Label>
+                <Label htmlFor="has_size_options">Has Size Options</Label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -367,11 +353,17 @@ const ProductsManager = () => {
                   id="has_milk_options"
                   checked={formData.has_milk_options}
                   onCheckedChange={(checked) => setFormData({ ...formData, has_milk_options: checked })}
-                  disabled={isCoffeeCategory()}
                 />
-                <Label htmlFor="has_milk_options" className={isCoffeeCategory() ? 'text-muted-foreground' : ''}>
-                  Has Milk Options {isCoffeeCategory() && '(Auto for Coffee)'}
-                </Label>
+                <Label htmlFor="has_milk_options">Has Milk Options</Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="has_temperature_options"
+                  checked={formData.has_temperature_options}
+                  onCheckedChange={(checked) => setFormData({ ...formData, has_temperature_options: checked })}
+                />
+                <Label htmlFor="has_temperature_options">Hot / Cold</Label>
               </div>
 
               <div className="flex items-center gap-2">
