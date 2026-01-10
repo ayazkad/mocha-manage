@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 const EmployeesManager = () => {
   const { toast } = useToast();
@@ -134,7 +134,7 @@ const EmployeesManager = () => {
                 <Label htmlFor="pin_code">PIN Code</Label>
                 <Input
                   id="pin_code"
-                  type="password"
+                  type="text"
                   value={formData.pin_code}
                   onChange={(e) => setFormData({ ...formData, pin_code: e.target.value })}
                   required
@@ -187,26 +187,26 @@ const EmployeesManager = () => {
         <CardContent>
           <div className="space-y-2">
             {employees?.map((employee) => (
-              <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div 
+                key={employee.id} 
+                className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => handleEdit(employee)}
+              >
                 <div>
                   <h3 className="font-semibold">{employee.name}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Code: {employee.employee_code} • Role: {employee.role}
+                    Code: {employee.employee_code} • PIN: {employee.pin_code} • Role: {employee.role}
                     {!employee.active && ' • Inactive'}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <Button
                     size="icon"
-                    variant="outline"
-                    onClick={() => handleEdit(employee)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
                     variant="destructive"
-                    onClick={() => deleteMutation.mutate(employee.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteMutation.mutate(employee.id);
+                    }}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

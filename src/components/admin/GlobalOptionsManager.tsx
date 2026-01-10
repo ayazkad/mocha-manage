@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Save, X, Plus, Trash2 } from 'lucide-react';
+import { Save, X, Plus, Trash2, GripVertical } from 'lucide-react';
+import SwipeableListItem from './SwipeableListItem';
 
 interface OptionGroup {
   name_en: string;
   option_type: string;
   price_modifier: number;
   count: number;
+  sort_order: number;
 }
 
 const GlobalOptionsManager = () => {
@@ -27,7 +29,7 @@ const GlobalOptionsManager = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('product_options')
-        .select('name_en, option_type, price_modifier')
+        .select('name_en, option_type, price_modifier, sort_order')
         .order('option_type')
         .order('sort_order');
       
@@ -42,6 +44,7 @@ const GlobalOptionsManager = () => {
             option_type: item.option_type,
             price_modifier: item.price_modifier || 0,
             count: 0,
+            sort_order: item.sort_order || 0,
           };
         }
         acc[key].count++;
@@ -77,6 +80,22 @@ const GlobalOptionsManager = () => {
     },
   });
 
+  // Reorder options
+  const reorderMutation = useMutation({
+    mutationFn: async ({ name, type, newSortOrder }: { name: string; type: string; newSortOrder: number }) => {
+      const { error } = await supabase
+        .from('product_options')
+        .update({ sort_order: newSortOrder })
+        .eq('name_en', name)
+        .eq('option_type', type);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['global-options'] });
+      queryClient.invalidateQueries({ queryKey: ['product-options'] });
+    },
+  });
+
   // Delete all options with the same name and type
   const deleteMutation = useMutation({
     mutationFn: async ({ name, type }: { name: string; type: string }) => {
@@ -100,7 +119,6 @@ const GlobalOptionsManager = () => {
   // Add new option to all products with size/milk options
   const createMutation = useMutation({
     mutationFn: async ({ type, name, price }: { type: string; name: string; price: number }) => {
-      // Get all products that have this option type enabled
       const column = type === 'size' ? 'has_size_options' : 'has_milk_options';
       const { data: products, error: fetchError } = await supabase
         .from('products')
@@ -112,7 +130,6 @@ const GlobalOptionsManager = () => {
         throw new Error('No products with this option type enabled');
       }
 
-      // Get max sort_order for this option type
       const { data: existingOptions } = await supabase
         .from('product_options')
         .select('sort_order')
@@ -122,7 +139,6 @@ const GlobalOptionsManager = () => {
       
       const maxSortOrder = existingOptions?.[0]?.sort_order || 0;
 
-      // Insert option for each product
       const inserts = products.map(product => ({
         product_id: product.id,
         option_type: type,
@@ -173,19 +189,136 @@ const GlobalOptionsManager = () => {
     }
   };
 
-  const sizeOptions = options?.filter(o => o.option_type === 'size') || [];
-  const milkOptions = options?.filter(o => o.option_type === 'milk') || [];
+  const handleMoveOption = (optionsList: OptionGroup[], index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= optionsList.length) return;
+
+    const current = optionsList[index];
+    const target = optionsList[targetIndex];
+
+    reorderMutation.mutate({ name: current.name_en, type: current.option_type, newSortOrder: target.sort_order });
+    reorderMutation.mutate({ name: target.name_en, type: target.option_type, newSortOrder: current.sort_order });
+  };
+
+  const sizeOptions = options?.filter(o => o.option_type === 'size').sort((a, b) => a.sort_order - b.sort_order) || [];
+  const milkOptions = options?.filter(o => o.option_type === 'milk').sort((a, b) => a.sort_order - b.sort_order) || [];
 
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading options...</div>;
   }
+
+  const renderOptionsList = (optionsList: OptionGroup[], type: 'size' | 'milk') => (
+    <>
+      {optionsList.length === 0 && !newOption?.type?.includes(type) && (
+        <p className="text-sm text-muted-foreground">No {type} options configured</p>
+      )}
+
+      {optionsList.map((option, index) => (
+        <SwipeableListItem
+          key={`${option.option_type}-${option.name_en}`}
+          onMoveUp={() => handleMoveOption(optionsList, index, 'up')}
+          onMoveDown={() => handleMoveOption(optionsList, index, 'down')}
+          canMoveUp={index > 0}
+          canMoveDown={index < optionsList.length - 1}
+          onClick={() => handleStartEdit(option)}
+          className="relative"
+        >
+          <div className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+            {editingOption?.name_en === option.name_en && editingOption?.option_type === option.option_type ? (
+              <>
+                <Input
+                  value={editedValues.name}
+                  onChange={(e) => setEditedValues({ ...editedValues, name: e.target.value })}
+                  placeholder="Option name"
+                  className="flex-1"
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">+</span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editedValues.price}
+                    onChange={(e) => setEditedValues({ ...editedValues, price: e.target.value })}
+                    className="w-24"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <span className="text-muted-foreground">₾</span>
+                </div>
+                <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }} disabled={updateMutation.isPending}>
+                  <Save className="w-4 h-4 text-green-600" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingOption(null); }}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <GripVertical className="w-4 h-4 text-muted-foreground" />
+                <span className="flex-1 font-medium">{option.name_en}</span>
+                <span className="text-muted-foreground">
+                  {option.price_modifier > 0 ? `+${option.price_modifier} ₾` : 'Base price'}
+                </span>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                  {option.count} products
+                </span>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteMutation.mutate({ name: option.name_en, type: option.option_type });
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </>
+            )}
+          </div>
+        </SwipeableListItem>
+      ))}
+
+      {newOption?.type === type && (
+        <div className="flex items-center gap-2 p-3 border rounded-lg border-dashed bg-muted/50">
+          <Input
+            value={newOption.name}
+            onChange={(e) => setNewOption({ ...newOption, name: e.target.value })}
+            placeholder={`New ${type} name`}
+            className="flex-1"
+            autoFocus
+          />
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground">+</span>
+            <Input
+              type="number"
+              step="0.01"
+              value={newOption.price}
+              onChange={(e) => setNewOption({ ...newOption, price: e.target.value })}
+              className="w-24"
+            />
+            <span className="text-muted-foreground">₾</span>
+          </div>
+          <Button size="icon" variant="ghost" onClick={handleCreateOption} disabled={createMutation.isPending}>
+            <Save className="w-4 h-4 text-green-600" />
+          </Button>
+          <Button size="icon" variant="ghost" onClick={() => setNewOption(null)}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <div className="space-y-6">
       {/* Size Options */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Size Options</CardTitle>
+          <div>
+            <CardTitle>Size Options</CardTitle>
+            <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
+          </div>
           <Button
             size="sm"
             variant="outline"
@@ -197,98 +330,17 @@ const GlobalOptionsManager = () => {
           </Button>
         </CardHeader>
         <CardContent className="space-y-2">
-          {sizeOptions.length === 0 && !newOption?.type?.includes('size') && (
-            <p className="text-sm text-muted-foreground">No size options configured</p>
-          )}
-
-          {sizeOptions.map((option) => (
-            <div key={`${option.option_type}-${option.name_en}`} className="flex items-center gap-2 p-3 border rounded-lg">
-              {editingOption?.name_en === option.name_en && editingOption?.option_type === option.option_type ? (
-                <>
-                  <Input
-                    value={editedValues.name}
-                    onChange={(e) => setEditedValues({ ...editedValues, name: e.target.value })}
-                    placeholder="Option name"
-                    className="flex-1"
-                    autoFocus
-                  />
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">+</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editedValues.price}
-                      onChange={(e) => setEditedValues({ ...editedValues, price: e.target.value })}
-                      className="w-24"
-                    />
-                    <span className="text-muted-foreground">₾</span>
-                  </div>
-                  <Button size="icon" variant="ghost" onClick={handleSaveEdit} disabled={updateMutation.isPending}>
-                    <Save className="w-4 h-4 text-green-600" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => setEditingOption(null)}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 font-medium">{option.name_en}</span>
-                  <span className="text-muted-foreground">
-                    {option.price_modifier > 0 ? `+${option.price_modifier} ₾` : 'Base price'}
-                  </span>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                    {option.count} products
-                  </span>
-                  <Button size="icon" variant="ghost" onClick={() => handleStartEdit(option)}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    onClick={() => deleteMutation.mutate({ name: option.name_en, type: option.option_type })}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </>
-              )}
-            </div>
-          ))}
-
-          {newOption?.type === 'size' && (
-            <div className="flex items-center gap-2 p-3 border rounded-lg border-dashed bg-muted/50">
-              <Input
-                value={newOption.name}
-                onChange={(e) => setNewOption({ ...newOption, name: e.target.value })}
-                placeholder="New size name"
-                className="flex-1"
-                autoFocus
-              />
-              <div className="flex items-center gap-1">
-                <span className="text-muted-foreground">+</span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={newOption.price}
-                  onChange={(e) => setNewOption({ ...newOption, price: e.target.value })}
-                  className="w-24"
-                />
-                <span className="text-muted-foreground">₾</span>
-              </div>
-              <Button size="icon" variant="ghost" onClick={handleCreateOption} disabled={createMutation.isPending}>
-                <Save className="w-4 h-4 text-green-600" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => setNewOption(null)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+          {renderOptionsList(sizeOptions, 'size')}
         </CardContent>
       </Card>
 
       {/* Milk Options */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Milk Options</CardTitle>
+          <div>
+            <CardTitle>Milk Options</CardTitle>
+            <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
+          </div>
           <Button
             size="sm"
             variant="outline"
@@ -300,91 +352,7 @@ const GlobalOptionsManager = () => {
           </Button>
         </CardHeader>
         <CardContent className="space-y-2">
-          {milkOptions.length === 0 && !newOption?.type?.includes('milk') && (
-            <p className="text-sm text-muted-foreground">No milk options configured</p>
-          )}
-
-          {milkOptions.map((option) => (
-            <div key={`${option.option_type}-${option.name_en}`} className="flex items-center gap-2 p-3 border rounded-lg">
-              {editingOption?.name_en === option.name_en && editingOption?.option_type === option.option_type ? (
-                <>
-                  <Input
-                    value={editedValues.name}
-                    onChange={(e) => setEditedValues({ ...editedValues, name: e.target.value })}
-                    placeholder="Option name"
-                    className="flex-1"
-                    autoFocus
-                  />
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">+</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editedValues.price}
-                      onChange={(e) => setEditedValues({ ...editedValues, price: e.target.value })}
-                      className="w-24"
-                    />
-                    <span className="text-muted-foreground">₾</span>
-                  </div>
-                  <Button size="icon" variant="ghost" onClick={handleSaveEdit} disabled={updateMutation.isPending}>
-                    <Save className="w-4 h-4 text-green-600" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => setEditingOption(null)}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 font-medium">{option.name_en}</span>
-                  <span className="text-muted-foreground">
-                    {option.price_modifier > 0 ? `+${option.price_modifier} ₾` : 'Base price'}
-                  </span>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                    {option.count} products
-                  </span>
-                  <Button size="icon" variant="ghost" onClick={() => handleStartEdit(option)}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    onClick={() => deleteMutation.mutate({ name: option.name_en, type: option.option_type })}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </>
-              )}
-            </div>
-          ))}
-
-          {newOption?.type === 'milk' && (
-            <div className="flex items-center gap-2 p-3 border rounded-lg border-dashed bg-muted/50">
-              <Input
-                value={newOption.name}
-                onChange={(e) => setNewOption({ ...newOption, name: e.target.value })}
-                placeholder="New milk name"
-                className="flex-1"
-                autoFocus
-              />
-              <div className="flex items-center gap-1">
-                <span className="text-muted-foreground">+</span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={newOption.price}
-                  onChange={(e) => setNewOption({ ...newOption, price: e.target.value })}
-                  className="w-24"
-                />
-                <span className="text-muted-foreground">₾</span>
-              </div>
-              <Button size="icon" variant="ghost" onClick={handleCreateOption} disabled={createMutation.isPending}>
-                <Save className="w-4 h-4 text-green-600" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => setNewOption(null)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+          {renderOptionsList(milkOptions, 'milk')}
         </CardContent>
       </Card>
     </div>
