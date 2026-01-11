@@ -61,10 +61,24 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
   };
 
   const handleProductClick = (product: Product) => {
-    if (product.has_size_options || product.has_milk_options) {
-      setSelectedProduct(product);
+    // Si le produit a des options, ouvrir le dialogue
+    if (product.has_size_options || product.has_milk_options || product.has_temperature_options) {
+      // Si un dialogue est déjà ouvert pour un *produit différent*, le fermer d'abord
+      if (selectedProduct && selectedProduct.id !== product.id) {
+        setSelectedProduct(null); // Fermer le dialogue actuel
+        // Utiliser un timeout pour permettre au dialogue de se fermer visuellement avant d'en ouvrir un nouveau
+        setTimeout(() => {
+          setSelectedProduct(product); // Ouvrir le nouveau dialogue
+        }, 200); // Délai de 200ms, ajustez si nécessaire
+      } else if (selectedProduct && selectedProduct.id === product.id) {
+        // Cliquer sur le même produit à nouveau devrait fermer le dialogue
+        setSelectedProduct(null);
+      } else {
+        // Aucun dialogue ouvert, ou c'est le premier clic sur ce produit
+        setSelectedProduct(product);
+      }
     } else {
-      // Add directly to cart with no options
+      // Le produit n'a pas d'options, l'ajouter directement au panier
       addToCart({
         productId: product.id,
         productName: getProductName(product),
@@ -72,12 +86,20 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
         basePrice: product.base_price,
         image_url: product.image_url,
       });
+      // Si un dialogue d'options de produit est ouvert, le fermer lors de l'ajout direct au panier
+      if (selectedProduct) {
+        setSelectedProduct(null);
+      }
     }
   };
 
   const handleProductLongPress = (product: Product) => {
     if (isAdmin) {
       setEditingProduct(product);
+      // Si un dialogue d'options de produit est ouvert, le fermer lors de l'ouverture du dialogue d'édition rapide
+      if (selectedProduct) {
+        setSelectedProduct(null);
+      }
     }
   };
 
