@@ -82,10 +82,7 @@ const Cart = ({ onClose }: CartProps) => {
   }, [cart, subtotal, itemsCount]);
 
   // Calculer la réduction automatique des offres
-  const automaticDiscount = appliedOffer ? appliedOffer.discount_type === 'percentage' 
-    ? (subtotal * appliedOffer.discount_value) / 100 
-    : appliedOffer.discount_value 
-    : 0;
+  const automaticDiscount = appliedOffer ? appliedOffer.discount_type === 'percentage' ? (subtotal * appliedOffer.discount_value) / 100 : appliedOffer.discount_value : 0;
 
   // Calculate manual discount from items
   const itemDiscounts = cart.reduce((sum, item) => {
@@ -116,41 +113,40 @@ const Cart = ({ onClose }: CartProps) => {
           .filter((p: any) => {
             const categoryNameEn = (p.categories?.name_en || '').trim().toLowerCase();
             const categoryNameFr = (p.categories?.name_fr || '').trim().toLowerCase();
-            return categoryNameEn === 'coffee' || categoryNameEn === 'non coffee' || 
-                   categoryNameFr === 'coffee' || categoryNameFr === 'non coffee';
+            return categoryNameEn === 'coffee' || categoryNameEn === 'non coffee' ||
+              categoryNameFr === 'coffee' || categoryNameFr === 'non coffee';
           })
           .map((p: any) => p.id);
         setDrinkProductIds(drinkIds);
       }
     };
+
     loadDrinkCategories();
   }, [cart]);
 
   // Calculer la boisson gratuite si le client a >= 10 points (seulement pour Coffee/Non Coffee)
-  const freeDrinkDiscount = selectedCustomer && selectedCustomer.points >= 10 
-    ? (() => {
-        // Filtrer seulement les boissons Coffee/Non Coffee
-        const drinks = cart
-          .filter(item => drinkProductIds.includes(item.productId))
-          .map((item, index) => ({ 
-            index, 
-            item, 
-            unitPrice: item.basePrice + (item.selectedSize?.priceModifier || 0) + (item.selectedMilk?.priceModifier || 0) 
-          }));
+  const freeDrinkDiscount = selectedCustomer && selectedCustomer.points >= 10 ? (() => {
+    // Filtrer seulement les boissons Coffee/Non Coffee
+    const drinks = cart
+      .filter(item => drinkProductIds.includes(item.productId))
+      .map((item, index) => ({
+        index,
+        item,
+        unitPrice: item.basePrice + (item.selectedSize?.priceModifier || 0) + (item.selectedMilk?.priceModifier || 0)
+      }));
 
-        if (drinks.length === 0) return 0;
+    if (drinks.length === 0) return 0;
 
-        // Trouver la boisson la moins chère
-        const cheapestDrink = drinks.reduce((cheapest, current) => {
-          if (!cheapest || current.unitPrice < cheapest.unitPrice) {
-            return current;
-          }
-          return cheapest;
-        }, null as { index: number; item: any; unitPrice: number } | null);
+    // Trouver la boisson la moins chère
+    const cheapestDrink = drinks.reduce((cheapest, current) => {
+      if (!cheapest || current.unitPrice < cheapest.unitPrice) {
+        return current;
+      }
+      return cheapest;
+    }, null as { index: number; item: any; unitPrice: number } | null);
 
-        return cheapestDrink ? cheapestDrink.unitPrice : 0;
-      })()
-    : 0;
+    return cheapestDrink ? cheapestDrink.unitPrice : 0;
+  })() : 0;
 
   const totalDiscount = automaticDiscount + itemDiscounts + freeDrinkDiscount;
   const total = Math.max(0, subtotal - totalDiscount);
@@ -166,11 +162,7 @@ const Cart = ({ onClose }: CartProps) => {
   };
 
   const toggleItemSelection = (index: number) => {
-    setSelectedItems(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index) 
-        : [...prev, index]
-    );
+    setSelectedItems(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
   };
 
   const toggleSelectAll = () => {
@@ -188,10 +180,8 @@ const Cart = ({ onClose }: CartProps) => {
       updateAllCartItems(updatedCart);
     } else if (selectedItems.length > 0) {
       // Appliquer seulement aux items sélectionnés
-      const updatedCart = cart.map((item, index) => 
-        selectedItems.includes(index) 
-          ? { ...item, discount: percentage } 
-          : item
+      const updatedCart = cart.map((item, index) =>
+        selectedItems.includes(index) ? { ...item, discount: percentage } : item
       );
       updateAllCartItems(updatedCart);
     }
@@ -351,6 +341,7 @@ const Cart = ({ onClose }: CartProps) => {
     }
 
     setProcessing(true);
+
     try {
       // If modifying an existing order, update it instead of creating new one
       if (isModifyingOrder && originalOrder) {
@@ -560,7 +551,9 @@ const Cart = ({ onClose }: CartProps) => {
         const today = new Date().toISOString().split('T')[0];
         await supabase
           .from('employee_daily_benefits')
-          .update({ free_drink_used: true })
+          .update({
+            free_drink_used: true
+          })
           .eq('employee_id', currentEmployee.id)
           .eq('benefit_date', today);
       }
@@ -570,7 +563,9 @@ const Cart = ({ onClose }: CartProps) => {
         const today = new Date().toISOString().split('T')[0];
         await supabase
           .from('employee_daily_benefits')
-          .update({ free_snack_used: true })
+          .update({
+            free_snack_used: true
+          })
           .eq('employee_id', currentEmployee.id)
           .eq('benefit_date', today);
       }
@@ -632,30 +627,14 @@ const Cart = ({ onClose }: CartProps) => {
 
   return (
     <>
-      <PrintReceiptDialog 
-        open={showPrintReceipt} 
-        onClose={handleReceiptClose} 
-        receiptData={receiptData} 
-      />
-      <CashPaymentDialog 
-        open={showCashCalculator} 
-        onClose={() => {
-          setShowCashCalculator(false);
-          setShowPaymentMethod(true);
-        }} 
-        total={isModifyingOrder ? getPriceDifference() : total} 
-        onConfirm={handleCashConfirm} 
-        processing={processing}
-        isRefund={isModifyingOrder && getPriceDifference() < 0}
-      />
+      <PrintReceiptDialog open={showPrintReceipt} onClose={handleReceiptClose} receiptData={receiptData} />
+      <CashPaymentDialog open={showCashCalculator} onClose={() => {
+        setShowCashCalculator(false);
+        setShowPaymentMethod(true);
+      }} total={isModifyingOrder ? getPriceDifference() : total} onConfirm={handleCashConfirm} processing={processing} isRefund={isModifyingOrder && getPriceDifference() < 0} />
       <AddCustomerDialog open={showAddCustomer} onClose={() => setShowAddCustomer(false)} />
       <UnifiedScanner open={showScanner} onClose={() => setShowScanner(false)} />
-      <DiscountDialog 
-        open={showDiscountDialog} 
-        onClose={() => setShowDiscountDialog(false)} 
-        onApply={applyDiscountToItems}
-        hasSelection={selectedItems.length > 0}
-      />
+      <DiscountDialog open={showDiscountDialog} onClose={() => setShowDiscountDialog(false)} onApply={applyDiscountToItems} hasSelection={selectedItems.length > 0} />
 
       <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
         {/* Header */}
@@ -669,7 +648,7 @@ const Cart = ({ onClose }: CartProps) => {
               {cart.length} item{cart.length !== 1 ? 's' : ''}
             </span>
           </div>
-          
+
           {/* Modification Mode Banner */}
           {isModifyingOrder && originalOrder && (
             <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/50">
@@ -680,16 +659,7 @@ const Cart = ({ onClose }: CartProps) => {
                     Modif. #{originalOrder.orderNumber}
                   </span>
                 </div>
-                {currentEmployee?.role === 'admin' && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6"
-                    onClick={cancelOrderModification}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                )}
+                {/* Removed the X button as per user request */}
               </div>
               <p className="text-[10px] text-muted-foreground mt-1">
                 Original: {originalOrder.originalTotal.toFixed(2)} ₾
@@ -715,24 +685,12 @@ const Cart = ({ onClose }: CartProps) => {
                 const discountedTotal = itemTotal * (1 - itemDiscount / 100);
 
                 return (
-                  <div 
-                    key={index} 
-                    className={`bg-card/50 rounded-lg p-2 border-2 transition-colors cursor-pointer ${
-                      selectedItems.includes(index) 
-                        ? 'border-primary bg-primary/10' 
-                        : 'border-border/30 hover:border-primary/50'
-                    }`}
-                    onClick={() => toggleItemSelection(index)}
-                  >
+                  <div key={index} className={`bg-card/50 rounded-lg p-2 border-2 transition-colors cursor-pointer ${selectedItems.includes(index) ? 'border-primary bg-primary/10' : 'border-border/30 hover:border-primary/50'}`} onClick={() => toggleItemSelection(index)}>
                     <div className="flex gap-2">
                       {/* Product image */}
                       <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                         {item.image_url ? (
-                          <img 
-                            src={item.image_url} 
-                            alt={item.productName} 
-                            className="w-full h-full object-cover" 
-                          />
+                          <img src={item.image_url} alt={item.productName} className="w-full h-full object-cover" />
                         ) : (
                           <ShoppingCart className="w-5 h-5 text-muted-foreground" />
                         )}
@@ -742,32 +700,27 @@ const Cart = ({ onClose }: CartProps) => {
                           <h3 className="font-semibold text-xs leading-tight text-card-foreground">
                             {item.productName}
                           </h3>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 shrink-0 text-destructive hover:bg-destructive/10 rounded-md"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeFromCart(index);
-                            }}
-                          >
+                          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-destructive hover:bg-destructive/10 rounded-md" onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromCart(index);
+                          }}>
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
+
                         {(item.selectedSize || item.selectedMilk) && (
                           <p className="text-[10px] text-muted-foreground mb-1">
-                            {[
-                              item.selectedSize?.name,
-                              item.selectedMilk?.name
-                            ].filter(Boolean).join(', ')}
+                            {[item.selectedSize?.name, item.selectedMilk?.name].filter(Boolean).join(', ')}
                           </p>
                         )}
+
                         {/* Display product notes */}
                         {item.notes && (
                           <p className="text-[10px] text-muted-foreground italic mb-1">
                             Note: {item.notes}
                           </p>
                         )}
+
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             {itemDiscount > 0 ? (
@@ -788,24 +741,15 @@ const Cart = ({ onClose }: CartProps) => {
                               </span>
                             )}
                           </div>
+
                           <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                            <Button 
-                              variant="outline" 
-                              size="icon" 
-                              className="h-6 w-6 rounded-md"
-                              onClick={() => handleQuantityChange(index, item.quantity - 1)}
-                            >
+                            <Button variant="outline" size="icon" className="h-6 w-6 rounded-md" onClick={() => handleQuantityChange(index, item.quantity - 1)}>
                               <Minus className="w-3 h-3" />
                             </Button>
                             <span className="w-7 text-center font-medium text-xs">
                               {item.quantity}
                             </span>
-                            <Button 
-                              variant="outline" 
-                              size="icon" 
-                              className="h-6 w-6 rounded-md"
-                              onClick={() => handleQuantityChange(index, item.quantity + 1)}
-                            >
+                            <Button variant="outline" size="icon" className="h-6 w-6 rounded-md" onClick={() => handleQuantityChange(index, item.quantity + 1)}>
                               <Plus className="w-3 h-3" />
                             </Button>
                           </div>
@@ -824,37 +768,25 @@ const Cart = ({ onClose }: CartProps) => {
           {/* Customer Loyalty - moved above subtotal */}
           <div className="p-2 border-b border-border/50">
             <div className="flex gap-2 mb-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1 gap-2 text-xs h-8"
-                onClick={() => setShowAddCustomer(true)}
-              >
+              <Button variant="outline" size="sm" className="flex-1 gap-2 text-xs h-8" onClick={() => setShowAddCustomer(true)}>
                 <UserPlus className="w-3 h-3" />
                 Nouveau client
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1 gap-2 text-xs h-8"
-                onClick={() => setShowScanner(true)}
-              >
+              <Button variant="outline" size="sm" className="flex-1 gap-2 text-xs h-8" onClick={() => setShowScanner(true)}>
                 <ScanLine className="w-3 h-3" />
                 Scanner
               </Button>
             </div>
-            <CustomerLoyalty 
-              onCustomerSelected={setSelectedCustomer} 
-              selectedCustomer={selectedCustomer} 
-            />
+            <CustomerLoyalty onCustomerSelected={setSelectedCustomer} selectedCustomer={selectedCustomer} />
           </div>
-          
+
           <div className="p-3 space-y-2">
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
               </div>
+
               {(appliedOffer || itemDiscounts > 0 || freeDrinkDiscount > 0) && (
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground flex items-center gap-1">
@@ -868,82 +800,54 @@ const Cart = ({ onClose }: CartProps) => {
                       </span>
                     )}
                   </span>
-                  <span className="font-semibold text-destructive">
-                    -{totalDiscount.toFixed(2)} ₾
-                  </span>
+                  <span className="font-semibold text-destructive">-{totalDiscount.toFixed(2)} ₾</span>
                 </div>
               )}
+
               <Separator />
+
               <div className="flex justify-between text-base font-bold">
                 <span className="text-card-foreground">Total Payment</span>
                 <span className="text-primary">{total.toFixed(2)} ₾</span>
               </div>
-              
+
               {/* Price difference when modifying an order */}
               {isModifyingOrder && originalOrder && (
-                <div className={`p-2 rounded-lg ${
-                  getPriceDifference() > 0 
-                    ? 'bg-red-500/10 border border-red-500/50' 
-                    : getPriceDifference() < 0 
-                      ? 'bg-green-500/10 border border-green-500/50' 
-                      : 'bg-muted border border-border'
-                }`}>
+                <div className={`p-2 rounded-lg ${getPriceDifference() > 0 ? 'bg-red-500/10 border border-red-500/50' : getPriceDifference() < 0 ? 'bg-green-500/10 border border-green-500/50' : 'bg-muted border border-border'}`}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-medium">
-                      {getPriceDifference() > 0 
-                        ? '💰 À encaisser' 
-                        : getPriceDifference() < 0 
-                          ? '💵 À rendre' 
-                          : '✓ Pas de différence'}
+                      {getPriceDifference() > 0 ? '💰 À encaisser' : getPriceDifference() < 0 ? '💵 À rendre' : '✓ Pas de différence'}
                     </span>
-                    <span className={`text-sm font-bold ${
-                      getPriceDifference() > 0 
-                        ? 'text-red-600' 
-                        : getPriceDifference() < 0 
-                          ? 'text-green-600' 
-                          : 'text-muted-foreground'
-                    }`}>
+                    <span className={`text-sm font-bold ${getPriceDifference() > 0 ? 'text-red-600' : getPriceDifference() < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
                       {getPriceDifference() > 0 ? '+' : ''}{getPriceDifference().toFixed(2)} ₾
                     </span>
                   </div>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowDiscountDialog(true)}
-                  className="justify-between rounded-lg h-9 text-xs"
-                  disabled={cart.length === 0}
-                >
+                <Button variant="outline" onClick={() => setShowDiscountDialog(true)} className="justify-between rounded-lg h-9 text-xs" disabled={cart.length === 0}>
                   <span className="flex items-center gap-1.5">
                     <Percent className="w-3 h-3" />
-                    {selectedItems.length > 0 
-                      ? `Discount (${selectedItems.length})` 
-                      : 'Discount'}
+                    {selectedItems.length > 0 ? `Discount (${selectedItems.length})` : 'Discount'}
                   </span>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    if (selectedItems.length > 0) {
-                      selectedItems.forEach(index => {
-                        const item = cart[index];
-                        updateCartItem(index, { ...item, discount: 0 });
-                      });
-                      setSelectedItems([]);
-                    } else {
-                      applyDiscountToItems(0, true);
-                    }
-                  }}
-                  className="rounded-lg h-9 text-xs text-destructive hover:text-destructive"
-                  disabled={cart.length === 0 || itemDiscounts === 0}
-                >
+                <Button variant="outline" onClick={() => {
+                  if (selectedItems.length > 0) {
+                    selectedItems.forEach(index => {
+                      const item = cart[index];
+                      updateCartItem(index, { ...item, discount: 0 });
+                    });
+                    setSelectedItems([]);
+                  } else {
+                    applyDiscountToItems(0, true);
+                  }
+                }} className="rounded-lg h-9 text-xs text-destructive hover:text-destructive" disabled={cart.length === 0 || itemDiscounts === 0}>
                   Remove
                 </Button>
               </div>
             </div>
-            
+
             {!showPaymentMethod && (
               <Button 
                 onClick={handlePaymentMethodClick} 
@@ -953,7 +857,7 @@ const Cart = ({ onClose }: CartProps) => {
                 Pay Now
               </Button>
             )}
-            
+
             {showPaymentMethod && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-center text-muted-foreground">
