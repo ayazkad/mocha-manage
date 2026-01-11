@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { Plus, Trash2, Edit, Gift, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -315,7 +314,8 @@ const OffersManager = () => {
 
             <div className="space-y-2">
               <Label>Applicable Products</Label>
-              <ScrollArea className="h-64 border rounded-lg p-3">
+              {/* Removed ScrollArea */}
+              <div className="border rounded-lg p-3">
                 <div className="space-y-4">
                   {Object.entries(groupedProducts)
                     .filter(([, group]) => group.products.length > 0)
@@ -348,7 +348,7 @@ const OffersManager = () => {
                       </div>
                     ))}
                 </div>
-              </ScrollArea>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {selectedProducts.length === 0
                   ? "No products selected - offer will apply to all products"
