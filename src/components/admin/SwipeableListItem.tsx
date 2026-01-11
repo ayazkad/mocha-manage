@@ -23,19 +23,10 @@ interface SwipeableListProps {
 export const SwipeableList = ({ children, className }: SwipeableListProps) => {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
-  
+
   const setDragging = useCallback((index: number | null, offset: number) => {
     setDraggingIndex(index);
     setDragOffset(offset);
-    
-    // Prevent body scrolling when dragging on touch devices
-    if (index !== null) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
   }, []);
 
   return (
@@ -83,7 +74,7 @@ const SwipeableListItem = ({
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasMoved = useRef(false);
   const itemRef = useRef<HTMLDivElement>(null);
-  
+
   const itemHeight = 72; // Approximate height of item
   const threshold = itemHeight / 2; // Move when past half an item
 
@@ -106,7 +97,7 @@ const SwipeableListItem = ({
   // Calculate if this item should be visually displaced
   const getDisplacement = () => {
     if (draggingIndex === null || draggingIndex === index) return 0;
-    
+
     const positionsToMove = getTargetOffset();
     const targetIndex = draggingIndex + positionsToMove;
 
@@ -114,12 +105,12 @@ const SwipeableListItem = ({
     if (positionsToMove > 0 && index > draggingIndex && index <= targetIndex) {
       return -itemHeight;
     }
-    
+
     // Dragging UP: items between targetIndex and draggingIndex move DOWN
     if (positionsToMove < 0 && index < draggingIndex && index >= targetIndex) {
       return itemHeight;
     }
-    
+
     return 0;
   };
 
@@ -128,11 +119,10 @@ const SwipeableListItem = ({
   const handleStart = useCallback((clientY: number) => {
     setStartY(clientY);
     hasMoved.current = false;
-    
+
     longPressTimer.current = setTimeout(() => {
       setIsDragging(true);
       setDragging(index, 0);
-      
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
@@ -149,10 +139,9 @@ const SwipeableListItem = ({
       }
       return;
     }
-    
+
     hasMoved.current = true;
     const diffY = clientY - startY;
-    
     // No max offset limitation - allow free movement
     setLocalOffset(diffY);
     setDragging(index, diffY);
@@ -163,11 +152,11 @@ const SwipeableListItem = ({
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-    
+
     if (isDragging) {
       const deltaRaw = Math.round(localOffset / itemHeight);
       const delta = clampDelta(deltaRaw);
-      
+
       if (Math.abs(localOffset) > threshold && delta !== 0) {
         if (onMoveTo) {
           const toIndex = index + delta;
@@ -181,7 +170,7 @@ const SwipeableListItem = ({
         }
       }
     }
-    
+
     setLocalOffset(0);
     setIsDragging(false);
     setDragging(null, 0);
@@ -198,27 +187,19 @@ const SwipeableListItem = ({
 
   // Touch events
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Prevent scrolling during touch interaction
-    e.preventDefault();
     handleStart(e.touches[0].clientY);
   }, [handleStart]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // Prevent scrolling when dragging
+    handleMove(e.touches[0].clientY);
     if (isDragging) {
       e.preventDefault();
-      e.stopPropagation();
     }
-    handleMove(e.touches[0].clientY);
   }, [handleMove, isDragging]);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    // Prevent default to avoid any residual scrolling
-    if (isDragging) {
-      e.preventDefault();
-    }
+  const handleTouchEnd = useCallback(() => {
     handleEnd();
-  }, [handleEnd, isDragging]);
+  }, [handleEnd]);
 
   // Mouse events
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -230,13 +211,9 @@ const SwipeableListItem = ({
     handleMove(e.clientY);
   }, [handleMove]);
 
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    // Prevent default to avoid any residual scrolling
-    if (isDragging) {
-      e.preventDefault();
-    }
+  const handleMouseUp = useCallback(() => {
     handleEnd();
-  }, [handleEnd, isDragging]);
+  }, [handleEnd]);
 
   const handleMouseLeave = useCallback(() => {
     if (isDragging) {
@@ -250,7 +227,7 @@ const SwipeableListItem = ({
     <div
       ref={itemRef}
       className={cn(
-        "relative select-none touch-pan-y", // Added touch-pan-y to allow vertical scrolling only when not dragging
+        "relative select-none",
         isBeingDragged && "z-20",
         !isBeingDragged && draggingIndex !== null && "z-10",
         className
@@ -261,7 +238,6 @@ const SwipeableListItem = ({
           : `translateY(${displacement}px)`,
         transition: isBeingDragged ? 'none' : 'transform 0.2s ease-out',
         boxShadow: isBeingDragged ? '0 8px 25px rgba(0,0,0,0.15)' : 'none',
-        touchAction: isDragging ? 'none' : 'pan-y', // Allow vertical scrolling only when not dragging
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

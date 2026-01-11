@@ -135,10 +135,7 @@ const ProductOptionsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent 
-        className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden"
-        onPointerDownOutside={onClose} // Explicitly close on outside pointer down
-      >
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 flex-shrink-0">
           <DialogTitle className="text-xl md:text-2xl">{getProductName(product)}</DialogTitle>
         </DialogHeader>
