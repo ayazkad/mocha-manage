@@ -150,41 +150,34 @@ const ProductsManager = () => {
     },
   });
 
-  const moveProduct = async (productId: string, categoryId: string | null, direction: 'up' | 'down') => {
+  const moveProductTo = async (categoryId: string | null, fromIndex: number, toIndex: number) => {
     const catKey = categoryId || 'no-category';
     const group = groupedProducts[catKey];
     if (!group) return;
 
-    const productIndex = group.products.findIndex((p: any) => p.id === productId);
-    if (productIndex === -1) return;
+    if (fromIndex === toIndex) return;
 
-    const swapIndex = direction === 'up' ? productIndex - 1 : productIndex + 1;
-    if (swapIndex < 0 || swapIndex >= group.products.length) return;
-
-    const currentProduct = group.products[productIndex];
-    const swapProduct = group.products[swapIndex];
-
-    // Swap sort_order values
-    const currentSortOrder = currentProduct.sort_order || productIndex;
-    const swapSortOrder = swapProduct.sort_order || swapIndex;
+    const next = [...group.products];
+    const [moved] = next.splice(fromIndex, 1);
+    if (!moved) return;
+    next.splice(toIndex, 0, moved);
 
     try {
-      await Promise.all([
-        supabase
-          .from('products')
-          .update({ sort_order: swapSortOrder })
-          .eq('id', currentProduct.id),
-        supabase
-          .from('products')
-          .update({ sort_order: currentSortOrder })
-          .eq('id', swapProduct.id),
-      ]);
+      await Promise.all(
+        next.map((p: any, idx: number) =>
+          supabase.from('products').update({ sort_order: idx }).eq('id', p.id)
+        )
+      );
 
       queryClient.invalidateQueries({ queryKey: ['products'] });
       toast({ title: 'Order updated' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating order:', error);
-      toast({ title: 'Error updating order', variant: 'destructive' });
+      toast({
+        title: 'Error updating order',
+        description: error?.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -496,10 +489,8 @@ const ProductsManager = () => {
                       <SwipeableListItem
                         key={product.id}
                         index={index}
-                        onMoveUp={() => moveProduct(product.id, product.category_id, 'up')}
-                        onMoveDown={() => moveProduct(product.id, product.category_id, 'down')}
-                        canMoveUp={index > 0}
-                        canMoveDown={index < group.products.length - 1}
+                        listSize={group.products.length}
+                        onMoveTo={(toIndex) => moveProductTo(product.category_id, index, toIndex)}
                         onClick={() => handleEdit(product)}
                       >
                         <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-background">

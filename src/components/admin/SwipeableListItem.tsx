@@ -41,7 +41,13 @@ export const SwipeableList = ({ children, className }: SwipeableListProps) => {
 interface SwipeableListItemProps {
   children: React.ReactNode;
   index: number;
+  /** Total items in the list (used to clamp drag target) */
+  listSize?: number;
+  /** Preferred: move directly to an index */
+  onMoveTo?: (toIndex: number) => void;
+  /** Legacy: move one step */
   onMoveUp?: () => void;
+  /** Legacy: move one step */
   onMoveDown?: () => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
@@ -52,6 +58,8 @@ interface SwipeableListItemProps {
 const SwipeableListItem = ({
   children,
   index,
+  listSize,
+  onMoveTo,
   onMoveUp,
   onMoveDown,
   canMoveUp = true,
@@ -70,29 +78,39 @@ const SwipeableListItem = ({
   const itemHeight = 72; // Approximate height of item
   const threshold = itemHeight / 2; // Move when past half an item
 
+  const clampDelta = useCallback(
+    (delta: number) => {
+      if (typeof listSize !== 'number') return delta;
+      const minDelta = -index;
+      const maxDelta = (listSize - 1) - index;
+      return Math.max(minDelta, Math.min(maxDelta, delta));
+    },
+    [index, listSize]
+  );
+
   // Calculate how many positions the dragged item should move
   const getTargetOffset = useCallback(() => {
     if (dragOffset === 0) return 0;
-    return Math.round(dragOffset / itemHeight);
-  }, [dragOffset, itemHeight]);
+    return clampDelta(Math.round(dragOffset / itemHeight));
+  }, [dragOffset, itemHeight, clampDelta]);
 
   // Calculate if this item should be visually displaced
   const getDisplacement = () => {
     if (draggingIndex === null || draggingIndex === index) return 0;
-    
+
     const positionsToMove = getTargetOffset();
     const targetIndex = draggingIndex + positionsToMove;
-    
+
     // If dragging item is above this one and moving down
     if (draggingIndex < index && targetIndex >= index) {
       return -itemHeight; // Move up
     }
-    
+
     // If dragging item is below this one and moving up
     if (draggingIndex > index && targetIndex <= index) {
       return itemHeight; // Move down
     }
-    
+
     return 0;
   };
 
@@ -101,7 +119,7 @@ const SwipeableListItem = ({
   const handleStart = useCallback((clientY: number) => {
     setStartY(clientY);
     hasMoved.current = false;
-    
+
     longPressTimer.current = setTimeout(() => {
       setIsDragging(true);
       setDragging(index, 0);
@@ -135,18 +153,20 @@ const SwipeableListItem = ({
       longPressTimer.current = null;
     }
 
-    if (isDragging && Math.abs(localOffset) > threshold) {
-      const positionsToMove = Math.round(localOffset / itemHeight);
-      
-      if (positionsToMove < 0 && canMoveUp && onMoveUp) {
-        // Move up by abs(positionsToMove) positions
-        for (let i = 0; i < Math.abs(positionsToMove); i++) {
-          onMoveUp();
-        }
-      } else if (positionsToMove > 0 && canMoveDown && onMoveDown) {
-        // Move down by positionsToMove positions
-        for (let i = 0; i < positionsToMove; i++) {
-          onMoveDown();
+    if (isDragging) {
+      const deltaRaw = Math.round(localOffset / itemHeight);
+      const delta = clampDelta(deltaRaw);
+
+      if (Math.abs(localOffset) > threshold && delta !== 0) {
+        if (onMoveTo) {
+          const toIndex = index + delta;
+          if (toIndex !== index) {
+            onMoveTo(toIndex);
+          }
+        } else {
+          // Legacy single-step fallback
+          if (delta < 0 && canMoveUp && onMoveUp) onMoveUp();
+          if (delta > 0 && canMoveDown && onMoveDown) onMoveDown();
         }
       }
     }
@@ -154,7 +174,7 @@ const SwipeableListItem = ({
     setLocalOffset(0);
     setIsDragging(false);
     setDragging(null, 0);
-  }, [isDragging, localOffset, canMoveUp, canMoveDown, onMoveUp, onMoveDown, setDragging, itemHeight, threshold]);
+  }, [isDragging, localOffset, setDragging, itemHeight, threshold, clampDelta, onMoveTo, index, canMoveUp, canMoveDown, onMoveUp, onMoveDown]);
 
   const handleClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (hasMoved.current || isDragging) {
@@ -234,7 +254,7 @@ const SwipeableListItem = ({
           <div className="absolute inset-0 bg-primary/10 rounded-lg pointer-events-none border-2 border-primary/30" />
           {Math.abs(localOffset) > threshold && (
             <div className={`absolute ${localOffset < 0 ? '-top-8' : '-bottom-8'} left-1/2 -translate-x-1/2 py-1 px-3 bg-primary text-primary-foreground text-xs rounded-full font-medium shadow-lg animate-fade-in`}>
-              {localOffset < 0 ? '↑' : '↓'} {Math.abs(Math.round(localOffset / itemHeight))} position{Math.abs(Math.round(localOffset / itemHeight)) > 1 ? 's' : ''}
+              {localOffset < 0 ? '↑' : '↓'} {Math.abs(clampDelta(Math.round(localOffset / itemHeight)))} position{Math.abs(clampDelta(Math.round(localOffset / itemHeight))) > 1 ? 's' : ''}
             </div>
           )}
         </>

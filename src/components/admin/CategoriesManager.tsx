@@ -71,18 +71,6 @@ const CategoriesManager = () => {
     },
   });
 
-  const reorderMutation = useMutation({
-    mutationFn: async ({ categoryId, newOrder }: { categoryId: string; newOrder: number }) => {
-      const { error } = await supabase
-        .from('categories')
-        .update({ sort_order: newOrder })
-        .eq('id', categoryId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-    },
-  });
 
   const resetForm = () => {
     setEditingId(null);
@@ -114,24 +102,30 @@ const CategoriesManager = () => {
     });
   };
 
-  const handleMoveUp = (index: number) => {
-    if (!categories || index === 0) return;
-    
-    const currentCategory = categories[index];
-    const previousCategory = categories[index - 1];
-    
-    reorderMutation.mutate({ categoryId: currentCategory.id, newOrder: previousCategory.sort_order || 0 });
-    reorderMutation.mutate({ categoryId: previousCategory.id, newOrder: currentCategory.sort_order || 0 });
-  };
+  const handleMoveTo = async (fromIndex: number, toIndex: number) => {
+    if (!categories) return;
+    if (fromIndex === toIndex) return;
 
-  const handleMoveDown = (index: number) => {
-    if (!categories || index === categories.length - 1) return;
-    
-    const currentCategory = categories[index];
-    const nextCategory = categories[index + 1];
-    
-    reorderMutation.mutate({ categoryId: currentCategory.id, newOrder: nextCategory.sort_order || 0 });
-    reorderMutation.mutate({ categoryId: nextCategory.id, newOrder: currentCategory.sort_order || 0 });
+    const next = [...categories];
+    const [moved] = next.splice(fromIndex, 1);
+    if (!moved) return;
+    next.splice(toIndex, 0, moved);
+
+    try {
+      await Promise.all(
+        next.map((cat, idx) =>
+          supabase.from('categories').update({ sort_order: idx }).eq('id', cat.id)
+        )
+      );
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    } catch (error: any) {
+      console.error('Error updating category order:', error);
+      toast({
+        title: 'Error updating order',
+        description: error?.message,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -197,10 +191,8 @@ const CategoriesManager = () => {
               <SwipeableListItem
                 key={category.id}
                 index={index}
-                onMoveUp={() => handleMoveUp(index)}
-                onMoveDown={() => handleMoveDown(index)}
-                canMoveUp={index > 0}
-                canMoveDown={index < (categories?.length || 0) - 1}
+                listSize={categories?.length || 0}
+                onMoveTo={(toIndex) => handleMoveTo(index, toIndex)}
                 onClick={() => handleEdit(category)}
                 className="relative"
               >

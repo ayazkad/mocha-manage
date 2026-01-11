@@ -80,21 +80,6 @@ const GlobalOptionsManager = () => {
     },
   });
 
-  // Reorder options
-  const reorderMutation = useMutation({
-    mutationFn: async ({ name, type, newSortOrder }: { name: string; type: string; newSortOrder: number }) => {
-      const { error } = await supabase
-        .from('product_options')
-        .update({ sort_order: newSortOrder })
-        .eq('name_en', name)
-        .eq('option_type', type);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['global-options'] });
-      queryClient.invalidateQueries({ queryKey: ['product-options'] });
-    },
-  });
 
   // Delete all options with the same name and type
   const deleteMutation = useMutation({
@@ -189,15 +174,30 @@ const GlobalOptionsManager = () => {
     }
   };
 
-  const handleMoveOption = (optionsList: OptionGroup[], index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= optionsList.length) return;
+  const handleMoveOptionTo = async (optionsList: OptionGroup[], fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
 
-    const current = optionsList[index];
-    const target = optionsList[targetIndex];
+    const next = [...optionsList];
+    const [moved] = next.splice(fromIndex, 1);
+    if (!moved) return;
+    next.splice(toIndex, 0, moved);
 
-    reorderMutation.mutate({ name: current.name_en, type: current.option_type, newSortOrder: target.sort_order });
-    reorderMutation.mutate({ name: target.name_en, type: target.option_type, newSortOrder: current.sort_order });
+    try {
+      await Promise.all(
+        next.map((opt, idx) =>
+          supabase
+            .from('product_options')
+            .update({ sort_order: idx })
+            .eq('name_en', opt.name_en)
+            .eq('option_type', opt.option_type)
+        )
+      );
+      queryClient.invalidateQueries({ queryKey: ['global-options'] });
+      queryClient.invalidateQueries({ queryKey: ['product-options'] });
+    } catch (error: any) {
+      console.error('Error updating option order:', error);
+      toast({ title: 'Error', description: error?.message, variant: 'destructive' });
+    }
   };
 
   const sizeOptions = options?.filter(o => o.option_type === 'size').sort((a, b) => a.sort_order - b.sort_order) || [];
@@ -218,10 +218,8 @@ const GlobalOptionsManager = () => {
           <SwipeableListItem
             key={`${option.option_type}-${option.name_en}`}
             index={index}
-            onMoveUp={() => handleMoveOption(optionsList, index, 'up')}
-            onMoveDown={() => handleMoveOption(optionsList, index, 'down')}
-            canMoveUp={index > 0}
-            canMoveDown={index < optionsList.length - 1}
+            listSize={optionsList.length}
+            onMoveTo={(toIndex) => handleMoveOptionTo(optionsList, index, toIndex)}
             onClick={() => handleStartEdit(option)}
             className="relative"
           >
