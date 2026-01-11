@@ -228,37 +228,35 @@ const OffersManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> {/* New grid layout */}
-        {/* Left Column: Offer Form */}
-        <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Gift className="w-5 h-5" />
-            {editingOffer ? 'Edit Offer' : 'Create Offer'}
-          </h3>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Offer Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
+      <Card className="p-6">
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Gift className="w-5 h-5" />
+          {editingOffer ? 'Edit Offer' : 'Create Offer'}
+        </h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Offer Name</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="discount_type">Discount Type</Label>
-                <Select
-                  value={formData.discount_type}
-                  onValueChange={(value: 'percentage' | 'fixed') =>
-                    setFormData({ ...formData, discount_type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="discount_type">Discount Type</Label>
+              <Select
+                value={formData.discount_type}
+                onValueChange={(value: 'percentage' | 'fixed') =>
+                  setFormData({ ...formData, discount_type: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="percentage">Percentage</SelectItem>
                     <SelectItem value="fixed">Fixed Amount</SelectItem>
@@ -315,6 +313,49 @@ const OffersManager = () => {
               <Label>Active Offer</Label>
             </div>
 
+            <div className="space-y-2">
+              <Label>Applicable Products</Label>
+              <ScrollArea className="h-64 border rounded-lg p-3">
+                <div className="space-y-4">
+                  {Object.entries(groupedProducts)
+                    .filter(([, group]) => group.products.length > 0)
+                    .sort((a, b) => a[1].sortOrder - b[1].sortOrder)
+                    .map(([categoryId, group]) => (
+                      <div key={categoryId} className="space-y-2">
+                        <h4 className="font-semibold text-sm border-b pb-1 text-primary">
+                          {group.name}
+                          <span className="text-xs font-normal text-muted-foreground ml-2">
+                            ({group.products.length} products)
+                          </span>
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {group.products.map((product) => (
+                            <Button
+                              key={product.id}
+                              type="button"
+                              variant={selectedProducts.includes(product.id) ? 'default' : 'outline'}
+                              onClick={() => toggleProductSelection(product.id)}
+                              className={cn(
+                                "flex items-center justify-between h-auto py-2 px-3 text-sm text-left",
+                                selectedProducts.includes(product.id) ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted/50"
+                              )}
+                            >
+                              <span className="flex-1 truncate">{getProductName(product)}</span>
+                              {selectedProducts.includes(product.id) && <Check className="ml-2 h-4 w-4" />}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </ScrollArea>
+              <p className="text-xs text-muted-foreground">
+                {selectedProducts.length === 0
+                  ? "No products selected - offer will apply to all products"
+                  : `${selectedProducts.length} product(s) selected`}
+              </p>
+            </div>
+
             <div className="flex gap-2">
               <Button type="submit" className="flex-1">
                 <Plus className="w-4 h-4 mr-2" />
@@ -329,106 +370,57 @@ const OffersManager = () => {
           </form>
         </Card>
 
-        {/* Right Column: Applicable Products Grid */}
-        <Card className="p-6"> {/* Use a card for the product selection too */}
-          <h3 className="text-xl font-semibold mb-4">Applicable Products</h3>
-          <p className="text-sm text-muted-foreground mb-4">Select products to apply this offer to. If none are selected, the offer applies to all products.</p>
-          
-          <ScrollArea className="h-[calc(100vh-250px)] pr-4"> {/* Adjusted height for better fit */}
-            <div className="space-y-4"> {/* This will be the main scrollable area for products */}
-              {Object.entries(groupedProducts)
-                .filter(([, group]) => group.products.length > 0)
-                .sort((a, b) => a[1].sortOrder - b[1].sortOrder)
-                .map(([categoryId, group]) => (
-                  <div key={categoryId} className="space-y-2">
-                    <h4 className="font-semibold text-sm border-b pb-1 text-primary">
-                      {group.name}
-                      <span className="text-xs font-normal text-muted-foreground ml-2">
-                        ({group.products.length} products)
-                      </span>
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {group.products.map((product) => (
-                        <Button
-                          key={product.id}
-                          type="button"
-                          variant={selectedProducts.includes(product.id) ? 'default' : 'outline'}
-                          onClick={() => toggleProductSelection(product.id)}
-                          className={cn(
-                            "flex items-center justify-between h-auto py-2 px-3 text-sm text-left",
-                            selectedProducts.includes(product.id) ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted/50"
-                          )}
-                        >
-                          <span className="flex-1 truncate">{getProductName(product)}</span>
-                          {selectedProducts.includes(product.id) && <Check className="ml-2 h-4 w-4" />}
-                        </Button>
-                      ))}
-                    </div>
+        <div className="space-y-3 mt-6">
+          <h3 className="text-xl font-semibold">Existing Offers</h3>
+          {offers.map((offer) => (
+            <Card key={offer.id} className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="font-semibold">{offer.name}</h4>
+                    <Switch
+                      checked={offer.active}
+                      onCheckedChange={() => toggleActive(offer)}
+                    />
                   </div>
-                ))}
-            </div>
-          </ScrollArea>
-          <p className="text-xs text-muted-foreground mt-4">
-            {selectedProducts.length === 0
-              ? "No products selected - offer will apply to all products"
-              : `${selectedProducts.length} product(s) selected`}
-          </p>
-        </Card>
-      </div>
-
-      {/* Existing Offers - This should probably be below the two-column layout, or in its own section */}
-      {/* Let's keep it below for now, as it's a separate concern from creating/editing */}
-      <div className="lg:col-span-2 space-y-3 mt-6"> {/* Make it span both columns */}
-        <h3 className="text-xl font-semibold">Existing Offers</h3>
-        {offers.map((offer) => (
-          <Card key={offer.id} className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h4 className="font-semibold">{offer.name}</h4>
-                  <Switch
-                    checked={offer.active}
-                    onCheckedChange={() => toggleActive(offer)}
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {offer.discount_type === 'percentage'
-                    ? `${offer.discount_value}% discount`
-                    : `${offer.discount_value}₾ discount`}
-                </p>
-                {(offer.min_items > 0 || offer.min_amount > 0 || offer.applicable_products?.length > 0) && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {offer.applicable_products?.length > 0 && (
-                      <span>{offer.applicable_products.length} product(s) • </span>
-                    )}
-                    {offer.min_items > 0 && `${offer.min_items} items min`}
-                    {offer.min_items > 0 && offer.min_amount > 0 && ' • '}
-                    {offer.min_amount > 0 && `${offer.min_amount}₾ min`}
+                  <p className="text-sm text-muted-foreground">
+                    {offer.discount_type === 'percentage'
+                      ? `${offer.discount_value}% discount`
+                      : `${offer.discount_value}₾ discount`}
                   </p>
-                )}
+                  {(offer.min_items > 0 || offer.min_amount > 0 || offer.applicable_products?.length > 0) && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {offer.applicable_products?.length > 0 && (
+                        <span>{offer.applicable_products.length} product(s) • </span>
+                      )}
+                      {offer.min_items > 0 && `${offer.min_items} items min`}
+                      {offer.min_items > 0 && offer.min_amount > 0 && ' • '}
+                      {offer.min_amount > 0 && `${offer.min_amount}₾ min`}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(offer)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(offer.id)}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEdit(offer)}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(offer.id)}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default OffersManager;
