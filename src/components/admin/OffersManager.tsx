@@ -1,15 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Plus, Trash2, Edit, Gift } from 'lucide-react';
+import { Plus, Trash2, Edit, Gift, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Offer {
   id: string;
@@ -28,11 +27,19 @@ interface Product {
   name_fr: string;
   name_en: string;
   category_id: string;
+  sort_order: number;
+}
+
+interface Category {
+  id: string;
+  name_fr: string;
+  name_en: string;
+  sort_order: number;
 }
 
 const OffersManager = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -68,7 +75,7 @@ const OffersManager = () => {
   const loadCategories = async () => {
     const { data } = await supabase
       .from('categories')
-      .select('*')
+      .select('id, name_en, name_fr, sort_order')
       .eq('active', true)
       .order('sort_order');
 
@@ -78,19 +85,41 @@ const OffersManager = () => {
   const loadProducts = async () => {
     const { data } = await supabase
       .from('products')
-      .select('id, name_fr, name_en, category_id')
+      .select('id, name_fr, name_en, category_id, sort_order')
       .eq('active', true)
-      .order('name_fr');
+      .order('sort_order');
 
     setProducts(data || []);
   };
+
+  const groupedProducts = useMemo(() => {
+    const groups: { [key: string]: { name: string; sortOrder: number; products: Product[] } } = {};
+    
+    categories.forEach(cat => {
+      groups[cat.id] = { name: cat.name_en || cat.name_fr, sortOrder: cat.sort_order || 0, products: [] };
+    });
+    
+    products.forEach(product => {
+      const categoryId = product.category_id;
+      if (categoryId && groups[categoryId]) {
+        groups[categoryId].products.push(product);
+      }
+    });
+    
+    // Sort products within each group
+    Object.values(groups).forEach(group => {
+      group.products.sort((a, b) => a.sort_order - b.sort_order);
+    });
+    
+    return groups;
+  }, [products, categories]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const offerData = {
       ...formData,
-      applicable_categories: [],
+      applicable_categories: [], // Not using categories for now
       applicable_products: selectedProducts,
     };
 
@@ -178,6 +207,10 @@ const OffersManager = () => {
     return product.name_en || product.name_fr;
   };
 
+  const getCategoryName = (category: Category) => {
+    return category.name_en || category.name_fr;
+  };
+
   const toggleActive = async (offer: Offer) => {
     const { error } = await supabase
       .from('offers')
@@ -223,155 +256,171 @@ const OffersManager = () => {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="percentage">Percentage</SelectItem>
-                  <SelectItem value="fixed">Fixed Amount</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="discount_value">
-                Value {formData.discount_type === 'percentage' ? '(%)' : '(₾)'}
-              </Label>
-              <Input
-                id="discount_value"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.discount_value}
-                onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) })}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="min_items">Minimum Items</Label>
-              <Input
-                id="min_items"
-                type="number"
-                min="0"
-                value={formData.min_items}
-                onChange={(e) => setFormData({ ...formData, min_items: parseInt(e.target.value) })}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="min_amount">Minimum Amount (₾)</Label>
-              <Input
-                id="min_amount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.min_amount}
-                onChange={(e) => setFormData({ ...formData, min_amount: parseFloat(e.target.value) })}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={formData.active}
-              onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-            />
-            <Label>Active Offer</Label>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Applicable Products</Label>
-            <ScrollArea className="h-48 border rounded-lg p-3">
-              <div className="space-y-2">
-                {products.map((product) => (
-                  <div key={product.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`product-${product.id}`}
-                      checked={selectedProducts.includes(product.id)}
-                      onCheckedChange={() => toggleProductSelection(product.id)}
-                    />
-                    <Label
-                      htmlFor={`product-${product.id}`}
-                      className="text-sm cursor-pointer flex-1"
-                    >
-                      {getProductName(product)}
-                    </Label>
-                  </div>
-                ))}
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed">Fixed Amount</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </ScrollArea>
-            <p className="text-xs text-muted-foreground">
-              {selectedProducts.length === 0
-                ? "No products selected - offer will apply to all products"
-                : `${selectedProducts.length} product(s) selected`}
-            </p>
-          </div>
 
-          <div className="flex gap-2">
-            <Button type="submit" className="flex-1">
-              <Plus className="w-4 h-4 mr-2" />
-              {editingOffer ? 'Update' : 'Create'}
-            </Button>
-            {editingOffer && (
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>
-            )}
-          </div>
-        </form>
-      </Card>
+              <div>
+                <Label htmlFor="discount_value">
+                  Value {formData.discount_type === 'percentage' ? '(%)' : '(₾)'}
+                </Label>
+                <Input
+                  id="discount_value"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.discount_value}
+                  onChange={(e) => setFormData({ ...formData, discount_value: parseFloat(e.target.value) })}
+                  required
+                />
+              </div>
+            </div>
 
-      <div className="space-y-3">
-        <h3 className="text-xl font-semibold">Existing Offers</h3>
-        {offers.map((offer) => (
-          <Card key={offer.id} className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h4 className="font-semibold">{offer.name}</h4>
-                  <Switch
-                    checked={offer.active}
-                    onCheckedChange={() => toggleActive(offer)}
-                  />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="min_items">Minimum Items</Label>
+                <Input
+                  id="min_items"
+                  type="number"
+                  min="0"
+                  value={formData.min_items}
+                  onChange={(e) => setFormData({ ...formData, min_items: parseInt(e.target.value) })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="min_amount">Minimum Amount (₾)</Label>
+                <Input
+                  id="min_amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.min_amount}
+                  onChange={(e) => setFormData({ ...formData, min_amount: parseFloat(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.active}
+                onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+              />
+              <Label>Active Offer</Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Applicable Products</Label>
+              {/* Removed ScrollArea */}
+              <div className="border rounded-lg p-3">
+                <div className="space-y-4">
+                  {Object.entries(groupedProducts)
+                    .filter(([, group]) => group.products.length > 0)
+                    .sort((a, b) => a[1].sortOrder - b[1].sortOrder)
+                    .map(([categoryId, group]) => (
+                      <div key={categoryId} className="space-y-2">
+                        <h4 className="font-semibold text-sm border-b pb-1 text-primary">
+                          {group.name}
+                          <span className="text-xs font-normal text-muted-foreground ml-2">
+                            ({group.products.length} products)
+                          </span>
+                        </h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {group.products.map((product) => (
+                            <Button
+                              key={product.id}
+                              type="button"
+                              variant={selectedProducts.includes(product.id) ? 'default' : 'outline'}
+                              onClick={() => toggleProductSelection(product.id)}
+                              className={cn(
+                                "flex items-center justify-between h-auto py-2 px-3 text-sm text-left",
+                                selectedProducts.includes(product.id) ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted/50"
+                              )}
+                            >
+                              <span className="flex-1 truncate">{getProductName(product)}</span>
+                              {selectedProducts.includes(product.id) && <Check className="ml-2 h-4 w-4" />}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {offer.discount_type === 'percentage'
-                    ? `${offer.discount_value}% discount`
-                    : `${offer.discount_value}₾ discount`}
-                </p>
-                {(offer.min_items > 0 || offer.min_amount > 0 || offer.applicable_products?.length > 0) && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {offer.applicable_products?.length > 0 && (
-                      <span>{offer.applicable_products.length} product(s) • </span>
-                    )}
-                    {offer.min_items > 0 && `${offer.min_items} items min`}
-                    {offer.min_items > 0 && offer.min_amount > 0 && ' • '}
-                    {offer.min_amount > 0 && `${offer.min_amount}₾ min`}
-                  </p>
-                )}
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEdit(offer)}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(offer.id)}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                {selectedProducts.length === 0
+                  ? "No products selected - offer will apply to all products"
+                  : `${selectedProducts.length} product(s) selected`}
+              </p>
             </div>
-          </Card>
-        ))}
+
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">
+                <Plus className="w-4 h-4 mr-2" />
+                {editingOffer ? 'Update' : 'Create'}
+              </Button>
+              {editingOffer && (
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </form>
+        </Card>
+
+        <div className="space-y-3 mt-6">
+          <h3 className="text-xl font-semibold">Existing Offers</h3>
+          {offers.map((offer) => (
+            <Card key={offer.id} className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="font-semibold">{offer.name}</h4>
+                    <Switch
+                      checked={offer.active}
+                      onCheckedChange={() => toggleActive(offer)}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {offer.discount_type === 'percentage'
+                      ? `${offer.discount_value}% discount`
+                      : `${offer.discount_value}₾ discount`}
+                  </p>
+                  {(offer.min_items > 0 || offer.min_amount > 0 || offer.applicable_products?.length > 0) && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {offer.applicable_products?.length > 0 && (
+                        <span>{offer.applicable_products.length} product(s) • </span>
+                      )}
+                      {offer.min_items > 0 && `${offer.min_items} items min`}
+                      {offer.min_items > 0 && offer.min_amount > 0 && ' • '}
+                      {offer.min_amount > 0 && `${offer.min_amount}₾ min`}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(offer)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(offer.id)}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default OffersManager;
