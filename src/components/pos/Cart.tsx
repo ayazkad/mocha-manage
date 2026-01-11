@@ -658,7 +658,7 @@ const Cart = ({ onClose }: CartProps) => {
         processing={processing}
         isRefund={isModifyingOrder && getPriceDifference() < 0}
       />
-      <AddCustomerDialog open={showAddCustomer} onOpenChange={setShowAddCustomer} />
+      <AddCustomerDialog open={showAddCustomer} onClose={() => setShowAddCustomer(false)} />
       <UnifiedScanner open={showScanner} onClose={() => setShowScanner(false)} />
       
       <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
