@@ -101,14 +101,14 @@ const SwipeableListItem = ({
     const positionsToMove = getTargetOffset();
     const targetIndex = draggingIndex + positionsToMove;
 
-    // If dragging item is above this one and moving down
-    if (draggingIndex < index && targetIndex >= index) {
-      return -itemHeight; // Move up
+    // Dragging DOWN: items between draggingIndex and targetIndex move UP
+    if (positionsToMove > 0 && index > draggingIndex && index <= targetIndex) {
+      return -itemHeight;
     }
 
-    // If dragging item is below this one and moving up
-    if (draggingIndex > index && targetIndex <= index) {
-      return itemHeight; // Move down
+    // Dragging UP: items between targetIndex and draggingIndex move DOWN
+    if (positionsToMove < 0 && index < draggingIndex && index >= targetIndex) {
+      return itemHeight;
     }
 
     return 0;
