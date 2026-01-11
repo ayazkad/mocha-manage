@@ -815,6 +815,13 @@ const Cart = ({ onClose }: CartProps) => {
                             .join(', ')}
                         </p>
                       )}
+                      
+                      {/* Display product notes */}
+                      {item.notes && (
+                        <p className="text-[10px] text-muted-foreground italic mb-1">
+                          Note: {item.notes}
+                        </p>
+                      )}
 
                       <div className="flex items-center justify-between">
                         <div className="flex flex-col">
@@ -917,7 +924,7 @@ const Cart = ({ onClose }: CartProps) => {
                 getPriceDifference() > 0 
                   ? 'bg-red-500/10 border border-red-500/50' 
                   : getPriceDifference() < 0 
-                    ? 'bg-green-500/10 border border-green-500/50'
+                        ? 'bg-green-500/10 border border-green-500/50'
                     : 'bg-muted border border-border'
               }`}>
                 <div className="flex justify-between items-center">
