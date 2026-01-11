@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePOS } from '@/contexts/POSContext';
 import ProductCard from './ProductCard';
@@ -36,6 +36,10 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
 
   const isAdmin = currentEmployee?.role === 'admin';
 
+  // Nouveau state pour bloquer temporairement l'ouverture d'un dialogue
+  const [isDialogOpeningBlocked, setIsDialogOpeningBlocked] = useState(false);
+  const blockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     if (categoryId) {
       loadProducts();
@@ -60,22 +64,35 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
     return product.name_en || product.name_fr;
   };
 
+  // Nouvelle fonction pour gérer la fermeture du dialogue d'options
+  const handleProductOptionsDialogClose = () => {
+    setSelectedProduct(null);
+    // Bloquer l'ouverture pour une courte période pour éviter une réouverture immédiate
+    setIsDialogOpeningBlocked(true);
+    if (blockTimeoutRef.current) {
+      clearTimeout(blockTimeoutRef.current);
+    }
+    blockTimeoutRef.current = setTimeout(() => {
+      setIsDialogOpeningBlocked(false);
+    }, 100); // Délai de 100ms, ajustez si nécessaire
+  };
+
   const handleProductClick = (product: Product) => {
-    // Si le produit a des options, ouvrir le dialogue
+    // Si le produit cliqué a des options
     if (product.has_size_options || product.has_milk_options || product.has_temperature_options) {
-      // Si un dialogue est déjà ouvert pour un *produit différent*, le fermer d'abord
-      if (selectedProduct && selectedProduct.id !== product.id) {
-        setSelectedProduct(null); // Fermer le dialogue actuel
-        // Utiliser un timeout pour permettre au dialogue de se fermer visuellement avant d'en ouvrir un nouveau
-        setTimeout(() => {
-          setSelectedProduct(product); // Ouvrir le nouveau dialogue
-        }, 200); // Délai de 200ms, ajustez si nécessaire
-      } else if (selectedProduct && selectedProduct.id === product.id) {
-        // Cliquer sur le même produit à nouveau devrait fermer le dialogue
-        setSelectedProduct(null);
-      } else {
-        // Aucun dialogue ouvert, ou c'est le premier clic sur ce produit
-        setSelectedProduct(product);
+      // Si l'ouverture du dialogue est bloquée, ne rien faire pour les produits avec options.
+      // Cela gère le comportement "cliquer en dehors pour fermer, puis recliquer pour ouvrir un nouveau".
+      if (isDialogOpeningBlocked) {
+        return; 
+      }
+
+      // Cas 1: Cliquer sur le *même* produit qui est actuellement sélectionné
+      if (selectedProduct && selectedProduct.id === product.id) {
+        handleProductOptionsDialogClose(); // Fermer le dialogue
+      } 
+      // Cas 2: Cliquer sur un *produit différent* (ou aucun produit n'est sélectionné)
+      else {
+        setSelectedProduct(product); // Ouvrir le dialogue pour le nouveau produit
       }
     } else {
       // Le produit n'a pas d'options, l'ajouter directement au panier
@@ -86,10 +103,11 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
         basePrice: product.base_price,
         image_url: product.image_url,
       });
-      // Si un dialogue d'options de produit est ouvert, le fermer lors de l'ajout direct au panier
+      // Toujours fermer tout dialogue d'options ouvert lors de l'ajout d'un produit sans option
       if (selectedProduct) {
-        setSelectedProduct(null);
+        handleProductOptionsDialogClose();
       }
+      // Pas besoin de bloquer ici, car nous n'ouvrons pas un nouveau dialogue.
     }
   };
 
@@ -98,7 +116,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
       setEditingProduct(product);
       // Si un dialogue d'options de produit est ouvert, le fermer lors de l'ouverture du dialogue d'édition rapide
       if (selectedProduct) {
-        setSelectedProduct(null);
+        handleProductOptionsDialogClose();
       }
     }
   };
@@ -122,7 +140,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
         <ProductOptionsDialog
           product={selectedProduct}
           open={!!selectedProduct}
-          onClose={() => setSelectedProduct(null)}
+          onClose={handleProductOptionsDialogClose} // Utiliser le nouveau gestionnaire de fermeture
           getProductName={getProductName}
         />
       )}
