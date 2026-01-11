@@ -33,9 +33,8 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { addToCart, currentEmployee } = usePOS();
-
   const isAdmin = currentEmployee?.role === 'admin';
-
+  
   // Nouveau state pour bloquer temporairement l'ouverture d'un dialogue
   const [isDialogOpeningBlocked, setIsDialogOpeningBlocked] = useState(false);
   const blockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -83,13 +82,13 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
       // Si l'ouverture du dialogue est bloquée, ne rien faire pour les produits avec options.
       // Cela gère le comportement "cliquer en dehors pour fermer, puis recliquer pour ouvrir un nouveau".
       if (isDialogOpeningBlocked) {
-        return; 
+        return;
       }
-
+      
       // Cas 1: Cliquer sur le *même* produit qui est actuellement sélectionné
       if (selectedProduct && selectedProduct.id === product.id) {
         handleProductOptionsDialogClose(); // Fermer le dialogue
-      } 
+      }
       // Cas 2: Cliquer sur un *produit différent* (ou aucun produit n'est sélectionné)
       else {
         setSelectedProduct(product); // Ouvrir le dialogue pour le nouveau produit
@@ -103,6 +102,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
         basePrice: product.base_price,
         image_url: product.image_url,
       });
+      
       // Toujours fermer tout dialogue d'options ouvert lors de l'ajout d'un produit sans option
       if (selectedProduct) {
         handleProductOptionsDialogClose();
@@ -135,7 +135,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
           />
         ))}
       </div>
-
+      
       {selectedProduct && (
         <ProductOptionsDialog
           product={selectedProduct}
@@ -144,7 +144,7 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
           getProductName={getProductName}
         />
       )}
-
+      
       {editingProduct && (
         <QuickEditProductDialog
           product={editingProduct}

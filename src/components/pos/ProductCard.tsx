@@ -31,7 +31,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
     setIsLongPress(false);
     
     if (!isAdmin || !onLongPress) return;
-
+    
     longPressTimer.current = setTimeout(() => {
       setIsLongPress(true);
       onLongPress();
@@ -44,16 +44,16 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchStartPos.current) return;
-
+    
     const touch = e.touches[0];
     const deltaX = Math.abs(touch.clientX - touchStartPos.current.x);
     const deltaY = Math.abs(touch.clientY - touchStartPos.current.y);
-
+    
     // Mark as moved if user moves finger more than 10px
     if (deltaX > 10 || deltaY > 10) {
       hasMovedRef.current = true;
     }
-
+    
     // Cancel long press if user moves finger more than 30px (scroll detection)
     if (deltaX > 30 || deltaY > 30) {
       if (longPressTimer.current) {
@@ -61,14 +61,19 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
         longPressTimer.current = null;
       }
     }
+    
+    // Prevent scrolling when moving horizontally (swipe gesture)
+    if (deltaX > 10 && isAdmin && onLongPress) {
+      e.preventDefault();
+    }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-
+    
     // Only trigger onClick if user didn't move (not a scroll) and not a long press
     if (!isLongPress && !hasMovedRef.current) {
       onClick();
@@ -100,7 +105,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-
+    
     if (!isLongPress) {
       onClick();
     }
@@ -130,14 +135,16 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
         }
       }}
       className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-95 overflow-hidden group touch-manipulation rounded-3xl relative aspect-[3/4] min-h-[140px] md:min-h-[180px]"
+      style={{ touchAction: 'manipulation' }} // Improve touch response
     >
       {/* Background image or gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/40">
         {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={getProductName(product)}
+          <img 
+            src={product.image_url} 
+            alt={getProductName(product)} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            draggable={false} // Prevent image dragging
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-400 to-amber-600">
