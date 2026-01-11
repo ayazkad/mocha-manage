@@ -134,7 +134,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
           longPressTimer.current = null;
         }
       }}
-      className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-95 overflow-hidden group touch-manipulation rounded-3xl relative aspect-[3/4] min-h-[140px] md:min-h-[180px]"
+      className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-95 overflow-hidden group touch-manipulation rounded-2xl sm:rounded-3xl relative aspect-[3/4] min-h-[120px] sm:min-h-[140px] md:min-h-[180px]"
       style={{ touchAction: 'manipulation' }} // Improve touch response
     >
       {/* Background image or gradient */}
@@ -148,7 +148,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-400 to-amber-600">
-            <Coffee className="w-16 h-16 md:w-20 md:h-20 text-white/60 group-hover:scale-110 transition-transform duration-500" />
+            <Coffee className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-white/60 group-hover:scale-110 transition-transform duration-500" />
           </div>
         )}
       </div>
@@ -157,12 +157,12 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
       
       {/* Content overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4">
+      <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 md:p-4">
         <div className="flex flex-col gap-1">
-          <h3 className="font-bold text-xs md:text-base text-white leading-tight">
+          <h3 className="font-bold text-xs sm:text-sm md:text-base text-white leading-tight">
             {getProductName(product)}
           </h3>
-          <span className="bg-foreground/80 text-background px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-sm font-semibold w-fit backdrop-blur-sm">
+          <span className="bg-foreground/80 text-background px-2 py-1 sm:px-2.5 sm:py-1.5 md:px-3 md:py-1.5 rounded-full text-[10px] sm:text-xs md:text-sm font-semibold w-fit backdrop-blur-sm">
             {product.base_price.toFixed(2)} ₾
           </span>
         </div>

@@ -32,7 +32,6 @@ const POS = () => {
       navigate('/');
       return;
     }
-
     loadCategories();
   }, [currentEmployee, navigate]);
 
@@ -42,7 +41,7 @@ const POS = () => {
       .select('*')
       .eq('active', true)
       .order('sort_order');
-
+      
     if (data && !error) {
       setCategories(data);
       if (data.length > 0 && !selectedCategory) {
@@ -60,28 +59,26 @@ const POS = () => {
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       <Header />
-      
       <div className="flex-1 flex overflow-hidden">
         {/* Main content area */}
         <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-background via-background to-secondary/5">
-          <CategoryTabs
-            categories={categories}
-            selectedCategory={selectedCategory}
+          <CategoryTabs 
+            categories={categories} 
+            selectedCategory={selectedCategory} 
             onSelectCategory={setSelectedCategory}
             getCategoryName={getCategoryName}
           />
-          
           <div className="flex-1 overflow-y-auto p-3 md:p-6 pb-24 md:pb-6">
             <ProductGrid categoryId={selectedCategory} />
           </div>
         </div>
-
+        
         {/* Desktop Cart - Hidden on mobile/tablet */}
         <div className="hidden lg:block overflow-hidden">
           <Cart />
         </div>
       </div>
-
+      
       {/* Mobile/Tablet Cart Button - Fixed at bottom */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-card/95 backdrop-blur-md border-t border-border/50 z-50">
         <Sheet open={cartOpen} onOpenChange={setCartOpen}>
