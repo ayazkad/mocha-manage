@@ -72,7 +72,7 @@ const UnifiedStatistics = () => {
         const employeeName = order.employees?.name || 'Unknown';
         
         if (!employeeMap.has(employeeId)) {
-          statsMap.set(employeeId, {
+          employeeMap.set(employeeId, {
             name: employeeName,
             totalSales: 0,
             orderCount: 0,
@@ -322,33 +322,6 @@ const UnifiedStatistics = () => {
           </Card>
         </div>
 
-        {/* Sales Trend Chart */}
-        {salesData?.dailyData && salesData.dailyData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Évolution des ventes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={salesData.dailyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="ventes" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    name="Ventes (₾)"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Sales by Employee */}
         {salesData?.employeeStats && salesData.employeeStats.length > 0 && (
           <Card>
@@ -374,66 +347,6 @@ const UnifiedStatistics = () => {
                       <TableCell className="text-right">
                         {(employee.totalSales / employee.orderCount).toFixed(2)} ₾
                       </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Top 3 Most Sold Products */}
-        {productSalesStats?.top3 && productSalesStats.top3.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-green-600">🔥 Top 3 produits les plus vendus</CardTitle>
-              <CardDescription>Pour la période sélectionnée</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Produit</TableHead>
-                    <TableHead className="text-right">Quantité</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {productSalesStats.top3.map((product, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">#{index + 1}</TableCell>
-                      <TableCell>{product.name}</TableCell>
-                      <TableCell className="text-right font-semibold text-green-600">{product.quantity}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Top 3 Least Sold Products */}
-        {productSalesStats?.least3 && productSalesStats.least3.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-orange-600">📉 Top 3 produits les moins vendus</CardTitle>
-              <CardDescription>Pour la période sélectionnée</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Produit</TableHead>
-                    <TableHead className="text-right">Quantité</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {productSalesStats.least3.map((product, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">#{index + 1}</TableCell>
-                      <TableCell>{product.name}</TableCell>
-                      <TableCell className="text-right font-semibold text-orange-600">{product.quantity}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -537,6 +450,67 @@ const UnifiedStatistics = () => {
                   </Card>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Top 3 Most Sold and Least Sold Products (Moved here) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {productSalesStats?.top3 && productSalesStats.top3.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-green-600">🔥 Top 3 produits les plus vendus</CardTitle>
+              <CardDescription>Pour la période sélectionnée</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Produit</TableHead>
+                    <TableHead className="text-right">Quantité</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {productSalesStats.top3.map((product, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">#{index + 1}</TableCell>
+                      <TableCell>{product.name}</TableCell>
+                      <TableCell className="text-right font-semibold text-green-600">{product.quantity}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+
+        {productSalesStats?.least3 && productSalesStats.least3.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-orange-600">📉 Top 3 produits les moins vendus</CardTitle>
+              <CardDescription>Pour la période sélectionnée</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Produit</TableHead>
+                    <TableHead className="text-right">Quantité</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {productSalesStats.least3.map((product, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">#{index + 1}</TableCell>
+                      <TableCell>{product.name}</TableCell>
+                      <TableCell className="text-right font-semibold text-orange-600">{product.quantity}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         )}
