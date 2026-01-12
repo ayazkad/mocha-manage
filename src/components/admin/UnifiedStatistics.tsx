@@ -322,6 +322,33 @@ const UnifiedStatistics = () => {
           </Card>
         </div>
 
+        {/* Sales Trend Chart - RESTORED */}
+        {salesData?.dailyData && salesData.dailyData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Évolution des ventes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={salesData.dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="ventes" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    name="Ventes (₾)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Sales by Employee */}
         {salesData?.employeeStats && salesData.employeeStats.length > 0 && (
           <Card>
