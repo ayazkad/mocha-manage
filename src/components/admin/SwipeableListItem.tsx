@@ -139,7 +139,7 @@ const SwipeableListItem = ({
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
-    }, 150); // Faster activation
+    }, 300); // Increased from 150ms to 300ms for better UX
   }, [index, setDragging]);
 
   const handleMove = useCallback((clientY: number) => {
@@ -251,7 +251,8 @@ const SwipeableListItem = ({
           : `translateY(${displacement}px)`,
         transition: isBeingDragged ? 'none' : 'transform 0.2s ease-out',
         boxShadow: isBeingDragged ? '0 8px 25px rgba(0,0,0,0.15)' : 'none',
-        touchAction: isDragging ? 'none' : 'auto', // Add this line
+        opacity: isBeingDragged ? 0.8 : 1, // Added opacity for the dragged item
+        touchAction: isDragging ? 'none' : 'auto',
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
