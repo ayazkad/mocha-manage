@@ -72,7 +72,7 @@ const UnifiedStatistics = () => {
         const employeeName = order.employees?.name || 'Unknown';
         
         if (!employeeMap.has(employeeId)) {
-          employeeMap.set(employeeId, {
+          statsMap.set(employeeId, {
             name: employeeName,
             totalSales: 0,
             orderCount: 0,
@@ -165,11 +165,53 @@ const UnifiedStatistics = () => {
     enabled: !!dateRange.from && !!dateRange.to,
   });
 
-  if (loadingSales || loadingLosses) {
+  // Top/Least sold products for the selected period
+  const { data: productSalesStats, isLoading: loadingProductSales } = useQuery({
+    queryKey: ['product-sales-period', dateRange.from, dateRange.to],
+    queryFn: async () => {
+      if (!dateRange.from || !dateRange.to) return null;
+
+      const { data, error } = await supabase
+        .from('order_items')
+        .select(`
+          product_id,
+          product_name,
+          quantity,
+          orders!inner (
+            created_at
+          )
+        `)
+        .gte('orders.created_at', format(dateRange.from, 'yyyy-MM-dd'))
+        .lte('orders.created_at', format(dateRange.to, 'yyyy-MM-dd') + 'T23:59:59');
+
+      if (error) throw error;
+
+      const productMap = new Map<string, { name: string; quantity: number }>();
+
+      data.forEach((item: any) => {
+        const key = item.product_id || item.product_name; // Use product_id if available, fallback to name
+        if (!productMap.has(key)) {
+          productMap.set(key, { name: item.product_name, quantity: 0 });
+        }
+        productMap.get(key)!.quantity += item.quantity;
+      });
+
+      const sortedProducts = Array.from(productMap.values()).sort((a, b) => b.quantity - a.quantity);
+
+      return {
+        top3: sortedProducts.slice(0, 3),
+        least3: sortedProducts.slice(-3).reverse(), // Reverse to get least sold in ascending order
+      };
+    },
+    enabled: !!dateRange.from && !!dateRange.to,
+  });
+
+  if (loadingSales || loadingLosses || loadingProductSales) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -210,9 +252,28 @@ const UnifiedStatistics = () => {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
-                mode="single"
-                selected={dateRange.from}
-                onSelect={handleDateSelect}
+                mode="range" // Changed to range mode for better UX with date ranges
+                selected={dateRange}
+                onSelect={(newRange) => {
+                  if (newRange?.from) {
+                    if (newRange.to) {
+                      setDateRange(newRange);
+                      setLastClickedDate(undefined); // Reset last clicked date for range
+                    } else {
+                      // If only 'from' is selected, allow single day selection on double click
+                      if (lastClickedDate && format(lastClickedDate, 'yyyy-MM-dd') === format(newRange.from, 'yyyy-MM-dd')) {
+                        setDateRange({ from: newRange.from, to: newRange.from });
+                        setLastClickedDate(undefined);
+                      } else {
+                        setDateRange(newRange);
+                        setLastClickedDate(newRange.from);
+                      }
+                    }
+                  } else {
+                    setDateRange({ from: undefined, to: undefined });
+                    setLastClickedDate(undefined);
+                  }
+                }}
                 initialFocus
                 className="pointer-events-auto"
                 locale={fr}
@@ -313,6 +374,66 @@ const UnifiedStatistics = () => {
                       <TableCell className="text-right">
                         {(employee.totalSales / employee.orderCount).toFixed(2)} ₾
                       </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Top 3 Most Sold Products */}
+        {productSalesStats?.top3 && productSalesStats.top3.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-green-600">🔥 Top 3 produits les plus vendus</CardTitle>
+              <CardDescription>Pour la période sélectionnée</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Produit</TableHead>
+                    <TableHead className="text-right">Quantité</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {productSalesStats.top3.map((product, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">#{index + 1}</TableCell>
+                      <TableCell>{product.name}</TableCell>
+                      <TableCell className="text-right font-semibold text-green-600">{product.quantity}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Top 3 Least Sold Products */}
+        {productSalesStats?.least3 && productSalesStats.least3.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-orange-600">📉 Top 3 produits les moins vendus</CardTitle>
+              <CardDescription>Pour la période sélectionnée</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Produit</TableHead>
+                    <TableHead className="text-right">Quantité</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {productSalesStats.least3.map((product, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">#{index + 1}</TableCell>
+                      <TableCell>{product.name}</TableCell>
+                      <TableCell className="text-right font-semibold text-orange-600">{product.quantity}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
