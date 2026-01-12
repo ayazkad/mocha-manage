@@ -14,24 +14,18 @@ import { Trash2, Edit, Eye, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import PrintReceiptDialog from '@/components/pos/PrintReceiptDialog';
+import { usePOS } from '@/contexts/POSContext'; // Import usePOS
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const OrdersManager = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { loadOrderForModification, cart } = usePOS(); // Get loadOrderForModification from context
+  const navigate = useNavigate(); // Get navigate hook
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
-  const [editForm, setEditForm] = useState({
-    status: '',
-    subtotal: '',
-    tax_amount: '',
-    discount_amount: '',
-    tip_amount: '',
-    total: '',
-    notes: '',
-  });
 
   // Fetch orders with employee and items
   const { data: orders, isLoading } = useQuery({
@@ -94,46 +88,40 @@ const OrdersManager = () => {
     },
   });
 
-  // Update order mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ orderId, updates }: { orderId: string; updates: any }) => {
-      const { error } = await supabase
-        .from('orders')
-        .update(updates)
-        .eq('id', orderId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      setIsEditDialogOpen(false);
-      toast({
-        title: 'Succès',
-        description: 'Commande mise à jour',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour la commande',
-        variant: 'destructive',
-      });
-      console.error(error);
-    },
-  });
-
   const handleEdit = (order: any) => {
-    setSelectedOrder(order);
-    setEditForm({
-      status: order.status,
-      subtotal: order.subtotal.toString(),
-      tax_amount: order.tax_amount?.toString() || '0',
-      discount_amount: order.discount_amount?.toString() || '0',
-      tip_amount: order.tip_amount?.toString() || '0',
-      total: order.total.toString(),
-      notes: order.notes || '',
+    if (cart.length > 0) {
+      toast.error('Videz d\'abord le panier avant de charger une commande pour modification.');
+      return;
+    }
+
+    const cartItems = order.order_items.map((item: any) => {
+      const options = item.selected_options 
+        ? (typeof item.selected_options === 'string' ? JSON.parse(item.selected_options) : item.selected_options) 
+        : null;
+      
+      return {
+        productId: item.product_id || '',
+        productName: item.product_name,
+        quantity: item.quantity,
+        basePrice: item.unit_price - 
+          (options?.size?.priceModifier || 0) - 
+          (options?.milk?.priceModifier || 0),
+        selectedSize: options?.size,
+        selectedMilk: options?.milk,
+        notes: item.notes || undefined,
+      };
     });
-    setIsEditDialogOpen(true);
+
+    const originalOrderData = {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      originalTotal: Number(order.total),
+      items: cartItems,
+    };
+    
+    loadOrderForModification(originalOrderData, cartItems);
+    toast.success(`Ticket #${order.order_number} chargé dans le panier pour modification.`);
+    navigate('/pos'); // Navigate to POS page
   };
 
   const handleView = (order: any) => {
@@ -169,23 +157,6 @@ const OrdersManager = () => {
     };
     setReceiptData(receipt);
     setIsPrintDialogOpen(true);
-  };
-
-  const handleUpdate = () => {
-    if (!selectedOrder) return;
-
-    updateMutation.mutate({
-      orderId: selectedOrder.id,
-      updates: {
-        status: editForm.status,
-        subtotal: parseFloat(editForm.subtotal),
-        tax_amount: parseFloat(editForm.tax_amount),
-        discount_amount: parseFloat(editForm.discount_amount),
-        tip_amount: parseFloat(editForm.tip_amount),
-        total: parseFloat(editForm.total),
-        notes: editForm.notes,
-      },
-    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -252,6 +223,7 @@ const OrdersManager = () => {
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(order)}
+                      title="Modifier la commande dans le TPV"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -388,92 +360,6 @@ const OrdersManager = () => {
                 )}
               </div>
             )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-h-[90vh] flex flex-col">
-            <DialogHeader className="shrink-0">
-              <DialogTitle>Modifier le ticket {selectedOrder?.order_number}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 overflow-y-auto flex-1 pr-2">
-              <div>
-                <Label>Statut</Label>
-                <Select value={editForm.status} onValueChange={(value) => setEditForm({ ...editForm, status: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">En attente</SelectItem>
-                    <SelectItem value="completed">Complété</SelectItem>
-                    <SelectItem value="cancelled">Annulé</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Sous-total</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={editForm.subtotal}
-                  onChange={(e) => setEditForm({ ...editForm, subtotal: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label>TVA</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={editForm.tax_amount}
-                  onChange={(e) => setEditForm({ ...editForm, tax_amount: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label>Remise</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={editForm.discount_amount}
-                  onChange={(e) => setEditForm({ ...editForm, discount_amount: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label>Pourboire</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={editForm.tip_amount}
-                  onChange={(e) => setEditForm({ ...editForm, tip_amount: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label>Total</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={editForm.total}
-                  onChange={(e) => setEditForm({ ...editForm, total: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label>Notes</Label>
-                <Input
-                  value={editForm.notes}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                />
-              </div>
-
-              <Button onClick={handleUpdate} className="w-full">
-                Enregistrer les modifications
-              </Button>
-            </div>
           </DialogContent>
         </Dialog>
 
