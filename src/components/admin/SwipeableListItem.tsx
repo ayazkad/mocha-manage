@@ -204,10 +204,11 @@ const SwipeableListItem = ({
   }, [handleStart]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    handleMove(e.touches[0].clientY);
-    if (isDragging) {
+    // Empêche le défilement par défaut si un glisser-déposer est en cours ou en attente de déclenchement
+    if (longPressTimer.current || isDragging) {
       e.preventDefault();
     }
+    handleMove(e.touches[0].clientY);
   }, [handleMove, isDragging]);
 
   const handleTouchEnd = useCallback(() => {
