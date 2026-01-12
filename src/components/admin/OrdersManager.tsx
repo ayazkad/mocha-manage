@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // Changed from '@/hooks/use-toast'
 import { Trash2, Edit, Eye, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -18,7 +18,6 @@ import { usePOS } from '@/contexts/POSContext'; // Import usePOS
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const OrdersManager = () => {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { loadOrderForModification, cart } = usePOS(); // Get loadOrderForModification from context
   const navigate = useNavigate(); // Get navigate hook
@@ -73,17 +72,10 @@ const OrdersManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast({
-        title: 'Succès',
-        description: 'Commande supprimée',
-      });
+      toast.success('Commande supprimée'); // Changed toast call
     },
     onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de supprimer la commande',
-        variant: 'destructive',
-      });
+      toast.error('Impossible de supprimer la commande'); // Changed toast call
       console.error(error);
     },
   });

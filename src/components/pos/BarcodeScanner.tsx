@@ -7,7 +7,7 @@ import { Barcode, Camera, Loader2 } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { supabase } from '@/integrations/supabase/client';
 import { usePOS } from '@/contexts/POSContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // Changed from '@/hooks/use-toast'
 import { nativeScannerService } from '@/lib/nativeScannerService';
 
 interface BarcodeScannerProps {
@@ -21,7 +21,6 @@ const BarcodeScanner = ({ externalOpen, onExternalClose }: BarcodeScannerProps) 
   const [scanning, setScanning] = useState(false);
   const [nativeScanning, setNativeScanning] = useState(false);
   const { addToCart } = usePOS();
-  const { toast } = useToast();
   const isNative = nativeScannerService.isNativePlatform();
 
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -57,11 +56,7 @@ const BarcodeScanner = ({ externalOpen, onExternalClose }: BarcodeScannerProps) 
       setBarcode(result.content);
       await handleScanWithCode(result.content);
     } else if (result.error) {
-      toast({
-        title: 'Erreur',
-        description: result.error,
-        variant: 'destructive',
-      });
+      toast.error(result.error); // Changed toast call
     }
   };
 
@@ -85,11 +80,7 @@ const BarcodeScanner = ({ externalOpen, onExternalClose }: BarcodeScannerProps) 
       if (error) throw error;
 
       if (!product) {
-        toast({
-          title: 'Produit non trouvé',
-          description: `Aucun produit avec le code-barres ${code}`,
-          variant: 'destructive',
-        });
+        toast.error(`Aucun produit avec le code-barres ${code}`); // Changed toast call
         setBarcode('');
         return;
       }
@@ -104,19 +95,12 @@ const BarcodeScanner = ({ externalOpen, onExternalClose }: BarcodeScannerProps) 
         image_url: product.image_url,
       });
 
-      toast({
-        title: 'Produit ajouté',
-        description: `${productName} ajouté au panier`,
-      });
+      toast.success(`${productName} ajouté au panier`); // Changed toast call
 
       setBarcode('');
       setOpen(false);
     } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(error.message); // Changed toast call
       setBarcode('');
     }
   };
