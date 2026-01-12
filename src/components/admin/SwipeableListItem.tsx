@@ -1,16 +1,18 @@
-import { useState, useRef, useCallback, createContext, useContext } from 'react';
+import { useState, useRef, useCallback, createContext, useContext, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 // Context for communicating drag state between items
 interface SwipeContextValue {
   draggingIndex: number | null;
   dragOffset: number;
+  itemHeight: number; // Add itemHeight to context
   setDragging: (index: number | null, offset: number) => void;
 }
 
 const SwipeContext = createContext<SwipeContextValue>({
   draggingIndex: null,
   dragOffset: 0,
+  itemHeight: 72, // Default value, will be overridden
   setDragging: () => {},
 });
 
@@ -23,6 +25,18 @@ interface SwipeableListProps {
 export const SwipeableList = ({ children, className }: SwipeableListProps) => {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
+  const [measuredItemHeight, setMeasuredItemHeight] = useState(72); // State for dynamic height
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Measure height of the first child once
+  useEffect(() => {
+    if (listRef.current && listRef.current.firstElementChild) {
+      const height = listRef.current.firstElementChild.clientHeight; // Use clientHeight for content + padding
+      if (height > 0 && height !== measuredItemHeight) {
+        setMeasuredItemHeight(height);
+      }
+    }
+  }, [children, measuredItemHeight]); // Re-measure if children change
 
   const setDragging = useCallback((index: number | null, offset: number) => {
     setDraggingIndex(index);
@@ -30,8 +44,8 @@ export const SwipeableList = ({ children, className }: SwipeableListProps) => {
   }, []);
 
   return (
-    <SwipeContext.Provider value={{ draggingIndex, dragOffset, setDragging }}>
-      <div className={cn("space-y-2", className)}>
+    <SwipeContext.Provider value={{ draggingIndex, dragOffset, itemHeight: measuredItemHeight, setDragging }}>
+      <div ref={listRef} className={cn("space-y-2", className)}>
         {children}
       </div>
     </SwipeContext.Provider>
@@ -67,7 +81,7 @@ const SwipeableListItem = ({
   className,
   onClick,
 }: SwipeableListItemProps) => {
-  const { draggingIndex, dragOffset, setDragging } = useContext(SwipeContext);
+  const { draggingIndex, dragOffset, itemHeight, setDragging } = useContext(SwipeContext); // Use itemHeight from context
   const [localOffset, setLocalOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
@@ -75,7 +89,6 @@ const SwipeableListItem = ({
   const hasMoved = useRef(false);
   const itemRef = useRef<HTMLDivElement>(null);
 
-  const itemHeight = 72; // Approximate height of item
   const threshold = itemHeight / 2; // Move when past half an item
 
   const clampDelta = useCallback(
@@ -90,7 +103,7 @@ const SwipeableListItem = ({
 
   // Calculate how many positions the dragged item should move
   const getTargetOffset = useCallback(() => {
-    if (dragOffset === 0) return 0;
+    if (dragOffset === 0 || itemHeight === 0) return 0; // Avoid division by zero
     return clampDelta(Math.round(dragOffset / itemHeight));
   }, [dragOffset, itemHeight, clampDelta]);
 
