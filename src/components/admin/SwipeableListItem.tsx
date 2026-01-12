@@ -251,6 +251,7 @@ const SwipeableListItem = ({
           : `translateY(${displacement}px)`,
         transition: isBeingDragged ? 'none' : 'transform 0.2s ease-out',
         boxShadow: isBeingDragged ? '0 8px 25px rgba(0,0,0,0.15)' : 'none',
+        touchAction: isDragging ? 'none' : 'auto', // Add this line
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
