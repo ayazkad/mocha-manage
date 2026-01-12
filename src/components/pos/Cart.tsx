@@ -930,10 +930,10 @@ const Cart = ({ onClose }: CartProps) => {
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-medium">
                     {getPriceDifference() > 0 
-                      ? '💰 À encaisser' 
+                      ? '💰 To Collect' 
                       : getPriceDifference() < 0 
-                        ? '💵 À rendre'
-                        : '✓ Pas de différence'}
+                        ? '💵 To Refund'
+                        : '✓ No Difference'}
                   </span>
                   <span className={`text-sm font-bold ${
                     getPriceDifference() > 0 
