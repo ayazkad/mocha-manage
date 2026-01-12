@@ -235,6 +235,33 @@ const SwipeableListItem = ({
     }
   }, [isDragging, handleEnd]);
 
+  // Effet pour bloquer/débloquer le défilement du body
+  useEffect(() => {
+    if (isDragging) {
+      // Stocker les styles originaux et la position de défilement
+      const originalOverflow = document.body.style.overflow;
+      const originalPosition = document.body.style.position;
+      const originalWidth = document.body.style.width;
+      const originalTop = document.body.style.top;
+      const scrollY = window.scrollY;
+
+      // Appliquer les styles pour bloquer le défilement
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${scrollY}px`; // Empêche le saut de page
+
+      return () => {
+        // Restaurer les styles originaux et la position de défilement
+        document.body.style.overflow = originalOverflow;
+        document.body.style.position = originalPosition;
+        document.body.style.width = originalWidth;
+        document.body.style.top = originalTop;
+        window.scrollTo(0, scrollY); // Restaurer la position de défilement
+      };
+    }
+  }, [isDragging]); // Déclencher l'effet lorsque isDragging change
+
   const isBeingDragged = draggingIndex === index;
 
   return (
