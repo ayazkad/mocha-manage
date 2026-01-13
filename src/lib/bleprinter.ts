@@ -46,13 +46,13 @@ let isInitialized = false;
  */
 export async function isBleAvailable(): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) {
+    console.log('[BLEPrinter] Bluetooth not available on web');
     return false;
   }
   
   try {
     await initializeBle();
-    const result = await BleClient.isEnabled();
-    return result.value;
+    return await BleClient.isEnabled();
   } catch (error) {
     console.error('[BLEPrinter] Error checking availability:', error);
     return false;
@@ -63,6 +63,11 @@ export async function isBleAvailable(): Promise<boolean> {
  * Initialize BLE - must be called before other operations
  */
 export async function initializeBle(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    console.log('[BLEPrinter] Bluetooth not available on web');
+    return;
+  }
+  
   if (isInitialized) return;
   
   try {
@@ -79,6 +84,11 @@ export async function initializeBle(): Promise<void> {
  * Request Bluetooth to be enabled (Android only)
  */
 export async function requestBluetoothEnable(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) {
+    console.log('[BLEPrinter] Bluetooth not available on web');
+    return false;
+  }
+  
   try {
     await initializeBle();
     await BleClient.requestEnable();
@@ -94,12 +104,17 @@ export async function requestBluetoothEnable(): Promise<boolean> {
  * Shows native device picker dialog
  */
 export async function scanForPrinters(): Promise<BleDevice | null> {
+  if (!Capacitor.isNativePlatform()) {
+    console.log('[BLEPrinter] Bluetooth not available on web');
+    return null;
+  }
+  
   try {
     await initializeBle();
     
     // Check if Bluetooth is enabled
-    const enabledResult = await BleClient.isEnabled();
-    if (!enabledResult.value) {
+    const isEnabled = await BleClient.isEnabled();
+    if (!isEnabled) {
       await requestBluetoothEnable();
     }
     
@@ -125,11 +140,16 @@ export async function scanForPrinters(): Promise<BleDevice | null> {
  * Get bonded (paired) devices - Android only
  */
 export async function getBondedDevices(): Promise<BleDevice[]> {
+  if (!Capacitor.isNativePlatform()) {
+    console.log('[BLEPrinter] Bluetooth not available on web');
+    return [];
+  }
+  
   try {
     await initializeBle();
-    const result = await BleClient.getBondedDevices();
-    console.log('[BLEPrinter] Bonded devices:', result.devices);
-    return result.devices || [];
+    const devices = await BleClient.getBondedDevices();
+    console.log('[BLEPrinter] Bonded devices:', devices);
+    return devices || [];
   } catch (error) {
     console.error('[BLEPrinter] Error getting bonded devices:', error);
     return [];
@@ -140,6 +160,13 @@ export async function getBondedDevices(): Promise<BleDevice[]> {
  * Connect to a printer device
  */
 export async function connectToPrinter(device: BleDevice): Promise<PrintResult> {
+  if (!Capacitor.isNativePlatform()) {
+    return {
+      success: false,
+      message: "Bluetooth non disponible sur le web. Utilisez l'application mobile.",
+    };
+  }
+  
   try {
     await initializeBle();
     
@@ -156,14 +183,14 @@ export async function connectToPrinter(device: BleDevice): Promise<PrintResult> 
     console.log('[BLEPrinter] Connected, discovering services...');
     
     // Discover services and find the write characteristic
-    const servicesResult = await BleClient.getServices(device.deviceId);
-    console.log('[BLEPrinter] Services discovered:', servicesResult);
+    const services = await BleClient.getServices(device.deviceId);
+    console.log('[BLEPrinter] Services discovered:', services);
     
     let foundService: string | undefined;
     let foundCharacteristic: string | undefined;
     
     // Look for a writable characteristic
-    for (const service of servicesResult.services) {
+    for (const service of services) {
       for (const char of service.characteristics) {
         if (char.properties.write || char.properties.writeWithoutResponse) {
           // Prefer known printer characteristics
@@ -256,6 +283,13 @@ export function getConnectedDevice(): BleDeviceInfo | null {
  * Splits data into chunks if needed (BLE has MTU limits)
  */
 export async function printRaw(data: number[]): Promise<PrintResult> {
+  if (!Capacitor.isNativePlatform()) {
+    return {
+      success: false,
+      message: "Bluetooth non disponible sur le web. Utilisez l'application mobile.",
+    };
+  }
+  
   if (!connectedDevice) {
     return {
       success: false,
@@ -279,7 +313,7 @@ export async function printRaw(data: number[]): Promise<PrintResult> {
     let mtu = 20;
     try {
       const mtuResult = await BleClient.getMtu(deviceId);
-      mtu = Math.min(mtuResult.value - 3, 512); // Leave room for BLE overhead
+      mtu = Math.min(mtuResult - 3, 512); // Leave room for BLE overhead
     } catch {
       // Some devices don't support getMtu
     }
