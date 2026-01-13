@@ -4,15 +4,15 @@
  * This module provides a unified interface for printing that works across:
  * - Web (hosted version): shows "not available" messages
  * - Desktop (Electron/Tauri .exe): uses native printing via window.electronAPI
- * - Capacitor (Android/iOS): uses Bluetooth Printer plugin
+ * - Capacitor (Android/iOS): uses Bluetooth LE Printer
  * 
  * The desktop client will inject `window.electronAPI` via its preload script,
  * enabling local ESC/POS printing without changing React code.
  */
 
 import { Capacitor } from '@capacitor/core';
-import { BluetoothPrinter } from '@/plugins/bluetooth-printer';
 import { buildReceipt, buildReceiptWithImages } from '@/plugins/bluetooth-printer/escpos';
+import * as BlePrinter from '@/lib/bleprinter';
 
 export interface PrintResult {
   success: boolean;
@@ -41,14 +41,29 @@ export interface PrintClient {
   printReceiptWithImages(text: string, logoBase64?: string, qrCodeData?: string): Promise<PrintResult>;
 
   /**
-   * Get paired Bluetooth devices (for Capacitor mode)
+   * Scan for Bluetooth printers (for Capacitor mode)
    */
-  getPairedDevices?(): Promise<{ name: string; address: string }[]>;
+  scanForPrinters?(): Promise<{ deviceId: string; name: string } | null>;
+
+  /**
+   * Get bonded/paired devices (for Capacitor mode - Android)
+   */
+  getBondedDevices?(): Promise<{ deviceId: string; name: string }[]>;
 
   /**
    * Connect to a Bluetooth printer (for Capacitor mode)
    */
-  connectToPrinter?(address: string): Promise<PrintResult>;
+  connectToPrinter?(deviceId: string, name?: string): Promise<PrintResult>;
+
+  /**
+   * Disconnect from current printer (for Capacitor mode)
+   */
+  disconnectPrinter?(): Promise<PrintResult>;
+
+  /**
+   * Check if connected to a printer (for Capacitor mode)
+   */
+  isConnectedToPrinter?(): { connected: boolean; deviceName?: string };
 }
 
 // Extend Window interface for native APIs (Electron/Tauri)
@@ -148,16 +163,31 @@ class DesktopPrintClient implements PrintClient {
 }
 
 /**
- * Capacitor Bluetooth client implementation - uses BluetoothPrinter plugin
+ * Capacitor Bluetooth LE client implementation
+ * Uses @capacitor-community/bluetooth-le for iOS/Android
  */
-class CapacitorBluetoothPrintClient implements PrintClient {
+class CapacitorBlePrintClient implements PrintClient {
+  private initialized = false;
+
+  private async ensureInitialized(): Promise<void> {
+    if (!this.initialized) {
+      try {
+        await BlePrinter.initializeBle();
+        this.initialized = true;
+      } catch (error) {
+        console.error('[CapacitorBlePrintClient] BLE init error:', error);
+      }
+    }
+  }
+
   isAvailable(): boolean {
     return true;
   }
 
   async testConnection(): Promise<PrintResult> {
     try {
-      const { connected, deviceName } = await BluetoothPrinter.isConnected();
+      await this.ensureInitialized();
+      const { connected, deviceName } = BlePrinter.isConnected();
       if (connected) {
         return {
           success: true,
@@ -179,10 +209,9 @@ class CapacitorBluetoothPrintClient implements PrintClient {
 
   async printReceipt(text: string): Promise<PrintResult> {
     try {
-      console.log('[CapacitorBluetoothPrintClient] Checking connection...');
+      await this.ensureInitialized();
       
-      // Check if connected
-      const { connected } = await BluetoothPrinter.isConnected();
+      const { connected } = BlePrinter.isConnected();
       if (!connected) {
         return {
           success: false,
@@ -190,16 +219,14 @@ class CapacitorBluetoothPrintClient implements PrintClient {
         };
       }
 
-      console.log('[CapacitorBluetoothPrintClient] Building ESC/POS receipt...');
+      console.log('[CapacitorBlePrintClient] Building ESC/POS receipt...');
       const escposData = buildReceipt(text);
       
-      console.log('[CapacitorBluetoothPrintClient] Sending to printer...');
-      const result = await BluetoothPrinter.printRaw({ data: escposData });
-      
-      return result;
+      console.log('[CapacitorBlePrintClient] Sending to printer...');
+      return await BlePrinter.printRaw(escposData);
     } catch (error) {
       const err = error as Error;
-      console.error('[CapacitorBluetoothPrintClient] Print error:', err);
+      console.error('[CapacitorBlePrintClient] Print error:', err);
       return {
         success: false,
         message: `Erreur d'impression: ${err.message}`,
@@ -209,10 +236,9 @@ class CapacitorBluetoothPrintClient implements PrintClient {
 
   async printReceiptWithImages(text: string, logoBase64?: string, qrCodeData?: string): Promise<PrintResult> {
     try {
-      console.log('[CapacitorBluetoothPrintClient] Checking connection...');
+      await this.ensureInitialized();
       
-      // Check if connected
-      const { connected } = await BluetoothPrinter.isConnected();
+      const { connected } = BlePrinter.isConnected();
       if (!connected) {
         return {
           success: false,
@@ -220,16 +246,14 @@ class CapacitorBluetoothPrintClient implements PrintClient {
         };
       }
 
-      console.log('[CapacitorBluetoothPrintClient] Building ESC/POS receipt with images...');
+      console.log('[CapacitorBlePrintClient] Building ESC/POS receipt with images...');
       const escposData = await buildReceiptWithImages(text, logoBase64, qrCodeData);
       
-      console.log('[CapacitorBluetoothPrintClient] Sending to printer...');
-      const result = await BluetoothPrinter.printRaw({ data: escposData });
-      
-      return result;
+      console.log('[CapacitorBlePrintClient] Sending to printer...');
+      return await BlePrinter.printRaw(escposData);
     } catch (error) {
       const err = error as Error;
-      console.error('[CapacitorBluetoothPrintClient] Print error:', err);
+      console.error('[CapacitorBlePrintClient] Print error:', err);
       return {
         success: false,
         message: `Erreur d'impression: ${err.message}`,
@@ -237,26 +261,35 @@ class CapacitorBluetoothPrintClient implements PrintClient {
     }
   }
 
-  async getPairedDevices(): Promise<{ name: string; address: string }[]> {
+  async scanForPrinters(): Promise<{ deviceId: string; name: string } | null> {
     try {
-      // Request permissions first
-      const { granted } = await BluetoothPrinter.requestPermissions();
-      if (!granted) {
-        console.warn('[CapacitorBluetoothPrintClient] Bluetooth permissions not granted');
-        return [];
+      await this.ensureInitialized();
+      const device = await BlePrinter.scanForPrinters();
+      if (device) {
+        return { deviceId: device.deviceId, name: device.name || 'Imprimante' };
       }
-
-      const { devices } = await BluetoothPrinter.getPairedDevices();
-      return devices.map(d => ({ name: d.name, address: d.address }));
+      return null;
     } catch (error) {
-      console.error('[CapacitorBluetoothPrintClient] Error getting devices:', error);
+      console.error('[CapacitorBlePrintClient] Scan error:', error);
+      return null;
+    }
+  }
+
+  async getBondedDevices(): Promise<{ deviceId: string; name: string }[]> {
+    try {
+      await this.ensureInitialized();
+      const devices = await BlePrinter.getBondedDevices();
+      return devices.map(d => ({ deviceId: d.deviceId, name: d.name || 'Appareil' }));
+    } catch (error) {
+      console.error('[CapacitorBlePrintClient] Error getting bonded devices:', error);
       return [];
     }
   }
 
-  async connectToPrinter(address: string): Promise<PrintResult> {
+  async connectToPrinter(deviceId: string, name?: string): Promise<PrintResult> {
     try {
-      return await BluetoothPrinter.connect({ address });
+      await this.ensureInitialized();
+      return await BlePrinter.connectToPrinter({ deviceId, name });
     } catch (error) {
       const err = error as Error;
       return {
@@ -264,6 +297,22 @@ class CapacitorBluetoothPrintClient implements PrintClient {
         message: `Erreur de connexion: ${err.message}`,
       };
     }
+  }
+
+  async disconnectPrinter(): Promise<PrintResult> {
+    try {
+      return await BlePrinter.disconnectPrinter();
+    } catch (error) {
+      const err = error as Error;
+      return {
+        success: false,
+        message: `Erreur: ${err.message}`,
+      };
+    }
+  }
+
+  isConnectedToPrinter(): { connected: boolean; deviceName?: string } {
+    return BlePrinter.isConnected();
   }
 }
 
@@ -275,7 +324,7 @@ let printClientInstance: PrintClient | null = null;
  * 
  * Detection logic:
  * - If window.electronAPI exists → Desktop mode (Electron/Tauri)
- * - If Capacitor native platform → Bluetooth printer mode
+ * - If Capacitor native platform → Bluetooth LE printer mode
  * - Otherwise → Web mode (no-op client)
  */
 export function getPrintClient(): PrintClient {
@@ -290,8 +339,8 @@ export function getPrintClient(): PrintClient {
   } 
   // Check for Capacitor native platform
   else if (isCapacitorNative()) {
-    console.log('[PrintClient] Capacitor native mode detected - using Bluetooth printer');
-    printClientInstance = new CapacitorBluetoothPrintClient();
+    console.log('[PrintClient] Capacitor native mode detected - using Bluetooth LE printer');
+    printClientInstance = new CapacitorBlePrintClient();
   } 
   // Fallback to web mode
   else {
