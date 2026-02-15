@@ -48,6 +48,9 @@ All colors MUST be HSL.
     --gradient-card: linear-gradient(135deg, hsl(240 5% 98%) 0%, hsl(240 5% 96%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(220 90% 56%) 0%, hsl(220 90% 50%) 100%);
     
+    /* Latte gradient for login */
+    --gradient-latte: linear-gradient(135deg, hsl(30 30% 96%) 0%, hsl(20 40% 92%) 50%, hsl(30 20% 95%) 100%);
+    
     /* Shadows - Subtle & Modern */
     --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.05);
     --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -97,6 +100,7 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(220 90% 56%) 0%, hsl(220 90% 50%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(220 18% 14%) 0%, hsl(220 18% 12%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(220 90% 56%) 0%, hsl(220 80% 48%) 100%);
+    --gradient-latte: linear-gradient(135deg, hsl(220 20% 12%) 0%, hsl(220 18% 10%) 50%, hsl(220 20% 11%) 100%);
   }
 }
 

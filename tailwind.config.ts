@@ -52,6 +52,7 @@ export default {
         'gradient-primary': 'var(--gradient-primary)',
         'gradient-card': 'var(--gradient-card)',
         'gradient-accent': 'var(--gradient-accent)',
+        'gradient-latte': 'var(--gradient-latte)',
       },
       boxShadow: {
         'soft': 'var(--shadow-soft)',
