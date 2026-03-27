@@ -193,7 +193,7 @@ const OrdersManager = () => {
                 <TableCell>{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm')}</TableCell>
                 <TableCell>{order.employees?.name}</TableCell>
                 <TableCell>{getStatusBadge(order.status)}</TableCell>
-                <TableCell className="text-right">{Number(order.total).toFixed(2)} Dhs</TableCell>
+                <TableCell className="text-right">{Number(order.total).toFixed(2)} MAD</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
@@ -274,7 +274,7 @@ const OrdersManager = () => {
                   {selectedOrder.payment_method === 'cash' && selectedOrder.cash_received && (
                     <div>
                       <p className="text-sm text-muted-foreground">Montant reçu</p>
-                      <p className="font-medium">{Number(selectedOrder.cash_received).toFixed(2)} Dhs</p>
+                      <p className="font-medium">{Number(selectedOrder.cash_received).toFixed(2)} MAD</p>
                     </div>
                   )}
                 </div>
@@ -295,8 +295,8 @@ const OrdersManager = () => {
                         <TableRow key={item.id}>
                           <TableCell>{item.product_name}</TableCell>
                           <TableCell>{item.quantity}</TableCell>
-                          <TableCell className="text-right">{Number(item.unit_price).toFixed(2)} Dhs</TableCell>
-                          <TableCell className="text-right">{Number(item.total_price).toFixed(2)} Dhs</TableCell>
+                          <TableCell className="text-right">{Number(item.unit_price).toFixed(2)} MAD</TableCell>
+                          <TableCell className="text-right">{Number(item.total_price).toFixed(2)} MAD</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -306,39 +306,39 @@ const OrdersManager = () => {
                 <div className="space-y-2 pt-4 border-t">
                   <div className="flex justify-between">
                     <span>Sous-total</span>
-                    <span>{Number(selectedOrder.subtotal).toFixed(2)} Dhs</span>
+                    <span>{Number(selectedOrder.subtotal).toFixed(2)} MAD</span>
                   </div>
                   {selectedOrder.tax_amount > 0 && (
                     <div className="flex justify-between text-muted-foreground">
                       <span>TVA</span>
-                      <span>{Number(selectedOrder.tax_amount).toFixed(2)} Dhs</span>
+                      <span>{Number(selectedOrder.tax_amount).toFixed(2)} MAD</span>
                     </div>
                   )}
                   {selectedOrder.discount_amount > 0 && (
                     <div className="flex justify-between text-muted-foreground">
                       <span>Remise</span>
-                      <span>-{Number(selectedOrder.discount_amount).toFixed(2)} Dhs</span>
+                      <span>-{Number(selectedOrder.discount_amount).toFixed(2)} MAD</span>
                     </div>
                   )}
                   {selectedOrder.tip_amount > 0 && (
                     <div className="flex justify-between text-muted-foreground">
                       <span>Pourboire</span>
-                      <span>{Number(selectedOrder.tip_amount).toFixed(2)} Dhs</span>
+                      <span>{Number(selectedOrder.tip_amount).toFixed(2)} MAD</span>
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-lg pt-2 border-t">
                     <span>Total</span>
-                    <span>{Number(selectedOrder.total).toFixed(2)} Dhs</span>
+                    <span>{Number(selectedOrder.total).toFixed(2)} MAD</span>
                   </div>
                   {selectedOrder.payment_method === 'cash' && selectedOrder.cash_received && (
                     <>
                       <div className="flex justify-between text-green-600 font-medium">
                         <span>Reçu en liquide</span>
-                        <span>{Number(selectedOrder.cash_received).toFixed(2)} Dhs</span>
+                        <span>{Number(selectedOrder.cash_received).toFixed(2)} MAD</span>
                       </div>
                       <div className="flex justify-between text-blue-600 font-medium">
                         <span>Rendu</span>
-                        <span>{(Number(selectedOrder.cash_received) - Number(selectedOrder.total)).toFixed(2)} Dhs</span>
+                        <span>{(Number(selectedOrder.cash_received) - Number(selectedOrder.total)).toFixed(2)} MAD</span>
                       </div>
                     </>
                   )}

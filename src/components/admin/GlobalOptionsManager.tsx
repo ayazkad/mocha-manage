@@ -244,7 +244,7 @@ const GlobalOptionsManager = () => {
                       className="w-24"
                       onClick={(e) => e.stopPropagation()}
                     />
-                    <span className="text-muted-foreground">Dhs</span>
+                    <span className="text-muted-foreground">MAD</span>
                   </div>
                   <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }} disabled={updateMutation.isPending}>
                     <Save className="w-4 h-4 text-green-600" />
@@ -258,7 +258,7 @@ const GlobalOptionsManager = () => {
                   <GripVertical className="w-4 h-4 text-muted-foreground" />
                   <span className="flex-1 font-medium">{option.name_en}</span>
                   <span className="text-muted-foreground">
-                    {option.price_modifier > 0 ? `+${option.price_modifier} Dhs` : 'Prix de base'}
+                    {option.price_modifier > 0 ? `+${option.price_modifier} MAD` : 'Prix de base'}
                   </span>
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
                     {option.count} produits
@@ -298,7 +298,7 @@ const GlobalOptionsManager = () => {
               onChange={(e) => setNewOption({ ...newOption, price: e.target.value })}
               className="w-24"
             />
-            <span className="text-muted-foreground">Dhs</span>
+            <span className="text-muted-foreground">MAD</span>
           </div>
           <Button size="icon" variant="ghost" onClick={handleCreateOption} disabled={createMutation.isPending}>
             <Save className="w-4 h-4 text-green-600" />

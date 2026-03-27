@@ -250,7 +250,7 @@ const ProductOptionsDialog = ({
                       </div>
                       {option.price_modifier > 0 && (
                         <span className="text-primary font-semibold text-sm">
-                          +{option.price_modifier.toFixed(2)} Dhs
+                          +{option.price_modifier.toFixed(2)} MAD
                         </span>
                       )}
                     </label>
@@ -278,7 +278,7 @@ const ProductOptionsDialog = ({
                       </div>
                       {option.price_modifier > 0 && (
                         <span className="text-primary font-semibold text-sm">
-                          +{option.price_modifier.toFixed(2)} Dhs
+                          +{option.price_modifier.toFixed(2)} MAD
                         </span>
                       )}
                     </label>
@@ -344,7 +344,7 @@ const ProductOptionsDialog = ({
             <div className="text-left flex-shrink-0">
               <p className="text-sm text-muted-foreground">Total</p>
               <p className="text-xl font-bold text-primary whitespace-nowrap">
-                {calculateTotal().toFixed(2)} Dhs
+                {calculateTotal().toFixed(2)} MAD
               </p>
             </div>
             <Button

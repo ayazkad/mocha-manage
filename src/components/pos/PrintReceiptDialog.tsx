@@ -110,14 +110,14 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
     return left + ' '.repeat(spaces) + right;
   };
 
-  const formatPrice = (price: number): string => `${price.toFixed(2)} Dhs`;
+  const formatPrice = (price: number): string => `${price.toFixed(2)} MAD`;
 
   let receipt = '';
 
   // Header - Only address info (logo is shown separately)
   receipt += '\n';
   receipt += center('Casablanca, Maroc') + '\n';
-  receipt += center('Tel: +995 XXX XXX XXX') + '\n';
+  receipt += center('Tel: +212 6XX XX XX XX') + '\n';
   receipt += '\n';
   receipt += LINE + '\n';
 
@@ -153,7 +153,7 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
 
     // Unit price if quantity > 1
     if (item.quantity > 1) {
-      receipt += `   @ ${item.unitPrice.toFixed(2)} Dhs each\n`;
+      receipt += `   @ ${item.unitPrice.toFixed(2)} MAD each\n`;
     }
   });
   receipt += '\n';
@@ -207,14 +207,13 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
 };
 
 const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogProps) => {
-  const [language, setLanguage] = useState<Language>('fr');
   const [receiptText, setReceiptText] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const logoBase64Ref = useRef<string>('');
 
-  const t = translations[language];
+  const t = translations['fr'];
   const isNative = isNativeMode();
   const printClient = getPrintClient();
 
@@ -321,19 +320,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             </div>
           )}
 
-          {/* Language Selector - only affects receipt text */}
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-              <SelectTrigger className="flex-1 h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" sideOffset={4}>
-                <SelectItem value="fr">Français</SelectItem>
-                <SelectItem value="en">English</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
 
           {/* Receipt Preview with Logo */}
           <div className="bg-white text-black p-3 rounded-lg max-h-[45vh] overflow-auto">

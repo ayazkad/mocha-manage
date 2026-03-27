@@ -104,7 +104,7 @@ const LossesStatistics = () => {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-1">Perte Totale</p>
                   <p className="text-3xl font-bold text-destructive">
-                    {totalLoss.toFixed(2)} Dhs
+                    {totalLoss.toFixed(2)} MAD
                   </p>
                 </div>
               </CardContent>
@@ -153,7 +153,7 @@ const LossesStatistics = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-destructive">
-                          {loss.total_loss.toFixed(2)} Dhs
+                          {loss.total_loss.toFixed(2)} MAD
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Qté: {loss.quantity}

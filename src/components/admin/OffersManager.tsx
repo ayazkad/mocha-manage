@@ -267,7 +267,7 @@ const OffersManager = () => {
 
               <div>
                 <Label htmlFor="discount_value">
-                  Valeur {formData.discount_type === 'percentage' ? '(%)' : '(Dhs)'}
+                  Valeur {formData.discount_type === 'percentage' ? '(%)' : '(MAD)'}
                 </Label>
                 <Input
                   id="discount_value"
@@ -294,7 +294,7 @@ const OffersManager = () => {
               </div>
 
               <div>
-                <Label htmlFor="min_amount">Montant minimum (Dhs)</Label>
+                <Label htmlFor="min_amount">Montant minimum (MAD)</Label>
                 <Input
                   id="min_amount"
                   type="number"
@@ -388,7 +388,7 @@ const OffersManager = () => {
                   <p className="text-sm text-muted-foreground">
                     {offer.discount_type === 'percentage'
                       ? `${offer.discount_value}% de remise`
-                      : `${offer.discount_value} Dhs de remise`}
+                      : `${offer.discount_value} MAD de remise`}
                   </p>
                   {(offer.min_items > 0 || offer.min_amount > 0 || offer.applicable_products?.length > 0) && (
                     <p className="text-xs text-muted-foreground mt-1">
@@ -397,7 +397,7 @@ const OffersManager = () => {
                       )}
                       {offer.min_items > 0 && `${offer.min_items} art. min`}
                       {offer.min_items > 0 && offer.min_amount > 0 && ' • '}
-                      {offer.min_amount > 0 && `${offer.min_amount} Dhs min`}
+                      {offer.min_amount > 0 && `${offer.min_amount} MAD min`}
                     </p>
                   )}
                 </div>

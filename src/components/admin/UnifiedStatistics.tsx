@@ -300,7 +300,7 @@ const UnifiedStatistics = () => {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-1">Total des ventes</p>
                 <p className="text-3xl font-bold text-primary">
-                  {salesData?.totalSales.toFixed(2) || 0} Dhs
+                  {salesData?.totalSales.toFixed(2) || 0} MAD
                 </p>
               </div>
             </CardContent>
@@ -319,7 +319,7 @@ const UnifiedStatistics = () => {
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-1">Panier moyen</p>
-                <p className="text-3xl font-bold">{salesData?.averageOrder.toFixed(2) || 0} Dhs</p>
+                <p className="text-3xl font-bold">{salesData?.averageOrder.toFixed(2) || 0} MAD</p>
               </div>
             </CardContent>
           </Card>
@@ -344,7 +344,7 @@ const UnifiedStatistics = () => {
                     dataKey="ventes" 
                     stroke="hsl(var(--primary))" 
                     strokeWidth={2}
-                    name="Ventes (Dhs)"
+                    name="Ventes (MAD)"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -373,9 +373,9 @@ const UnifiedStatistics = () => {
                     <TableRow key={index}>
                       <TableCell className="font-medium">{employee.name}</TableCell>
                       <TableCell className="text-right">{employee.orderCount}</TableCell>
-                      <TableCell className="text-right">{employee.totalSales.toFixed(2)} Dhs</TableCell>
+                      <TableCell className="text-right">{employee.totalSales.toFixed(2)} MAD</TableCell>
                       <TableCell className="text-right">
-                        {(employee.totalSales / employee.orderCount).toFixed(2)} Dhs
+                        {(employee.totalSales / employee.orderCount).toFixed(2)} MAD
                       </TableCell>
                     </TableRow>
                   ))}
@@ -399,7 +399,7 @@ const UnifiedStatistics = () => {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-1">Perte Totale</p>
                 <p className="text-3xl font-bold text-destructive">
-                  {lossesData?.totalLoss.toFixed(2) || 0} Dhs
+                  {lossesData?.totalLoss.toFixed(2) || 0} MAD
                 </p>
               </div>
             </CardContent>
@@ -443,7 +443,7 @@ const UnifiedStatistics = () => {
                     dataKey="pertes" 
                     stroke="hsl(var(--destructive))" 
                     strokeWidth={2}
-                    name="Pertes (Dhs)"
+                    name="Pertes (MAD)"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -470,7 +470,7 @@ const UnifiedStatistics = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-destructive">
-                          {loss.total_loss.toFixed(2)} Dhs
+                          {loss.total_loss.toFixed(2)} MAD
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Qté: {loss.quantity}

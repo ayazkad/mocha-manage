@@ -86,11 +86,11 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
               <>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Montant à rendre</span>
-                  <span className="text-xl font-bold text-green-600">{refundAmount.toFixed(2)} Dhs</span>
+                  <span className="text-xl font-bold text-green-600">{refundAmount.toFixed(2)} MAD</span>
                 </div>
                 <div className="pt-2 border-t border-border text-center">
                   <p className="text-sm text-muted-foreground">
-                    Rendez {refundAmount.toFixed(2)} Dhs au client
+                    Rendez {refundAmount.toFixed(2)} MAD au client
                   </p>
                 </div>
               </>
@@ -98,18 +98,18 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
               <>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Total à payer</span>
-                  <span className="text-lg font-bold text-foreground">{total.toFixed(2)} Dhs</span>
+                  <span className="text-lg font-bold text-foreground">{total.toFixed(2)} MAD</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Montant reçu</span>
                   <span className="text-xl font-bold text-primary">
-                    {amountReceived || '0'} Dhs
+                    {amountReceived || '0'} MAD
                   </span>
                 </div>
                 {amount >= total && (
                   <div className="flex justify-between items-center pt-2 border-t border-border">
                     <span className="text-xs font-semibold text-foreground">Rendu monnaie</span>
-                    <span className="text-xl font-bold text-green-600">{change.toFixed(2)} Dhs</span>
+                    <span className="text-xl font-bold text-green-600">{change.toFixed(2)} MAD</span>
                   </div>
                 )}
               </>
@@ -131,7 +131,7 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
                       className="h-10 text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-colors rounded-lg border"
                       disabled={processing}
                     >
-                      {bill} Dhs
+                      {bill} MAD
                     </Button>
                   ))}
                 </div>

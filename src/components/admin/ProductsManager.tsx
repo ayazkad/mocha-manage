@@ -526,7 +526,7 @@ const ProductsManager = () => {
                             <div>
                               <h4 className="font-semibold">{product.name_en}</h4>
                               <p className="text-sm text-muted-foreground">
-                                {product.base_price} Dhs
+                                {product.base_price} MAD
                                 {!product.active && ' • Inactif'}
                                 {product.barcode && ` • 📊 ${product.barcode}`}
                                 {!product.visible_in_categories && ' • Scan uniquement'}

@@ -139,15 +139,15 @@ const SwipeableCartItem = ({
                 {itemDiscount > 0 ? (
                   <>
                     <span className="text-[10px] text-muted-foreground line-through">
-                      {itemTotal.toFixed(2)} Dhs
+                      {itemTotal.toFixed(2)} MAD
                     </span>
                     <span className="font-bold text-sm text-primary">
-                      {discountedTotal.toFixed(2)} Dhs
+                      {discountedTotal.toFixed(2)} MAD
                     </span>
                   </>
                 ) : (
                   <span className="font-bold text-sm text-card-foreground">
-                    {itemTotal.toFixed(2)} Dhs
+                    {itemTotal.toFixed(2)} MAD
                   </span>
                 )}
               </div>
@@ -500,7 +500,7 @@ const Cart = ({ onClose }: CartProps) => {
           subtotal,
           discount_amount: totalDiscount,
           total,
-          notes: `Modifié: différence ${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)} Dhs`,
+          notes: `Modifié: différence ${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)} MAD`,
         })
         .eq('id', originalOrder.orderId);
 
@@ -551,9 +551,9 @@ const Cart = ({ onClose }: CartProps) => {
       };
 
       if (priceDiff < 0) {
-        toast.success(`Remboursement: ${Math.abs(priceDiff).toFixed(2)} Dhs à rendre`);
+        toast.success(`Remboursement: ${Math.abs(priceDiff).toFixed(2)} MAD à rendre`);
       } else if (priceDiff > 0) {
-        toast.success(`Encaissé: ${priceDiff.toFixed(2)} Dhs`);
+        toast.success(`Encaissé: ${priceDiff.toFixed(2)} MAD`);
       } else {
         toast.success('Ticket modifié (pas de différence)');
       }
@@ -957,7 +957,7 @@ const Cart = ({ onClose }: CartProps) => {
                 )}
               </div>
               <p className="text-[10px] text-muted-foreground mt-1">
-                Original: {originalOrder.originalTotal.toFixed(2)} Dhs
+                Original: {originalOrder.originalTotal.toFixed(2)} MAD
               </p>
             </div>
           )}
@@ -1008,7 +1008,7 @@ const Cart = ({ onClose }: CartProps) => {
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Sous-total</span>
-                <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} Dhs</span>
+                <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} MAD</span>
               </div>
 
               {(appliedOffer || itemDiscounts > 0 || freeDrinkDiscount > 0) && (
@@ -1025,7 +1025,7 @@ const Cart = ({ onClose }: CartProps) => {
                     )}
                   </span>
                   <span className="font-semibold text-destructive">
-                    -{totalDiscount.toFixed(2)} Dhs
+                    -{totalDiscount.toFixed(2)} MAD
                   </span>
                 </div>
               )}
@@ -1034,7 +1034,7 @@ const Cart = ({ onClose }: CartProps) => {
 
               <div className="flex justify-between text-base font-bold">
                 <span className="text-card-foreground">Total à payer</span>
-                <span className="text-primary">{total.toFixed(2)} Dhs</span>
+                <span className="text-primary">{total.toFixed(2)} MAD</span>
               </div>
 
               {/* Price difference when modifying an order */}
@@ -1059,7 +1059,7 @@ const Cart = ({ onClose }: CartProps) => {
                         ? 'text-green-600'
                         : 'text-muted-foreground'
                       }`}>
-                      {getPriceDifference() > 0 ? '+' : ''}{getPriceDifference().toFixed(2)} Dhs
+                      {getPriceDifference() > 0 ? '+' : ''}{getPriceDifference().toFixed(2)} MAD
                     </span>
                   </div>
                 </div>

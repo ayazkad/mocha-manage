@@ -169,7 +169,7 @@ const SalesStatistics = () => {
             <CardDescription>Commandes complétées</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{globalStats?.totalSales.toFixed(2)} Dhs</p>
+            <p className="text-3xl font-bold">{globalStats?.totalSales.toFixed(2)} MAD</p>
           </CardContent>
         </Card>
         
@@ -189,7 +189,7 @@ const SalesStatistics = () => {
             <CardDescription>Par commande</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{globalStats?.averageOrder.toFixed(2)} Dhs</p>
+            <p className="text-3xl font-bold">{globalStats?.averageOrder.toFixed(2)} MAD</p>
           </CardContent>
         </Card>
       </div>
@@ -215,9 +215,9 @@ const SalesStatistics = () => {
                 <TableRow key={index}>
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell className="text-right">{employee.orderCount}</TableCell>
-                  <TableCell className="text-right">{employee.totalSales.toFixed(2)} Dhs</TableCell>
+                  <TableCell className="text-right">{employee.totalSales.toFixed(2)} MAD</TableCell>
                   <TableCell className="text-right">
-                    {(employee.totalSales / employee.orderCount).toFixed(2)} Dhs
+                    {(employee.totalSales / employee.orderCount).toFixed(2)} MAD
                   </TableCell>
                 </TableRow>
               ))}

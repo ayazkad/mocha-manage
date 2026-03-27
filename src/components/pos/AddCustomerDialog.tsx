@@ -34,7 +34,7 @@ const AddCustomerDialog = () => {
       return data;
     },
     onSuccess: async (customer) => {
-      toast.success(`Client ${customer.name} added successfully!`);
+      toast.success(`Client ${customer.name} ajouté avec succès !`);
 
       // Send QR code email
       try {
@@ -44,8 +44,7 @@ const AddCustomerDialog = () => {
             customerEmail: customer.email,
             customerName: customer.name,
             qrCode: customer.qr_code,
-            language: navigator.language.startsWith('ru') ? 'ru' :
-              navigator.language.startsWith('ka') ? 'ge' : 'en',
+            language: 'fr',
           },
         });
 
@@ -55,16 +54,16 @@ const AddCustomerDialog = () => {
 
           // Check if it's a Resend domain verification error
           if (errorMessage.includes('verify a domain') || errorMessage.includes('validation_error')) {
-            toast.error('Email not sent: domain not verified on Resend. Please verify your domain on resend.com/domains');
+            toast.error('Email non envoyé: domaine non vérifié sur Resend. Veuillez vérifier votre domaine sur resend.com/domains');
           } else {
-            toast.error('Client added but error sending email');
+            toast.error('Client ajouté mais erreur lors de l\'envoi de l\'email');
           }
         } else {
-          toast.success('Email with QR code sent!');
+          toast.success('Email avec QR code envoyé !');
         }
       } catch (error) {
         console.error('Error invoking function:', error);
-        toast.error('Error sending email');
+        toast.error('Erreur lors de l\'envoi de l\'email');
       }
 
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -74,9 +73,9 @@ const AddCustomerDialog = () => {
     onError: (error: any) => {
       console.error('Error adding customer:', error);
       if (error.code === '23505') {
-        toast.error('A client with this email already exists');
+        toast.error('Un client avec cet email existe déjà');
       } else {
-        toast.error('Error adding customer');
+        toast.error('Erreur lors de l\'ajout du client');
       }
     },
   });
@@ -108,24 +107,24 @@ const AddCustomerDialog = () => {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <UserPlus className="w-4 h-4" />
-          <span className="hidden md:inline">New Customer</span>
+          <span className="hidden md:inline">Nouveau Client</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md w-[90%] rounded-2xl border-none shadow-xl">
         <DialogHeader>
-          <DialogTitle>Add New Customer</DialogTitle>
+          <DialogTitle>Ajouter Nouveau Client</DialogTitle>
           <DialogDescription>
-            Create a loyalty account for a new customer
+            Créer un compte fidélité pour un nouveau client
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">Nom complet</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Name"
+              placeholder="Nom"
               required
             />
           </div>
@@ -141,13 +140,13 @@ const AddCustomerDialog = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">Téléphone</Label>
             <Input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+995 5xx xx xx xx"
+              placeholder="+212 6xx xx xx xx"
               required
             />
           </div>
@@ -160,13 +159,13 @@ const AddCustomerDialog = () => {
                 resetForm();
               }}
             >
-              Cancel
+              Annuler
             </Button>
             <Button
               type="submit"
               disabled={addCustomerMutation.isPending}
             >
-              {addCustomerMutation.isPending ? 'Adding...' : 'Add Customer'}
+              {addCustomerMutation.isPending ? 'Ajout en cours...' : 'Ajouter Client'}
             </Button>
           </div>
         </form>
