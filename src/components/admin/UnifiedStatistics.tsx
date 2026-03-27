@@ -24,6 +24,7 @@ const UnifiedStatistics = () => {
     to: endOfMonth(new Date()),
   });
   const [lastClickedDate, setLastClickedDate] = useState<Date | undefined>();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Handle date selection with double-click for single day
   const handleDateSelect = (date: Date | undefined) => {
@@ -225,7 +226,7 @@ const UnifiedStatistics = () => {
           <CardDescription>Cliquez deux fois sur la même date pour sélectionner un jour unique</CardDescription>
         </CardHeader>
         <CardContent>
-          <Popover>
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -259,11 +260,13 @@ const UnifiedStatistics = () => {
                     if (newRange.to) {
                       setDateRange(newRange);
                       setLastClickedDate(undefined); // Reset last clicked date for range
+                      setIsCalendarOpen(false); // Close when end date is selected
                     } else {
                       // If only 'from' is selected, allow single day selection on double click
                       if (lastClickedDate && format(lastClickedDate, 'yyyy-MM-dd') === format(newRange.from, 'yyyy-MM-dd')) {
                         setDateRange({ from: newRange.from, to: newRange.from });
                         setLastClickedDate(undefined);
+                        setIsCalendarOpen(false); // Close on double click too
                       } else {
                         setDateRange(newRange);
                         setLastClickedDate(newRange.from);
