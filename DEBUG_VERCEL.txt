@@ -1,0 +1,5 @@
+Vercel Diagnostic File
+Created at: 2026-03-27 16:34:00
+Last Commit: 61ce23c
+Full Reset to Capacitor v6
+pnpm-lock.yaml regenerated
