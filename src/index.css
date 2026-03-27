@@ -266,3 +266,42 @@ body.dragging-no-scroll .admin-scroll-container {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
+
+/* ========================================
+   IOS INSTANT RENDERING FIX
+   Empêche le rendu progressif bloc par bloc sur iOS WebKit.
+   Les animations animate-in/fade-in de tailwindcss-animate
+   causent un chargement séquentiel visible sur iOS.
+   ======================================== */
+
+/* Force le rendu immédiat du contenu des pages */
+.admin-page .container,
+.pos-page > *,
+.login-page > * {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Désactive les animations d'entrée sur le contenu principal des slides */
+.embla__slide > *,
+.embla__slide .container > * {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Pré-compose les layers pour éviter le rendu progressif iOS */
+#root {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Cards et listes - rendu instantané */
+.admin-page .space-y-2 > *,
+.admin-page .space-y-4 > *,
+.admin-page .space-y-6 > *,
+.admin-page .grid > * {
+  animation: none !important;
+  opacity: 1 !important;
+}
