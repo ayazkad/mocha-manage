@@ -9,6 +9,7 @@ import { Gift, Search, X, ScanLine } from 'lucide-react';
 import { usePOS } from '@/contexts/POSContext';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import DrinkPointsDisplay from './DrinkPointsDisplay';
+import { useNavigate } from 'react-router-dom';
 
 interface Customer {
   id: string;
@@ -32,7 +33,9 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
   const [showResults, setShowResults] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const queryClient = useQueryClient();
-  const { cart } = usePOS();
+  // Added loadOrderForModification to destructuring
+  const { cart, addToCart, loadOrderForModification } = usePOS();
+  const navigate = useNavigate();
 
   // Sync with external selectedCustomer prop
   useEffect(() => {
@@ -47,41 +50,130 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
 
   const searchCustomerMutation = useMutation({
     mutationFn: async (searchTerm: string) => {
-      // Try exact QR code match first
+      // 1. Try exact QR code match for customer
       const { data: qrMatch } = await supabase
         .from('customers')
         .select('*')
         .eq('qr_code', searchTerm)
         .maybeSingle();
-      
+
       if (qrMatch) {
-        return [qrMatch as Customer];
+        return { type: 'customer', data: [qrMatch as Customer] };
       }
 
-      // Search by name or phone
-      const { data, error } = await supabase
+      // 2. Try to find an ORDER by UUID (for ticket reloading)
+      // Basic UUID regex check to avoid unnecessary queries
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(searchTerm)) {
+        const { data: order } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (*)
+          `)
+          .eq('id', searchTerm)
+          .maybeSingle();
+
+        if (order) {
+          return { type: 'order', data: order };
+        }
+      }
+
+      // 3. Search by name or phone for customer
+      const { data: customerData } = await supabase
         .from('customers')
         .select('*')
         .or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
-      
-      if (error) throw error;
-      return data as Customer[];
+
+      if (customerData && customerData.length > 0) {
+        return { type: 'customer', data: customerData as Customer[] };
+      }
+
+      // 4. If no customer/order found, try to find a PRODUCT by barcode
+      const { data: productData } = await supabase
+        .from('products')
+        .select('*')
+        .eq('barcode', searchTerm)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (productData) {
+        return { type: 'product', data: productData };
+      }
+
+      return { type: 'none', data: [] };
     },
-    onSuccess: (customers) => {
-      if (customers.length === 0) {
-        toast.error('No customer found');
+    onSuccess: (result: any) => {
+      if (result.type === 'none') {
+        toast.error('No customer, order, or product found');
         setSearchResults([]);
         setShowResults(false);
-      } else if (customers.length === 1) {
-        setSelectedCustomer(customers[0]);
-        onCustomerSelected?.(customers[0]);
+      } else if (result.type === 'customer') {
+        const customers = result.data;
+        if (customers.length === 1) {
+          setSelectedCustomer(customers[0]);
+          onCustomerSelected?.(customers[0]);
+          setSearchResults([]);
+          setShowResults(false);
+          setShowScanner(false);
+          setSearchInput(''); // clear input on success
+          toast.success(`Customer found: ${customers[0].name}`);
+        } else {
+          setSearchResults(customers);
+          setShowResults(true);
+          toast.info(`${customers.length} customers found`);
+        }
+      } else if (result.type === 'product') {
+        const product = result.data;
+        // Add product to cart
+        addToCart({
+          productId: product.id,
+          productName: product.name_en, // Default to English name
+          quantity: 1,
+          basePrice: product.base_price,
+          image_url: product.image_url,
+          notes: '',
+        });
+        toast.success(`Added ${product.name_en} to cart`);
         setSearchResults([]);
         setShowResults(false);
-        toast.success(`Customer found: ${customers[0].name}`);
-      } else {
-        setSearchResults(customers);
-        setShowResults(true);
-        toast.info(`${customers.length} customers found`);
+        setShowScanner(false); // Close scanner after product scan too
+        setSearchInput('');
+      } else if (result.type === 'order') {
+        const order = result.data;
+
+        // Reconstruct cart items from order items
+        const cartItems = order.order_items.map((item: any) => {
+          const options = item.selected_options
+            ? (typeof item.selected_options === 'string' ? JSON.parse(item.selected_options) : item.selected_options)
+            : null;
+
+          return {
+            productId: item.product_id || '',
+            productName: item.product_name,
+            quantity: item.quantity,
+            basePrice: item.unit_price,
+            selectedSize: options?.size,
+            selectedMilk: options?.milk,
+            notes: item.notes || undefined,
+          };
+        });
+
+        const originalOrderData = {
+          orderId: order.id,
+          orderNumber: order.order_number,
+          originalTotal: Number(order.total),
+          items: cartItems,
+        };
+
+        loadOrderForModification(originalOrderData, cartItems);
+
+        toast.success(`Ticket #${order.order_number} chargé pour modification`);
+        setSearchResults([]);
+        setShowResults(false);
+        setShowScanner(false);
+        setSearchInput('');
+        navigate('/pos'); // Ensure we are on POS page
       }
     },
     onError: () => {
@@ -115,7 +207,8 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
 
   const handleScan = (result: string) => {
     if (result) {
-      setShowScanner(false);
+      // Don't close scanner immediately, let mutation success close it
+      // so users can see feedback if error
       searchCustomerMutation.mutate(result);
     }
   };
@@ -221,9 +314,9 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
                     <p className="font-semibold text-xs">{customer.name}</p>
                     <p className="text-[10px] text-muted-foreground">{customer.email}</p>
                     <p className="text-[10px] text-muted-foreground">{customer.phone}</p>
-                     <p className="text-[10px] text-primary font-medium">
-                       {customer.points} points • {customer.total_purchases} purchases
-                     </p>
+                    <p className="text-[10px] text-primary font-medium">
+                      {customer.points} points • {customer.total_purchases} purchases
+                    </p>
                   </div>
                 </div>
               ))}

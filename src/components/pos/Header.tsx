@@ -26,9 +26,9 @@ const Header = () => {
     <header className="bg-card border-b border-border/50 shadow-soft backdrop-blur-sm">
       <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
         <div className="flex items-center gap-3">
-          <img 
-            src={logoLatte} 
-            alt="Latte Logo" 
+          <img
+            src={logoLatte}
+            alt="Latte Logo"
             className="h-10 w-auto object-contain"
           />
         </div>

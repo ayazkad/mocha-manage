@@ -43,14 +43,14 @@ const DiscountDialog = ({ open, onClose, onApply, hasSelection }: DiscountDialog
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[90%] sm:max-w-md rounded-2xl border-none shadow-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Percent className="w-5 h-5" />
             Réduction en pourcentage
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           <div className="text-center">
             <div className="text-4xl font-bold text-primary mb-2">

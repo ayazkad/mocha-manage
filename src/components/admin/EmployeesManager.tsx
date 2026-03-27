@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const EmployeesManager = () => {
   const { toast } = useToast();
@@ -51,7 +52,15 @@ const EmployeesManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      resetForm();
+      setEditingId(null);
+      setFormData({
+        name: '',
+        employee_code: '',
+        pin_code: '',
+        role: 'employee',
+        active: true,
+      });
+      setIsDialogOpen(false);
       toast({ title: editingId ? 'Employee updated' : 'Employee created' });
     },
     onError: (error: any) => {
@@ -84,6 +93,8 @@ const EmployeesManager = () => {
     });
   };
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const handleEdit = (employee: any) => {
     setEditingId(employee.id);
     setFormData({
@@ -93,6 +104,12 @@ const EmployeesManager = () => {
       role: employee.role,
       active: employee.active,
     });
+    setIsDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    resetForm();
+    setIsDialogOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -102,13 +119,18 @@ const EmployeesManager = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingId ? 'Edit Employee' : 'Add New Employee'}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Employees List</h2>
+        <Button onClick={handleAdd}>Add New Employee</Button>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="w-[90%] rounded-2xl border-none shadow-xl sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label htmlFor="name">Name</Label>
                 <Input
@@ -129,7 +151,7 @@ const EmployeesManager = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label htmlFor="pin_code">PIN Code</Label>
                 <Input
@@ -166,56 +188,47 @@ const EmployeesManager = () => {
               <Label htmlFor="active">Active</Label>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
               <Button type="submit">
                 {editingId ? 'Update' : 'Create'}
               </Button>
-              {editingId && (
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancel
-                </Button>
-              )}
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Employees List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {employees?.map((employee) => (
-              <div 
-                key={employee.id} 
-                className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => handleEdit(employee)}
+      <div className="space-y-2">
+        {employees?.map((employee) => (
+          <div
+            key={employee.id}
+            className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-card"
+            onClick={() => handleEdit(employee)}
+          >
+            <div>
+              <h3 className="font-semibold">{employee.name}</h3>
+              <p className="text-sm text-muted-foreground">
+                Code: {employee.employee_code} • PIN: {employee.pin_code} • Role: {employee.role}
+                {!employee.active && ' • Inactive'}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteMutation.mutate(employee.id);
+                }}
               >
-                <div>
-                  <h3 className="font-semibold">{employee.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Code: {employee.employee_code} • PIN: {employee.pin_code} • Role: {employee.role}
-                    {!employee.active && ' • Inactive'}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteMutation.mutate(employee.id);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        ))}
+      </div>
     </div>
   );
 };

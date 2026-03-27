@@ -292,7 +292,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     try {
       setIsPrinting(true);
       console.log('[PrintReceiptDialog] Sending receipt via PrintClient with images...');
-      
+
       const result = await printClient.printReceiptWithImages(
         receiptText,
         logoBase64Ref.current || undefined,
@@ -329,7 +329,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-[340px] p-4" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent className="w-[90%] max-w-[340px] p-4 rounded-2xl border-none shadow-xl" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader className="pb-2">
           <DialogTitle className="text-base">Receipt #{receiptData.orderNumber}</DialogTitle>
         </DialogHeader>
@@ -371,13 +371,13 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
                 />
               </div>
               <pre className="font-mono text-[9px] leading-tight whitespace-pre overflow-x-auto">{receiptText}</pre>
-              
+
               {/* QR Code integrated in receipt */}
               {qrCodeDataUrl && (
                 <div className="flex flex-col items-center mt-2">
-                  <img 
-                    src={qrCodeDataUrl} 
-                    alt="Order QR Code" 
+                  <img
+                    src={qrCodeDataUrl}
+                    alt="Order QR Code"
                     className="w-20 h-20"
                   />
                   <p className="font-mono text-[8px] text-gray-600 mt-1 text-center">

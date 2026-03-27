@@ -14,7 +14,7 @@ interface CashPaymentDialogProps {
 
 const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefund }: CashPaymentDialogProps) => {
   const [amountReceived, setAmountReceived] = useState('');
-  
+
   // Reset amount when dialog opens
   useEffect(() => {
     if (open) {
@@ -23,7 +23,7 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
   }, [open]);
 
   const amount = parseFloat(amountReceived) || 0;
-  
+
   // For refunds, the total is already negative, we just confirm
   // For payments, we need to check amount >= total
   const isRefundMode = isRefund || total < 0;
@@ -71,7 +71,7 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[340px] p-4">
+      <DialogContent className="w-[90%] max-w-[340px] p-4 rounded-2xl border-none shadow-xl">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2 text-base">
             {isRefundMode ? <ArrowLeftRight className="w-4 h-4" /> : <Banknote className="w-4 h-4" />}
@@ -170,9 +170,8 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
             <Button
               onClick={handleConfirm}
               disabled={!canConfirm || processing}
-              className={`h-10 text-white rounded-lg font-semibold text-sm ${
-                isRefundMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'
-              }`}
+              className={`h-10 text-white rounded-lg font-semibold text-sm ${isRefundMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'
+                }`}
             >
               {processing ? 'Traitement...' : isRefundMode ? 'Confirmer remboursement' : 'Confirmer'}
             </Button>

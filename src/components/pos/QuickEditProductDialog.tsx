@@ -46,6 +46,44 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
+  // Delay interactions and aggressively clear text selection to prevent iOS issues
+  useEffect(() => {
+    if (open) {
+      setIsReady(false);
+
+      // Continuously clear selection during the opening animation
+      const clearSelection = () => {
+        if (window.getSelection) {
+          window.getSelection()?.removeAllRanges();
+        }
+        // Also blur any focused element
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      };
+
+      // Clear immediately
+      clearSelection();
+
+      // Clear repeatedly during animation
+      const interval = setInterval(clearSelection, 50);
+
+      const timer = setTimeout(() => {
+        clearInterval(interval);
+        clearSelection();
+        setIsReady(true);
+      }, 300);
+
+      return () => {
+        clearTimeout(timer);
+        clearInterval(interval);
+      };
+    } else {
+      setIsReady(false);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -146,7 +184,7 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
 
   const handleDelete = async () => {
     if (!product) return;
-    
+
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     setLoading(true);
@@ -179,7 +217,21 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-md">
+      <DialogContent className="w-[90%] max-w-md rounded-2xl border-none shadow-xl" style={{ pointerEvents: isReady ? 'auto' : 'none' }}>
+        {/* Touch-blocking overlay during opening animation */}
+        {!isReady && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 9999,
+              background: 'transparent',
+            }}
+            onTouchStart={(e) => e.preventDefault()}
+            onTouchMove={(e) => e.preventDefault()}
+            onTouchEnd={(e) => e.preventDefault()}
+          />
+        )}
         <DialogHeader>
           <DialogTitle>Edit {product?.name_en || product?.name_fr}</DialogTitle>
         </DialogHeader>
@@ -314,7 +366,7 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
               Save changes
             </Button>
           </div>
-          
+
           <Button
             variant="destructive"
             onClick={handleDelete}

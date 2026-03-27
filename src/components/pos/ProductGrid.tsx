@@ -40,6 +40,8 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
   const [isDialogOpeningBlocked, setIsDialogOpeningBlocked] = useState(false);
   const blockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+
+
   useEffect(() => {
     if (categoryId) {
       loadProducts();
@@ -83,13 +85,13 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
       // Si l'ouverture du dialogue est bloquée, ne rien faire pour les produits avec options.
       // Cela gère le comportement "cliquer en dehors pour fermer, puis recliquer pour ouvrir un nouveau".
       if (isDialogOpeningBlocked) {
-        return; 
+        return;
       }
 
       // Cas 1: Cliquer sur le *même* produit qui est actuellement sélectionné
       if (selectedProduct && selectedProduct.id === product.id) {
         handleProductOptionsDialogClose(); // Fermer le dialogue
-      } 
+      }
       // Cas 2: Cliquer sur un *produit différent* (ou aucun produit n'est sélectionné)
       else {
         setSelectedProduct(product); // Ouvrir le dialogue pour le nouveau produit
@@ -123,7 +125,9 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
 
   return (
     <>
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
+      <div
+        className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3 p-1 min-h-[50vh]"
+      >
         {products.map((product) => (
           <ProductCard
             key={product.id}

@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, GripVertical } from 'lucide-react';
+import { Trash2, GripVertical, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import SwipeableListItem, { SwipeableList } from './SwipeableListItem';
 
 const CategoriesManager = () => {
@@ -49,7 +50,13 @@ const CategoriesManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      resetForm();
+      setEditingId(null);
+      setFormData({
+        name_en: '',
+        icon: '',
+        active: true,
+      });
+      setIsDialogOpen(false);
       toast({ title: editingId ? 'Category updated' : 'Category created' });
     },
     onError: (error: any) => {
@@ -81,6 +88,8 @@ const CategoriesManager = () => {
     });
   };
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const handleEdit = (category: any) => {
     setEditingId(category.id);
     setFormData({
@@ -88,6 +97,12 @@ const CategoriesManager = () => {
       icon: category.icon || '',
       active: category.active,
     });
+    setIsDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    resetForm();
+    setIsDialogOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -130,13 +145,23 @@ const CategoriesManager = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingId ? 'Edit Category' : 'Add New Category'}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-semibold">Categories List</h2>
+          <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
+        </div>
+        <Button onClick={handleAdd} size="sm" className="gap-2">
+          <Plus className="w-4 h-4" /> Add Category
+        </Button>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="w-[90%] rounded-2xl border-none shadow-xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label htmlFor="name_en">Category Name</Label>
                 <Input
@@ -166,67 +191,59 @@ const CategoriesManager = () => {
               <Label htmlFor="active">Active</Label>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
               <Button type="submit">
                 {editingId ? 'Update' : 'Create'}
               </Button>
-              {editingId && (
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancel
-                </Button>
-              )}
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Categories List</CardTitle>
-          <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
-        </CardHeader>
-        <CardContent>
-          <SwipeableList>
-            {categories?.map((category, index) => (
-              <SwipeableListItem
-                key={category.id}
-                index={index}
-                listSize={categories?.length || 0}
-                onMoveTo={(toIndex) => handleMoveTo(index, toIndex)}
-                onClick={() => handleEdit(category)}
-                className="relative"
-              >
-                <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-background">
-                  <div className="flex items-center gap-3">
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <h3 className="font-semibold flex items-center gap-2">
-                        {category.icon && <span>{category.icon}</span>}
-                        {category.name_en}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {!category.active && 'Inactive'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteMutation.mutate(category.id);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+      <div className="space-y-2">
+        <SwipeableList>
+          {categories?.map((category, index) => (
+            <SwipeableListItem
+              key={category.id}
+              index={index}
+              listSize={categories?.length || 0}
+              onMoveTo={(toIndex) => handleMoveTo(index, toIndex)}
+              onClick={() => handleEdit(category)}
+              className="relative"
+            >
+              <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-card">
+                <div className="flex items-center gap-3">
+                  <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <h3 className="font-semibold flex items-center gap-2">
+                      {category.icon && <span>{category.icon}</span>}
+                      {category.name_en}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {!category.active && 'Inactive'}
+                    </p>
                   </div>
                 </div>
-              </SwipeableListItem>
-            ))}
-          </SwipeableList>
-        </CardContent>
-      </Card>
+                <div className="flex gap-2">
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteMutation.mutate(category.id);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </SwipeableListItem>
+          ))}
+        </SwipeableList>
+      </div>
     </div>
   );
 };

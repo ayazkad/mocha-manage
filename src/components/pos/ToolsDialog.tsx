@@ -46,7 +46,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
     if (!currentEmployee) return;
 
     const today = new Date().toISOString().split('T')[0];
-    
+
     const { data, error } = await supabase
       .from('employee_daily_benefits')
       .select('*')
@@ -129,12 +129,12 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       }
 
       const item = cart[drinkIndex];
-      
+
       // Apply 100% discount
       updateCartItem(drinkIndex, { ...item, discount: 100 });
 
       setFreeDrinkActive(true);
-      
+
       toast.success('Free drink applied (100% discount)');
       onClose();
     } catch (error) {
@@ -167,13 +167,13 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       let snackIndex = -1;
       for (let i = cart.length - 1; i >= 0; i--) {
         if (cart[i].discount === 100) continue; // Skip items already at 100%
-        
+
         const { data: product } = await supabase
           .from('products')
           .select('category_id')
           .eq('id', cart[i].productId)
           .single();
-        
+
         if (product && sweetSaltCategoryIds.includes(product.category_id)) {
           snackIndex = i;
           break;
@@ -187,7 +187,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
       }
 
       const item = cart[snackIndex];
-      
+
       // Apply 100% discount
       updateCartItem(snackIndex, { ...item, discount: 100 });
 
@@ -212,12 +212,12 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const losses = cart.map(item => {
         const itemPrice = item.basePrice +
           (item.selectedSize?.priceModifier || 0) +
           (item.selectedMilk?.priceModifier || 0);
-        
+
         return {
           employee_id: currentEmployee.id,
           session_id: currentSession.id,
@@ -249,7 +249,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="w-[90%] max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border-none shadow-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Wrench className="w-5 h-5" />
@@ -261,7 +261,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
           {/* Dark Mode Toggle */}
           <div className="space-y-3">
             <h3 className="font-semibold text-base">Display</h3>
-            
+
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -284,7 +284,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
           {/* Staff Benefits */}
           <div className="space-y-3">
             <h3 className="font-semibold text-base">Staff Benefits</h3>
-            
+
             <Card className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -359,7 +359,7 @@ const ToolsDialog = ({ open, onClose }: ToolsDialogProps) => {
           {/* Loss Management */}
           <div className="space-y-3">
             <h3 className="font-semibold text-base">Loss Management</h3>
-            
+
             <Card className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">

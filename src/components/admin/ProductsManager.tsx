@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash2, Upload, X, GripVertical } from 'lucide-react';
 import AdminBarcodeScanner from './AdminBarcodeScanner';
 import SwipeableListItem, { SwipeableList } from './SwipeableListItem';
+import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 const ProductsManager = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,6 +35,30 @@ const ProductsManager = () => {
     barcode: '',
     visible_in_categories: true,
   });
+
+  // Force re-render trigger state
+  const [rerenderKey, setRerenderKey] = useState(0);
+
+  // Fix for iOS keyboard hiding issue - force re-render like tab change
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const handleKeyboardHide = () => {
+        // Force a re-render by updating state (same as changing tabs)
+        setRerenderKey(prev => prev + 1);
+
+        // Also scroll to top
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+        }, 100);
+      };
+
+      Keyboard.addListener('keyboardDidHide', handleKeyboardHide);
+
+      return () => {
+        Keyboard.removeAllListeners();
+      };
+    }
+  }, []);
 
   const { data: products, refetch: refetchProducts } = useQuery({
     queryKey: ['products'],
@@ -61,17 +88,17 @@ const ProductsManager = () => {
   // Group products by category
   const groupedProducts = useMemo(() => {
     if (!products) return {};
-    
+
     const groups: { [key: string]: { name: string; sortOrder: number; products: any[] } } = {};
-    
+
     // Initialize groups from categories
     categories?.forEach(cat => {
       groups[cat.id] = { name: cat.name_en || cat.name_fr, sortOrder: cat.sort_order || 0, products: [] };
     });
-    
+
     // Add "No Category" group
     groups['no-category'] = { name: 'No Category', sortOrder: 9999, products: [] };
-    
+
     // Distribute products into groups
     products.forEach(product => {
       const categoryId = product.category_id || 'no-category';
@@ -81,12 +108,12 @@ const ProductsManager = () => {
         groups['no-category'].products.push(product);
       }
     });
-    
+
     // Sort products within each group by sort_order
     Object.values(groups).forEach(group => {
       group.products.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     });
-    
+
     return groups;
   }, [products, categories]);
 
@@ -245,7 +272,7 @@ const ProductsManager = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Auto-capitalize first letter
     let productName = formData.name_en.trim();
     if (productName) {
@@ -254,21 +281,21 @@ const ProductsManager = () => {
 
     // Check for duplicate product names
     if (products) {
-      const isDuplicate = products.some(p => 
-        p.name_en?.toLowerCase() === productName.toLowerCase() && 
+      const isDuplicate = products.some(p =>
+        p.name_en?.toLowerCase() === productName.toLowerCase() &&
         (!editingId || p.id !== editingId)
       );
-      
+
       if (isDuplicate) {
-        toast({ 
-          title: 'Duplicate product', 
+        toast({
+          title: 'Duplicate product',
           description: 'A product with this name already exists',
-          variant: 'destructive' 
+          variant: 'destructive'
         });
         return;
       }
     }
-    
+
     saveMutation.mutate({
       name_en: productName,
       name_fr: productName,
@@ -353,7 +380,7 @@ const ProductsManager = () => {
                   placeholder="Scan or enter barcode"
                   className="flex-1"
                 />
-                <AdminBarcodeScanner 
+                <AdminBarcodeScanner
                   onBarcodeScanned={(barcode) => setFormData({ ...formData, barcode })}
                 />
               </div>
@@ -493,7 +520,7 @@ const ProductsManager = () => {
                         onMoveTo={(toIndex) => moveProductTo(product.category_id, index, toIndex)}
                         onClick={() => handleEdit(product)}
                       >
-                        <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-background">
+                        <div className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors bg-background h-24">
                           <div className="flex items-center gap-3">
                             <GripVertical className="w-4 h-4 text-muted-foreground" />
                             <div>

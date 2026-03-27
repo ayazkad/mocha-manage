@@ -33,7 +33,7 @@ const NumPad = ({ value, onChange, maxLength = 4 }: NumPadProps) => {
             type="button"
             variant="outline"
             onClick={() => handleNumberClick(num)}
-            className="h-16 text-2xl font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="h-16 text-2xl font-semibold active:bg-primary active:text-primary-foreground transition-colors"
           >
             {num}
           </Button>
@@ -42,7 +42,7 @@ const NumPad = ({ value, onChange, maxLength = 4 }: NumPadProps) => {
           type="button"
           variant="outline"
           onClick={() => handleNumberClick('0')}
-          className="h-16 text-2xl font-semibold hover:bg-primary hover:text-primary-foreground transition-colors col-span-2"
+          className="h-16 text-2xl font-semibold active:bg-primary active:text-primary-foreground transition-colors col-span-2"
         >
           0
         </Button>
@@ -50,7 +50,7 @@ const NumPad = ({ value, onChange, maxLength = 4 }: NumPadProps) => {
           type="button"
           variant="outline"
           onClick={handleClear}
-          className="h-16 text-sm font-medium hover:bg-destructive hover:text-destructive-foreground"
+          className="h-16 text-sm font-medium active:bg-destructive active:text-destructive-foreground"
         >
           Effacer
         </Button>

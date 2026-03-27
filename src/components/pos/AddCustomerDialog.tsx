@@ -34,8 +34,8 @@ const AddCustomerDialog = () => {
       return data;
     },
     onSuccess: async (customer) => {
-      toast.success(`Client ${customer.name} ajouté avec succès!`);
-      
+      toast.success(`Client ${customer.name} added successfully!`);
+
       // Send QR code email
       try {
         const { data, error: functionError } = await supabase.functions.invoke('send-loyalty-qr', {
@@ -44,27 +44,27 @@ const AddCustomerDialog = () => {
             customerEmail: customer.email,
             customerName: customer.name,
             qrCode: customer.qr_code,
-            language: navigator.language.startsWith('ru') ? 'ru' : 
-                     navigator.language.startsWith('ka') ? 'ge' : 'en',
+            language: navigator.language.startsWith('ru') ? 'ru' :
+              navigator.language.startsWith('ka') ? 'ge' : 'en',
           },
         });
 
         if (functionError) {
           console.error('Error sending QR code:', functionError);
           const errorMessage = functionError.message || 'Unknown error';
-          
+
           // Check if it's a Resend domain verification error
           if (errorMessage.includes('verify a domain') || errorMessage.includes('validation_error')) {
-            toast.error('Email non envoyé : domaine non vérifié sur Resend. Veuillez vérifier votre domaine sur resend.com/domains');
+            toast.error('Email not sent: domain not verified on Resend. Please verify your domain on resend.com/domains');
           } else {
-            toast.error('Client ajouté mais erreur lors de l\'envoi de l\'email');
+            toast.error('Client added but error sending email');
           }
         } else {
-          toast.success('Email avec QR code envoyé!');
+          toast.success('Email with QR code sent!');
         }
       } catch (error) {
         console.error('Error invoking function:', error);
-        toast.error('Erreur lors de l\'envoi de l\'email');
+        toast.error('Error sending email');
       }
 
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -74,9 +74,9 @@ const AddCustomerDialog = () => {
     onError: (error: any) => {
       console.error('Error adding customer:', error);
       if (error.code === '23505') {
-        toast.error('Un client avec cet email existe déjà');
+        toast.error('A client with this email already exists');
       } else {
-        toast.error('Erreur lors de l\'ajout du client');
+        toast.error('Error adding customer');
       }
     },
   });
@@ -89,7 +89,7 @@ const AddCustomerDialog = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim() || !email.trim() || !phone.trim()) {
       toast.error('Tous les champs sont requis');
       return;
@@ -103,28 +103,29 @@ const AddCustomerDialog = () => {
   };
 
   return (
+
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <UserPlus className="w-4 h-4" />
-          <span className="hidden md:inline">Nouveau client</span>
+          <span className="hidden md:inline">New Customer</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md w-[90%] rounded-2xl border-none shadow-xl">
         <DialogHeader>
-          <DialogTitle>Ajouter un nouveau client</DialogTitle>
+          <DialogTitle>Add New Customer</DialogTitle>
           <DialogDescription>
-            Créez un compte fidélité pour un nouveau client
+            Create a loyalty account for a new customer
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nom complet</Label>
+            <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Jean Dupont"
+              placeholder="Name"
               required
             />
           </div>
@@ -135,18 +136,18 @@ const AddCustomerDialog = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="jean.dupont@example.com"
+              placeholder="example@example.com"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Téléphone</Label>
+            <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+33 6 12 34 56 78"
+              placeholder="+995 5xx xx xx xx"
               required
             />
           </div>
@@ -159,13 +160,13 @@ const AddCustomerDialog = () => {
                 resetForm();
               }}
             >
-              Annuler
+              Cancel
             </Button>
             <Button
               type="submit"
               disabled={addCustomerMutation.isPending}
             >
-              {addCustomerMutation.isPending ? 'Ajout...' : 'Ajouter'}
+              {addCustomerMutation.isPending ? 'Adding...' : 'Add Customer'}
             </Button>
           </div>
         </form>

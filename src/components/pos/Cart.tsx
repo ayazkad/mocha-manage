@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Trash2, CheckCircle, CreditCard, Banknote, Percent, Gift, Edit2, Plus, Minus, AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import CustomerLoyalty from './CustomerLoyalty';
 import DiscountDialog from './DiscountDialog';
 import PrintReceiptDialog from './PrintReceiptDialog';
@@ -15,6 +15,171 @@ import CashPaymentDialog from './CashPaymentDialog';
 interface CartProps {
   onClose?: () => void;
 }
+
+const SwipeableCartItem = ({
+  item,
+  index,
+  isSelected,
+  onToggleSelection,
+  onRemove,
+  onQuantityChange
+}: {
+  item: any,
+  index: number,
+  isSelected: boolean,
+  onToggleSelection: () => void,
+  onRemove: () => void,
+  onQuantityChange: (index: number, q: number) => void
+}) => {
+  const [offsetX, setOffsetX] = useState(0);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    isDragging.current = true;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX.current || !isDragging.current) return;
+
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - touchStartX.current;
+
+    // Only allow swiping left (negative diff)
+    if (diff < 0) {
+      // Limit the drag to -100px
+      setOffsetX(Math.max(diff, -100));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    touchStartX.current = null;
+
+    // If swiped more than 80px, trigger remove
+    if (offsetX < -80) {
+      setOffsetX(-1000); // Animate out content
+      setIsRemoving(true); // Trigger container collapse
+
+      setTimeout(() => {
+        onRemove();
+      }, 300);
+    } else {
+      // Snap back
+      setOffsetX(0);
+    }
+  };
+
+  const itemPrice = item.basePrice +
+    (item.selectedSize?.priceModifier || 0) +
+    (item.selectedMilk?.priceModifier || 0);
+  const itemTotal = itemPrice * item.quantity;
+  const itemDiscount = item.discount || 0;
+  const discountedTotal = itemTotal * (1 - itemDiscount / 100);
+
+  return (
+    <div
+      className={`relative overflow-hidden mb-2 rounded-lg transition-all duration-300 ease-in-out ${isRemoving ? 'max-h-0 opacity-0 mb-0' : 'max-h-[200px] opacity-100'
+        }`}
+    >
+      {/* Background delete layer */}
+      <div className="absolute inset-0 bg-destructive flex items-center justify-end pr-4 rounded-lg">
+        <Trash2 className="text-white w-5 h-5" />
+      </div>
+
+      {/* Swipeable content */}
+      <div
+        className={`bg-card relative z-10 p-2 border-2 transition-transform duration-200 ease-out rounded-lg ${isSelected ? 'border-primary bg-primary/5' : 'border-border/30'
+          }`}
+        style={{ transform: `translateX(${offsetX}px)` }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={onToggleSelection}
+      >
+        <div className="flex gap-2">
+          {/* Product image */}
+          <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+            {item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={item.productName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <ShoppingCart className="w-5 h-5 text-muted-foreground" />
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-1 mb-0.5">
+              <h3 className="font-semibold text-xs leading-tight text-card-foreground">
+                {item.productName}
+              </h3>
+            </div>
+
+            {(item.selectedSize || item.selectedMilk) && (
+              <p className="text-[10px] text-muted-foreground mb-1">
+                {[item.selectedSize?.name, item.selectedMilk?.name]
+                  .filter(Boolean)
+                  .join(', ')}
+              </p>
+            )}
+
+            {item.notes && (
+              <p className="text-[10px] text-muted-foreground italic mb-1">
+                Note: {item.notes}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between mt-1">
+              <div className="flex flex-col">
+                {itemDiscount > 0 ? (
+                  <>
+                    <span className="text-[10px] text-muted-foreground line-through">
+                      {itemTotal.toFixed(2)} ₾
+                    </span>
+                    <span className="font-bold text-sm text-primary">
+                      {discountedTotal.toFixed(2)} ₾
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-bold text-sm text-card-foreground">
+                    {itemTotal.toFixed(2)} ₾
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 rounded-full shadow-sm"
+                  onClick={() => onQuantityChange(index, item.quantity - 1)}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <span className="w-6 text-center font-bold text-sm">
+                  {item.quantity}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 rounded-full shadow-sm"
+                  onClick={() => onQuantityChange(index, item.quantity + 1)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Cart = ({ onClose }: CartProps) => {
   const {
@@ -47,6 +212,32 @@ const Cart = ({ onClose }: CartProps) => {
   const [showPrintReceipt, setShowPrintReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
 
+  // Swipe to close gesture
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = touchEndX - touchStartX.current;
+    const deltaY = Math.abs(touchEndY - touchStartY.current);
+
+    // Swipe right from left edge: deltaX > 80px, started within 120px of left edge
+    if (deltaX > 80 && touchStartX.current < 120 && deltaY < 150) {
+      onClose?.();
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   const getRawSubtotal = () => {
     return cart.reduce((total, item) => {
       const sizeModifier = item.selectedSize?.priceModifier || 0;
@@ -58,7 +249,7 @@ const Cart = ({ onClose }: CartProps) => {
 
   const subtotal = getRawSubtotal();
   const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  
+
   // Calculer la réduction automatique des offres
   useEffect(() => {
     const checkOffers = async () => {
@@ -100,7 +291,7 @@ const Cart = ({ onClose }: CartProps) => {
       ? (subtotal * appliedOffer.discount_value) / 100
       : appliedOffer.discount_value
     : 0;
-  
+
   // Calculate manual discount from items
   const itemDiscounts = cart.reduce((sum, item) => {
     const itemPrice = (item.basePrice +
@@ -109,7 +300,7 @@ const Cart = ({ onClose }: CartProps) => {
     const discount = item.discount || 0;
     return sum + (itemPrice * discount / 100);
   }, 0);
-  
+
   // État pour stocker les boissons (Coffee/Non Coffee)
   const [drinkProductIds, setDrinkProductIds] = useState<string[]>([]);
 
@@ -139,7 +330,7 @@ const Cart = ({ onClose }: CartProps) => {
           const categoryNameEn = (p.categories?.name_en || '').trim().toLowerCase();
           const categoryNameFr = (p.categories?.name_fr || '').trim().toLowerCase();
           return categoryNameEn === 'coffee' || categoryNameEn === 'non coffee' ||
-                 categoryNameFr === 'coffee' || categoryNameFr === 'non coffee';
+            categoryNameFr === 'coffee' || categoryNameFr === 'non coffee';
         }).map((p: any) => p.id);
         setDrinkProductIds(drinkIds);
       }
@@ -151,31 +342,31 @@ const Cart = ({ onClose }: CartProps) => {
   // Calculer la boisson gratuite si le client a >= 10 points (seulement pour Coffee/Non Coffee)
   const freeDrinkDiscount = selectedCustomer && selectedCustomer.points >= 10
     ? (() => {
-        // Filtrer seulement les boissons Coffee/Non Coffee
-        const drinks = cart
-          .filter(item => drinkProductIds.includes(item.productId))
-          .map((item, index) => ({
-            index,
-            item,
-            unitPrice: item.basePrice + 
-              (item.selectedSize?.priceModifier || 0) + 
-              (item.selectedMilk?.priceModifier || 0)
-          }));
-        
-        if (drinks.length === 0) return 0;
-        
-        // Trouver la boisson la moins chère
-        const cheapestDrink = drinks.reduce((cheapest, current) => {
-          if (!cheapest || current.unitPrice < cheapest.unitPrice) {
-            return current;
-          }
-          return cheapest;
-        }, null as { index: number; item: any; unitPrice: number } | null);
-        
-        return cheapestDrink ? cheapestDrink.unitPrice : 0;
-      })()
+      // Filtrer seulement les boissons Coffee/Non Coffee
+      const drinks = cart
+        .filter(item => drinkProductIds.includes(item.productId))
+        .map((item, index) => ({
+          index,
+          item,
+          unitPrice: item.basePrice +
+            (item.selectedSize?.priceModifier || 0) +
+            (item.selectedMilk?.priceModifier || 0)
+        }));
+
+      if (drinks.length === 0) return 0;
+
+      // Trouver la boisson la moins chère
+      const cheapestDrink = drinks.reduce((cheapest, current) => {
+        if (!cheapest || current.unitPrice < cheapest.unitPrice) {
+          return current;
+        }
+        return cheapest;
+      }, null as { index: number; item: any; unitPrice: number } | null);
+
+      return cheapestDrink ? cheapestDrink.unitPrice : 0;
+    })()
     : 0;
-  
+
   const totalDiscount = automaticDiscount + itemDiscounts + freeDrinkDiscount;
   const total = Math.max(0, subtotal - totalDiscount);
 
@@ -190,8 +381,8 @@ const Cart = ({ onClose }: CartProps) => {
   };
 
   const toggleItemSelection = (index: number) => {
-    setSelectedItems(prev => 
-      prev.includes(index) 
+    setSelectedItems(prev =>
+      prev.includes(index)
         ? prev.filter(i => i !== index)
         : [...prev, index]
     );
@@ -215,8 +406,8 @@ const Cart = ({ onClose }: CartProps) => {
       updateAllCartItems(updatedCart);
     } else if (selectedItems.length > 0) {
       // Appliquer seulement aux items sélectionnés
-      const updatedCart = cart.map((item, index) => 
-        selectedItems.includes(index) 
+      const updatedCart = cart.map((item, index) =>
+        selectedItems.includes(index)
           ? { ...item, discount: percentage }
           : item
       );
@@ -271,16 +462,16 @@ const Cart = ({ onClose }: CartProps) => {
 
   const handleUpdateModifiedOrder = async (paymentMethod: 'cash' | 'card', cashAmount: number = 0) => {
     if (!originalOrder || !currentSession || !currentEmployee) return;
-    
+
     try {
       const priceDiff = getPriceDifference();
-      
+
       // Delete old order items
       await supabase
         .from('order_items')
         .delete()
         .eq('order_id', originalOrder.orderId);
-      
+
       // Insert new order items
       const orderItems = cart.map((item) => ({
         order_id: originalOrder.orderId,
@@ -301,7 +492,7 @@ const Cart = ({ onClose }: CartProps) => {
       }));
 
       await supabase.from('order_items').insert(orderItems);
-      
+
       // Update order totals
       await supabase
         .from('orders')
@@ -312,7 +503,7 @@ const Cart = ({ onClose }: CartProps) => {
           notes: `Modifié: différence ${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)} ₾`,
         })
         .eq('id', originalOrder.orderId);
-      
+
       // Update session totals with the difference
       if (priceDiff !== 0) {
         const { data: sessionData } = await supabase
@@ -341,11 +532,11 @@ const Cart = ({ onClose }: CartProps) => {
         items: cart.map(item => ({
           productName: item.productName,
           quantity: item.quantity,
-          unitPrice: item.basePrice + 
-            (item.selectedSize?.priceModifier || 0) + 
+          unitPrice: item.basePrice +
+            (item.selectedSize?.priceModifier || 0) +
             (item.selectedMilk?.priceModifier || 0),
-          totalPrice: (item.basePrice + 
-            (item.selectedSize?.priceModifier || 0) + 
+          totalPrice: (item.basePrice +
+            (item.selectedSize?.priceModifier || 0) +
             (item.selectedMilk?.priceModifier || 0)) * item.quantity,
           selectedSize: item.selectedSize,
           selectedMilk: item.selectedMilk,
@@ -478,15 +669,15 @@ const Cart = ({ onClose }: CartProps) => {
             // Bien nettoyer les espaces
             const categoryNameEn = (product.categories.name_en || '').trim().toLowerCase();
             const categoryNameFr = (product.categories.name_fr || '').trim().toLowerCase();
-            
+
             console.log(`Product ${item.productName}: EN="${categoryNameEn}", FR="${categoryNameFr}"`);
-            
+
             // Vérifier si c'est Coffee ou Non Coffee (exactement, après trim)
             const isCoffeeCategory = categoryNameEn === 'coffee' || categoryNameFr === 'coffee';
             const isNonCoffeeCategory = categoryNameEn === 'non coffee' || categoryNameFr === 'non coffee';
-            
+
             console.log(`Is coffee: ${isCoffeeCategory}, Is non-coffee: ${isNonCoffeeCategory}`);
-            
+
             if (isCoffeeCategory || isNonCoffeeCategory) {
               console.log(`✅ Adding ${item.quantity} points for ${item.productName}`);
               return sum + item.quantity;
@@ -507,9 +698,9 @@ const Cart = ({ onClose }: CartProps) => {
           const newPoints = selectedCustomer.points - 10 + drinkCount;
           await supabase
             .from('customers')
-            .update({ 
+            .update({
               points: newPoints,
-              total_purchases: selectedCustomer.total_purchases + totalItemsCount 
+              total_purchases: selectedCustomer.total_purchases + totalItemsCount
             })
             .eq('id', selectedCustomer.id);
 
@@ -529,9 +720,9 @@ const Cart = ({ onClose }: CartProps) => {
             console.log(`Adding ${drinkCount} points to customer`);
             await supabase
               .from('customers')
-              .update({ 
+              .update({
                 points: selectedCustomer.points + drinkCount,
-                total_purchases: selectedCustomer.total_purchases + totalItemsCount 
+                total_purchases: selectedCustomer.total_purchases + totalItemsCount
               })
               .eq('id', selectedCustomer.id);
 
@@ -547,8 +738,8 @@ const Cart = ({ onClose }: CartProps) => {
             // Update only total purchases if no drinks
             await supabase
               .from('customers')
-              .update({ 
-                total_purchases: selectedCustomer.total_purchases + totalItemsCount 
+              .update({
+                total_purchases: selectedCustomer.total_purchases + totalItemsCount
               })
               .eq('id', selectedCustomer.id);
           }
@@ -585,7 +776,7 @@ const Cart = ({ onClose }: CartProps) => {
         if (benefitsData) {
           await supabase
             .from('employee_daily_benefits')
-            .update({ 
+            .update({
               discount_tickets_count: (benefitsData.discount_tickets_count || 0) + 1,
               discount_used: true
             })
@@ -602,7 +793,7 @@ const Cart = ({ onClose }: CartProps) => {
             });
         }
       }
-      
+
       // Marquer la boisson gratuite comme utilisée si applicable
       if (freeDrinkActive) {
         const today = new Date().toISOString().split('T')[0];
@@ -612,7 +803,7 @@ const Cart = ({ onClose }: CartProps) => {
           .eq('employee_id', currentEmployee.id)
           .eq('benefit_date', today);
       }
-      
+
       // Marquer le snack gratuit comme utilisé si applicable
       if (freeSnackActive) {
         const today = new Date().toISOString().split('T')[0];
@@ -624,7 +815,7 @@ const Cart = ({ onClose }: CartProps) => {
       }
 
       toast.success(`Order ${orderData.order_number} completed`);
-      
+
       // Prepare receipt data
       const now = new Date();
       const receiptInfo = {
@@ -636,11 +827,11 @@ const Cart = ({ onClose }: CartProps) => {
         items: cart.map(item => ({
           productName: item.productName,
           quantity: item.quantity,
-          unitPrice: item.basePrice + 
-            (item.selectedSize?.priceModifier || 0) + 
+          unitPrice: item.basePrice +
+            (item.selectedSize?.priceModifier || 0) +
             (item.selectedMilk?.priceModifier || 0),
-          totalPrice: (item.basePrice + 
-            (item.selectedSize?.priceModifier || 0) + 
+          totalPrice: (item.basePrice +
+            (item.selectedSize?.priceModifier || 0) +
             (item.selectedMilk?.priceModifier || 0)) * item.quantity,
           selectedSize: item.selectedSize,
           selectedMilk: item.selectedMilk,
@@ -658,7 +849,7 @@ const Cart = ({ onClose }: CartProps) => {
 
       setReceiptData(receiptInfo);
       setShowPrintReceipt(true);
-      
+
       // Ne pas nettoyer immédiatement - attendre que le dialog soit fermé
       // clearCart();
       // setSelectedCustomer(null);
@@ -699,7 +890,7 @@ const Cart = ({ onClose }: CartProps) => {
         onClose={handleReceiptClose}
         receiptData={receiptData}
       />
-      
+
       <CashPaymentDialog
         open={showCashCalculator}
         onClose={() => {
@@ -711,327 +902,253 @@ const Cart = ({ onClose }: CartProps) => {
         processing={processing}
         isRefund={isModifyingOrder && getPriceDifference() < 0}
       />
-      
-      <div className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50">
-      {/* Header */}
-      <div className="p-3 border-b border-border/50 bg-secondary/30 shrink-0">
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold text-card-foreground">
-            {isModifyingOrder ? 'Modification' : 'Cart'}
-          </h2>
-          <span className="ml-auto text-xs text-muted-foreground">
-            {cart.length} item{cart.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-        
-        {/* Modification Mode Banner */}
-        {isModifyingOrder && originalOrder && (
-          <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/50">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-                  Modif. #{originalOrder.orderNumber}
-                </span>
-              </div>
-              {currentEmployee?.role === 'admin' && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={cancelOrderModification}
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              )}
+
+      <div
+        className="w-full h-full bg-card/95 backdrop-blur-sm flex flex-col border-l border-border/50"
+        style={{ touchAction: 'pan-y' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Header */}
+        <header
+          className="cart-header pl-3 pr-3 pb-3 border-b border-border/50 bg-secondary/30 shrink-0 pt-[max(env(safe-area-inset-top),44px)]"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4 text-primary" />
+              <h2 className="text-base font-semibold text-card-foreground">
+                {isModifyingOrder ? 'Modification' : 'Cart'}
+              </h2>
+              <span className="text-xs text-muted-foreground">
+                {cart.length} item{cart.length !== 1 ? 's' : ''}
+              </span>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Original: {originalOrder.originalTotal.toFixed(2)} ₾
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Cart Items */}
-      <ScrollArea className="flex-1">
-        {cart.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground py-12 min-h-[300px]">
-            <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
-            <p className="text-sm">Your cart is empty</p>
-          </div>
-        ) : (
-          <div className="p-3 space-y-2">
-            {/* Cart items list */}
-            {cart.map((item, index) => {
-              const itemPrice = item.basePrice +
-                (item.selectedSize?.priceModifier || 0) +
-                (item.selectedMilk?.priceModifier || 0);
-              const itemTotal = itemPrice * item.quantity;
-              const itemDiscount = item.discount || 0;
-              const discountedTotal = itemTotal * (1 - itemDiscount / 100);
-
-              return (
-                <div 
-                  key={index} 
-                  className={`bg-card/50 rounded-lg p-2 border-2 transition-colors cursor-pointer ${
-                    selectedItems.includes(index) ? 'border-primary bg-primary/10' : 'border-border/30 hover:border-primary/50'
-                  }`}
-                  onClick={() => toggleItemSelection(index)}
-                >
-                  <div className="flex gap-2">
-                    {/* Product image */}
-                    <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                      {item.image_url ? (
-                        <img
-                          src={item.image_url}
-                          alt={item.productName}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <ShoppingCart className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-1 mb-0.5">
-                        <h3 className="font-semibold text-xs leading-tight text-card-foreground">
-                          {item.productName}
-                        </h3>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 shrink-0 text-destructive hover:bg-destructive/10 rounded-md"
-                          onClick={(e) => { e.stopPropagation(); removeFromCart(index); }}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-
-                      {(item.selectedSize || item.selectedMilk) && (
-                        <p className="text-[10px] text-muted-foreground mb-1">
-                          {[item.selectedSize?.name, item.selectedMilk?.name]
-                            .filter(Boolean)
-                            .join(', ')}
-                        </p>
-                      )}
-                      
-                      {/* Display product notes */}
-                      {item.notes && (
-                        <p className="text-[10px] text-muted-foreground italic mb-1">
-                          Note: {item.notes}
-                        </p>
-                      )}
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                          {itemDiscount > 0 ? (
-                            <>
-                              <span className="text-[10px] text-muted-foreground line-through">
-                                {itemTotal.toFixed(2)} ₾
-                              </span>
-                              <span className="font-bold text-sm text-primary">
-                                {discountedTotal.toFixed(2)} ₾
-                              </span>
-                              <span className="text-[9px] text-green-600">
-                                -{itemDiscount}%
-                              </span>
-                            </>
-                          ) : (
-                            <span className="font-bold text-sm text-card-foreground">
-                              {itemTotal.toFixed(2)} ₾
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6 rounded-md"
-                            onClick={() => handleQuantityChange(index, item.quantity - 1)}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="w-7 text-center font-medium text-xs">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6 rounded-md"
-                            onClick={() => handleQuantityChange(index, item.quantity + 1)}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </ScrollArea>
-
-      {/* Footer - always visible */}
-      <div className="mt-auto border-t border-border/50 bg-secondary/30 shrink-0">
-        {/* Customer Loyalty - moved above subtotal */}
-        <div className="p-2 border-b border-border/50">
-          <CustomerLoyalty 
-            onCustomerSelected={setSelectedCustomer}
-            selectedCustomer={selectedCustomer}
-          />
-        </div>
-
-        <div className="p-3 space-y-2">
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
-            </div>
-            
-            {(appliedOffer || itemDiscounts > 0 || freeDrinkDiscount > 0) && (
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  {appliedOffer && <Gift className="w-3 h-3" />}
-                  {itemDiscounts > 0 && <Percent className="w-3 h-3" />}
-                  {freeDrinkDiscount > 0 && <Gift className="w-3 h-3 text-green-600" />}
-                  Discount
-                  {freeDrinkDiscount > 0 && (
-                    <span className="text-green-600 font-medium">
-                      (Free Drink!)
-                    </span>
-                  )}
-                </span>
-                <span className="font-semibold text-destructive">
-                  -{totalDiscount.toFixed(2)} ₾
-                </span>
-              </div>
+            {onClose && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={onClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             )}
-            
-            <Separator />
-            
-            <div className="flex justify-between text-base font-bold">
-              <span className="text-card-foreground">Total Payment</span>
-              <span className="text-primary">{total.toFixed(2)} ₾</span>
-            </div>
+          </div>
 
-            {/* Price difference when modifying an order */}
-            {isModifyingOrder && originalOrder && (
-              <div className={`p-2 rounded-lg ${
-                getPriceDifference() > 0 
-                  ? 'bg-red-500/10 border border-red-500/50' 
-                  : getPriceDifference() < 0 
-                        ? 'bg-green-500/10 border border-green-500/50'
-                    : 'bg-muted border border-border'
-              }`}>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-medium">
-                    {getPriceDifference() > 0 
-                      ? '💰 To Collect' 
-                      : getPriceDifference() < 0 
-                        ? '💵 To Refund'
-                        : '✓ No Difference'}
+          {/* Modification Mode Banner */}
+          {isModifyingOrder && originalOrder && (
+            <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/50">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                    Modif. #{originalOrder.orderNumber}
                   </span>
-                  <span className={`text-sm font-bold ${
-                    getPriceDifference() > 0 
-                      ? 'text-red-600' 
-                      : getPriceDifference() < 0 
+                </div>
+                {currentEmployee?.role === 'admin' && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={cancelOrderModification}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Original: {originalOrder.originalTotal.toFixed(2)} ₾
+              </p>
+            </div>
+          )}
+        </header>
+
+        {/* Cart Items */}
+        <ScrollArea className="flex-1">
+          {cart.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground py-12 min-h-[300px]">
+              <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
+              <p className="text-sm">Your cart is empty</p>
+            </div>
+          ) : (
+            <div className="p-3 space-y-2">
+              {/* Cart items list */}
+              {cart.map((item, index) => (
+                <SwipeableCartItem
+                  key={`${item.productId}-${index}-${item.selectedSize?.name}-${item.selectedMilk?.name}`}
+                  item={item}
+                  index={index}
+                  isSelected={selectedItems.includes(index)}
+                  onToggleSelection={() => toggleItemSelection(index)}
+                  onRemove={() => {
+                    removeFromCart(index);
+                    if (selectedItems.includes(index)) {
+                      toggleItemSelection(index);
+                    }
+                  }}
+                  onQuantityChange={handleQuantityChange}
+                />
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+
+
+        {/* Footer - always visible */}
+        <div className="mt-auto border-t border-border/50 bg-secondary/30 shrink-0">
+          {/* Customer Loyalty - moved above subtotal */}
+          <div className="p-2 border-b border-border/50">
+            <CustomerLoyalty
+              onCustomerSelected={setSelectedCustomer}
+              selectedCustomer={selectedCustomer}
+            />
+          </div>
+
+          <div className="p-3 space-y-2">
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
+              </div>
+
+              {(appliedOffer || itemDiscounts > 0 || freeDrinkDiscount > 0) && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    {appliedOffer && <Gift className="w-3 h-3" />}
+                    {itemDiscounts > 0 && <Percent className="w-3 h-3" />}
+                    {freeDrinkDiscount > 0 && <Gift className="w-3 h-3 text-green-600" />}
+                    Discount
+                    {freeDrinkDiscount > 0 && (
+                      <span className="text-green-600 font-medium">
+                        (Free Drink!)
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-semibold text-destructive">
+                    -{totalDiscount.toFixed(2)} ₾
+                  </span>
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="flex justify-between text-base font-bold">
+                <span className="text-card-foreground">Total Payment</span>
+                <span className="text-primary">{total.toFixed(2)} ₾</span>
+              </div>
+
+              {/* Price difference when modifying an order */}
+              {isModifyingOrder && originalOrder && (
+                <div className={`p-2 rounded-lg ${getPriceDifference() > 0
+                  ? 'bg-red-500/10 border border-red-500/50'
+                  : getPriceDifference() < 0
+                    ? 'bg-green-500/10 border border-green-500/50'
+                    : 'bg-muted border border-border'
+                  }`}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium">
+                      {getPriceDifference() > 0
+                        ? '💰 To Collect'
+                        : getPriceDifference() < 0
+                          ? '💵 To Refund'
+                          : '✓ No Difference'}
+                    </span>
+                    <span className={`text-sm font-bold ${getPriceDifference() > 0
+                      ? 'text-red-600'
+                      : getPriceDifference() < 0
                         ? 'text-green-600'
                         : 'text-muted-foreground'
-                  }`}>
-                    {getPriceDifference() > 0 ? '+' : ''}{getPriceDifference().toFixed(2)} ₾
-                  </span>
+                      }`}>
+                      {getPriceDifference() > 0 ? '+' : ''}{getPriceDifference().toFixed(2)} ₾
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowDiscountDialog(true)}
-                className="justify-between rounded-lg h-9 text-xs"
-                disabled={cart.length === 0}
-              >
-                <span className="flex items-center gap-1.5">
-                  <Percent className="w-3 h-3" />
-                  {selectedItems.length > 0 
-                    ? `Discount (${selectedItems.length})`
-                    : 'Discount'
-                  }
-                </span>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (selectedItems.length > 0) {
-                    selectedItems.forEach(index => {
-                      const item = cart[index];
-                      updateCartItem(index, { ...item, discount: 0 });
-                    });
-                    setSelectedItems([]);
-                  } else {
-                    applyDiscountToItems(0, true);
-                  }
-                }}
-                className="rounded-lg h-9 text-xs text-destructive hover:text-destructive"
-                disabled={cart.length === 0 || itemDiscounts === 0}
-              >
-                Remove
-              </Button>
-            </div>
-          </div>
-
-          {!showPaymentMethod && (
-            <Button
-              onClick={handlePaymentMethodClick}
-              disabled={processing}
-              className="w-full h-11 bg-[#F5A623] hover:bg-[#E09612] text-white transition-colors gap-2 text-base font-semibold rounded-lg shadow-md"
-            >
-              Pay Now
-            </Button>
-          )}
-
-          {showPaymentMethod && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-center text-muted-foreground">
-                Choose payment method
-              </p>
               <div className="grid grid-cols-2 gap-2">
                 <Button
-                  onClick={handleCashPayment}
-                  disabled={processing}
-                  className="h-16 flex-col gap-1.5 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-lg"
                   variant="outline"
+                  onClick={() => setShowDiscountDialog(true)}
+                  className="justify-between rounded-lg h-9 text-xs"
+                  disabled={cart.length === 0}
                 >
-                  <Banknote className="w-6 h-6" />
-                  <span className="text-xs font-semibold">Cash</span>
+                  <span className="flex items-center gap-1.5">
+                    <Percent className="w-3 h-3" />
+                    {selectedItems.length > 0
+                      ? `Discount (${selectedItems.length})`
+                      : 'Discount'
+                    }
+                  </span>
                 </Button>
                 <Button
-                  onClick={handleCardPayment}
-                  disabled={processing}
-                  className="h-16 flex-col gap-1.5 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-lg"
                   variant="outline"
+                  onClick={() => {
+                    if (selectedItems.length > 0) {
+                      selectedItems.forEach(index => {
+                        const item = cart[index];
+                        updateCartItem(index, { ...item, discount: 0 });
+                      });
+                      setSelectedItems([]);
+                    } else {
+                      applyDiscountToItems(0, true);
+                    }
+                  }}
+                  className="rounded-lg h-9 text-xs text-destructive hover:text-destructive"
+                  disabled={cart.length === 0 || itemDiscounts === 0}
                 >
-                  <CreditCard className="w-6 h-6" />
-                  <span className="text-xs font-semibold">Card</span>
+                  Remove
                 </Button>
               </div>
-              <Button
-                onClick={() => setShowPaymentMethod(false)}
-                variant="ghost"
-                className="w-full rounded-lg h-8 text-xs"
-                disabled={processing}
-              >
-                Back
-              </Button>
             </div>
-          )}
+
+            {!showPaymentMethod && (
+              <Button
+                onClick={handlePaymentMethodClick}
+                disabled={processing}
+                className="w-full h-11 bg-[#F5A623] hover:bg-[#E09612] text-white transition-colors gap-2 text-base font-semibold rounded-lg shadow-md"
+              >
+                Pay Now
+              </Button>
+            )}
+
+            {showPaymentMethod && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-center text-muted-foreground">
+                  Choose payment method
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={handleCashPayment}
+                    disabled={processing}
+                    className="h-16 flex-col gap-1.5 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-lg"
+                    variant="outline"
+                  >
+                    <Banknote className="w-6 h-6" />
+                    <span className="text-xs font-semibold">Cash</span>
+                  </Button>
+                  <Button
+                    onClick={handleCardPayment}
+                    disabled={processing}
+                    className="h-16 flex-col gap-1.5 bg-card hover:bg-accent border-2 border-border hover:border-primary transition-all rounded-lg"
+                    variant="outline"
+                  >
+                    <CreditCard className="w-6 h-6" />
+                    <span className="text-xs font-semibold">Card</span>
+                  </Button>
+                </div>
+                <Button
+                  onClick={() => setShowPaymentMethod(false)}
+                  variant="ghost"
+                  className="w-full rounded-lg h-8 text-xs"
+                  disabled={processing}
+                >
+                  Back
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      </div>
+      </div >
       <DiscountDialog
         open={showDiscountDialog}
         onClose={() => setShowDiscountDialog(false)}

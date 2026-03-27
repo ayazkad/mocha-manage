@@ -17,12 +17,12 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
   const [scanning, setScanning] = useState(true);
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  
+
   const { loadOrderForModification, cart } = usePOS();
 
   const handleScan = async (result: string) => {
     if (!result || loading) return;
-    
+
     setLoading(true);
     setScanning(false);
 
@@ -85,13 +85,13 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
     // Convert order items to cart items
     const cartItems = orderDetails.order_items.map((item: any) => {
       const options = item.selected_options ? JSON.parse(item.selected_options) : {};
-      
+
       return {
         productId: item.product_id || '',
         productName: item.product_name,
         quantity: item.quantity,
-        basePrice: item.unit_price - 
-          (options.size?.priceModifier || 0) - 
+        basePrice: item.unit_price -
+          (options.size?.priceModifier || 0) -
           (options.milk?.priceModifier || 0),
         selectedSize: options.size || undefined,
         selectedMilk: options.milk || undefined,
@@ -108,14 +108,14 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
     };
 
     loadOrderForModification(originalOrder, cartItems);
-    
+
     toast.success('Commande chargée dans le panier - Modifiez et validez');
     handleClose();
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="w-[90%] max-w-2xl max-h-[90vh] rounded-2xl border-none shadow-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <QrCode className="h-5 w-5" />
@@ -160,15 +160,14 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
                 <div className="bg-muted p-4 rounded-lg space-y-2">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-bold">Commande #{orderDetails.order_number}</h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      orderDetails.status === 'completed' 
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' 
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${orderDetails.status === 'completed'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
                         : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                    }`}>
+                      }`}>
                       {orderDetails.status === 'completed' ? 'TERMINÉE' : orderDetails.status.toUpperCase()}
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <p className="text-muted-foreground">Employé</p>
@@ -183,8 +182,8 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
                     <div>
                       <p className="text-muted-foreground">Paiement</p>
                       <p className="font-medium capitalize">
-                        {orderDetails.payment_method === 'cash' ? 'Espèces' : 
-                         orderDetails.payment_method === 'card' ? 'Carte' : 'N/A'}
+                        {orderDetails.payment_method === 'cash' ? 'Espèces' :
+                          orderDetails.payment_method === 'card' ? 'Carte' : 'N/A'}
                       </p>
                     </div>
                     <div>
@@ -255,8 +254,8 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={handleLoadToCart} 
+                  <Button
+                    onClick={handleLoadToCart}
                     className="flex-1 gap-2"
                     disabled={cart.length > 0}
                   >

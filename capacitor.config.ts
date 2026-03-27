@@ -1,14 +1,27 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.latte.pos',
+  appId: 'com.latte.mocha',
   appName: 'Latte',
   webDir: 'dist',
-  // Pour le développement avec hot-reload, décommentez la section server ci-dessous :
-  // server: {
-  //   url: 'https://09f0d9a8-18c1-4b46-9de1-b12f3cc2e32f.lovableproject.com?forceHideBadge=true',
-  //   cleartext: true,
-  // },
+  ios: {
+    useSpm: true,
+    contentInset: 'automatic',
+    scrollEnabled: false, // Disable native WKWebView scroll — scrolling is handled via CSS overflow
+    backgroundColor: '#ffffff' // Light background color to match app theme
+  },
+  plugins: {
+    StatusBar: {
+      style: 'light', // Dark text for light background
+      backgroundColor: '#ffffff'
+    },
+    Keyboard: {
+      resize: 'native', // Let iOS natively shrink the viewport — triggers visualViewport resize event
+      style: 'light',
+      resizeOnFullScreen: true,
+      accessoryBarVisible: false,
+    }
+  }
 };
 
 export default config;

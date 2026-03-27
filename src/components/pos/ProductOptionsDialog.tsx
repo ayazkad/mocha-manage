@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePOS } from '@/contexts/POSContext';
 import {
@@ -14,7 +14,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 interface Product {
   id: string;
@@ -56,15 +57,66 @@ const ProductOptionsDialog = ({
   const [temperature, setTemperature] = useState<'hot' | 'cold'>('hot');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
+
+  // New state: isReady controls the VISIBILITY of the dialog
+  // It starts false, and becomes true only when data is fetched.
+  const [isReady, setIsReady] = useState(false);
+
   const { addToCart } = usePOS();
 
+  // Refs for keyboard avoidance
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+
+  // Keyboard avoidance for iOS
   useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleKeyboardShow = () => {
+      // If the notes field is focused, scroll to bottom of container
+      if (document.activeElement === notesRef.current && scrollContainerRef.current) {
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({
+              top: scrollContainerRef.current.scrollHeight,
+              behavior: 'smooth'
+            });
+          }
+        }, 100);
+      }
+    };
+
+    const sub = Keyboard.addListener('keyboardDidShow', handleKeyboardShow);
+
+    return () => {
+      sub.then(s => s.remove());
+    };
+  }, []);
+
+  useEffect(() => {
+    // When parent asks to open (or changes product), we start loading (or checking if needed)
     if (open && product) {
+      // Reset readiness on new open
+      // If we are already open and product changes, we might want to hide briefly? 
+      // Assuming 'open' toggles freshly for each product click in parent.
+      setIsReady(false);
       loadOptions();
+    } else {
+      setIsReady(false);
     }
   }, [open, product]);
 
   const loadOptions = async () => {
+    // Optimization: If the product has NO dynamic options, we are ready immediately!
+    const needsFetch = product.has_size_options || product.has_milk_options;
+
+    if (!needsFetch) {
+      setSizeOptions([]);
+      setMilkOptions([]);
+      setIsReady(true); // Open immediately
+      return;
+    }
+
     const { data, error } = await supabase
       .from('product_options')
       .select('*')
@@ -80,9 +132,12 @@ const ProductOptionsDialog = ({
       setMilkOptions(milks);
 
       // Set default selections
-      if (sizes.length > 0 && !selectedSize) setSelectedSize(sizes[0].id);
-      if (milks.length > 0 && !selectedMilk) setSelectedMilk(milks[0].id);
+      if (sizes.length > 0) setSelectedSize(sizes[0].id);
+      if (milks.length > 0) setSelectedMilk(milks[0].id);
     }
+
+    // Data is ready, NOW we show the dialog
+    setIsReady(true);
   };
 
   const getOptionName = (option: ProductOption) => {
@@ -91,7 +146,7 @@ const ProductOptionsDialog = ({
 
   const calculateTotal = () => {
     let total = product.base_price;
-    
+
     const size = sizeOptions.find((opt) => opt.id === selectedSize);
     if (size) total += size.price_modifier;
 
@@ -126,24 +181,27 @@ const ProductOptionsDialog = ({
 
     toast.success('Added to cart');
     onClose();
-    
+
     // Reset form
     setQuantity(1);
     setNotes('');
     setTemperature('hot');
   };
 
+  // Only show the Dialog UI when parent requested open AND we have finished loading
+  const showDialog = open && isReady;
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent 
-        className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden"
-        onPointerDownOutside={onClose} // Explicitly close on outside pointer down
+    <Dialog open={showDialog} onOpenChange={(val) => !val && onClose()}>
+      <DialogContent
+        className="w-[90%] max-w-2xl flex flex-col p-0 overflow-hidden rounded-2xl border-none shadow-xl transition-all duration-300"
+        onPointerDownOutside={onClose}
       >
         <DialogHeader className="px-6 pt-6 pb-2 flex-shrink-0">
           <DialogTitle className="text-xl md:text-2xl">{getProductName(product)}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="space-y-4 pb-4">
             {/* Toggle Hot/Cold - Only show if product has temperature options */}
             {product.has_temperature_options && (
@@ -152,22 +210,20 @@ const ProductOptionsDialog = ({
                   <button
                     type="button"
                     onClick={() => setTemperature('hot')}
-                    className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${
-                      temperature === 'hot'
-                        ? 'bg-primary text-primary-foreground shadow-md'
-                        : 'bg-background hover:bg-primary/10'
-                    }`}
+                    className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${temperature === 'hot'
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-background hover:bg-primary/10'
+                      }`}
                   >
                     🔥 Hot
                   </button>
                   <button
                     type="button"
                     onClick={() => setTemperature('cold')}
-                    className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${
-                      temperature === 'cold'
-                        ? 'bg-primary text-primary-foreground shadow-md'
-                        : 'bg-background hover:bg-primary/10'
-                    }`}
+                    className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all text-sm ${temperature === 'cold'
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-background hover:bg-primary/10'
+                      }`}
                   >
                     ❄️ Cold
                   </button>
@@ -183,11 +239,10 @@ const ProductOptionsDialog = ({
                     <label
                       key={option.id}
                       htmlFor={option.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
-                        selectedSize === option.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
+                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${selectedSize === option.id
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
+                        }`}
                     >
                       <div className="flex items-center gap-3 flex-1">
                         <RadioGroupItem value={option.id} id={option.id} />
@@ -212,11 +267,10 @@ const ProductOptionsDialog = ({
                     <label
                       key={option.id}
                       htmlFor={`milk-${option.id}`}
-                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
-                        selectedMilk === option.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
-                      }`}
+                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${selectedMilk === option.id
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
+                        }`}
                     >
                       <div className="flex items-center gap-3 flex-1">
                         <RadioGroupItem value={option.id} id={`milk-${option.id}`} />
@@ -260,8 +314,23 @@ const ProductOptionsDialog = ({
             <div className="space-y-2">
               <Label className="text-base font-semibold">Notes (optionnel)</Label>
               <Textarea
+                ref={notesRef}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                onFocus={() => {
+                  // Retry scroll at multiple intervals to catch keyboard animation
+                  const doScroll = () => {
+                    if (scrollContainerRef.current) {
+                      scrollContainerRef.current.scrollTo({
+                        top: scrollContainerRef.current.scrollHeight,
+                        behavior: 'smooth'
+                      });
+                    }
+                  };
+                  setTimeout(doScroll, 100);
+                  setTimeout(doScroll, 300);
+                  setTimeout(doScroll, 500);
+                }}
                 placeholder="Instructions spéciales..."
                 className="resize-none min-h-[80px] text-sm"
                 rows={3}
@@ -272,9 +341,9 @@ const ProductOptionsDialog = ({
 
         <DialogFooter className="flex-col sm:flex-row gap-3 px-6 py-4 border-t flex-shrink-0">
           <div className="flex items-center justify-between w-full gap-3">
-            <div className="text-left">
+            <div className="text-left flex-shrink-0">
               <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-3xl md:text-2xl font-bold text-primary">
+              <p className="text-xl font-bold text-primary whitespace-nowrap">
                 {calculateTotal().toFixed(2)} ₾
               </p>
             </div>

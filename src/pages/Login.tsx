@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import NumPad from '@/components/login/NumPad';
 import logoLatte from '@/assets/logo-latte.png';
+import { usePreventVerticalScroll } from '@/hooks/use-prevent-vertical-scroll';
 
 const Login = () => {
   const [employeeCode, setEmployeeCode] = useState('');
@@ -13,6 +14,9 @@ const Login = () => {
   const [step, setStep] = useState<'code' | 'pin'>('code');
   const { login } = usePOS();
   const navigate = useNavigate();
+
+  // Block vertical scroll/swipe on iOS (numpad page)
+  usePreventVerticalScroll();
 
   const handleNext = () => {
     if (employeeCode.length === 4) {
@@ -61,14 +65,14 @@ const Login = () => {
   }, [pin, step]);
 
   return (
-    <div className="min-h-screen bg-gradient-latte flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-latte flex items-center justify-center p-4 login-page">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-2xl shadow-strong p-8 space-y-8">
           <div className="text-center space-y-4">
             <div className="flex justify-center">
-              <img 
-                src={logoLatte} 
-                alt="Latte Logo" 
+              <img
+                src={logoLatte}
+                alt="Latte Logo"
                 className="h-24 w-auto object-contain"
               />
             </div>
@@ -85,7 +89,7 @@ const Login = () => {
                   Enter 4 digits
                 </p>
               </div>
-              
+
               <div className="flex justify-center">
                 <div className="flex gap-3">
                   {[...Array(4)].map((_, i) => (
@@ -94,7 +98,7 @@ const Login = () => {
                       className="w-14 h-14 rounded-lg border-2 border-primary flex items-center justify-center bg-muted"
                     >
                       <span className="text-2xl font-bold">
-                        {step === 'code' 
+                        {step === 'code'
                           ? employeeCode[i] || '•'
                           : pin[i] ? '*' : '•'
                         }

@@ -1,5 +1,8 @@
 import { Capacitor } from '@capacitor/core';
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import {
+  CapacitorBarcodeScanner,
+  CapacitorBarcodeScannerTypeHintALLOption
+} from '@capacitor/barcode-scanner';
 
 export interface ScanResult {
   success: boolean;
@@ -12,29 +15,8 @@ class NativeScannerService {
   private isNative = Capacitor.isNativePlatform();
 
   async checkPermission(): Promise<boolean> {
-    if (!this.isNative) return true;
-
-    try {
-      const { camera } = await BarcodeScanner.checkPermissions();
-
-      if (camera === 'granted') return true;
-
-      if (camera === 'denied') {
-        const shouldOpenSettings = confirm(
-          "Pour utiliser le scanner, veuillez autoriser l'accès à la caméra dans les paramètres."
-        );
-        if (shouldOpenSettings) {
-          await BarcodeScanner.openSettings();
-        }
-        return false;
-      }
-
-      const { camera: requested } = await BarcodeScanner.requestPermissions();
-      return requested === 'granted';
-    } catch (error) {
-      console.error('[NativeScannerService] Permission error:', error);
-      return false;
-    }
+    // This plugin handles permissions internally or doesn't expose them in the same way
+    return true;
   }
 
   async startScan(): Promise<ScanResult> {
@@ -43,47 +25,33 @@ class NativeScannerService {
     }
 
     try {
-      const hasPermission = await this.checkPermission();
-      if (!hasPermission) {
-        return { success: false, error: 'Permission caméra refusée' };
-      }
-
-      const { barcodes } = await BarcodeScanner.scan({
-        formats: [
-          BarcodeFormat.QrCode,
-          BarcodeFormat.Ean13,
-          BarcodeFormat.Ean8,
-          BarcodeFormat.Code128,
-          BarcodeFormat.Code39,
-          BarcodeFormat.UpcA,
-          BarcodeFormat.UpcE,
-        ],
+      const result = await CapacitorBarcodeScanner.scanBarcode({
+        hint: CapacitorBarcodeScannerTypeHintALLOption.ALL,
+        scanInstructions: 'Placez le code dans le cadre',
+        scanButton: true,
       });
 
-      const first = barcodes?.[0] as any;
-      const content: string | undefined = first?.rawValue ?? first?.displayValue;
-
-      if (content) {
-        return { success: true, content, format: String(first?.format ?? '') };
+      if (result && result.ScanResult) {
+        return {
+          success: true,
+          content: result.ScanResult,
+          format: String(result.format || '')
+        };
       }
 
       return { success: false, error: 'Aucun code détecté' };
     } catch (error: any) {
       console.error('[NativeScannerService] Scan error:', error);
+      // If user cancelled, don't show as error
+      if (error?.message?.includes('cancelled')) {
+        return { success: false };
+      }
       return { success: false, error: error?.message || 'Erreur de scan' };
     }
   }
 
   async stopScan(): Promise<void> {
-    if (!this.isNative) return;
-
-    try {
-      // scan() stops automatically, but keep this safe for cancellation paths
-      await BarcodeScanner.removeAllListeners();
-      await BarcodeScanner.stopScan();
-    } catch {
-      // ignore
-    }
+    // handled by the plugin's scanBarcode promise completion
   }
 
   isNativePlatform(): boolean {

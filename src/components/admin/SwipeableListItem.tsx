@@ -13,7 +13,7 @@ const SwipeContext = createContext<SwipeContextValue>({
   draggingIndex: null,
   dragOffset: 0,
   itemHeight: 72, // Default value, will be overridden
-  setDragging: () => {},
+  setDragging: () => { },
 });
 
 // Wrapper component to manage swipeable list
@@ -31,7 +31,9 @@ export const SwipeableList = ({ children, className }: SwipeableListProps) => {
   // Measure height of the first child once
   useEffect(() => {
     if (listRef.current && listRef.current.firstElementChild) {
-      const height = listRef.current.firstElementChild.clientHeight; // Use clientHeight for content + padding
+      const element = listRef.current.firstElementChild as HTMLElement;
+      // Calculate full height including margin (mb-2 = 8px)
+      const height = element.offsetHeight + 8;
       if (height > 0 && height !== measuredItemHeight) {
         setMeasuredItemHeight(height);
       }
@@ -45,12 +47,13 @@ export const SwipeableList = ({ children, className }: SwipeableListProps) => {
 
   return (
     <SwipeContext.Provider value={{ draggingIndex, dragOffset, itemHeight: measuredItemHeight, setDragging }}>
-      <div ref={listRef} className={cn("space-y-2", className)}>
+      <div ref={listRef} className={className}>
         {children}
       </div>
     </SwipeContext.Provider>
   );
 };
+
 
 interface SwipeableListItemProps {
   children: React.ReactNode;
@@ -109,9 +112,15 @@ const SwipeableListItem = ({
 
   // Calculate if this item should be visually displaced
   const getDisplacement = () => {
-    if (draggingIndex === null || draggingIndex === index) return 0;
+    if (draggingIndex === null || draggingIndex === index || itemHeight === 0) return 0;
+    if (typeof listSize !== 'number') return 0;
 
-    const positionsToMove = getTargetOffset();
+    // Calculate clamped delta using the DRAGGED item's constraints, not ours
+    const rawDelta = Math.round(dragOffset / itemHeight);
+    const minDelta = -draggingIndex; // How far up the dragged item can go
+    const maxDelta = (listSize - 1) - draggingIndex; // How far down
+    const positionsToMove = Math.max(minDelta, Math.min(maxDelta, rawDelta));
+
     const targetIndex = draggingIndex + positionsToMove;
 
     // Dragging DOWN: items between draggingIndex and targetIndex move UP
@@ -235,32 +244,18 @@ const SwipeableListItem = ({
     }
   }, [isDragging, handleEnd]);
 
-  // Effet pour bloquer/débloquer le défilement du body
+  // Effect to lock scroll on the container during drag
   useEffect(() => {
     if (isDragging) {
-      // Stocker les styles originaux et la position de défilement
-      const originalOverflow = document.body.style.overflow;
-      const originalPosition = document.body.style.position;
-      const originalWidth = document.body.style.width;
-      const originalTop = document.body.style.top;
-      const scrollY = window.scrollY;
-
-      // Appliquer les styles pour bloquer le défilement
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = `-${scrollY}px`; // Empêche le saut de page
-
-      return () => {
-        // Restaurer les styles originaux et la position de défilement
-        document.body.style.overflow = originalOverflow;
-        document.body.style.position = originalPosition;
-        document.body.style.width = originalWidth;
-        document.body.style.top = originalTop;
-        window.scrollTo(0, scrollY); // Restaurer la position de défilement
-      };
+      document.body.classList.add('dragging-no-scroll');
+    } else {
+      document.body.classList.remove('dragging-no-scroll');
     }
-  }, [isDragging]); // Déclencher l'effet lorsque isDragging change
+
+    return () => {
+      document.body.classList.remove('dragging-no-scroll');
+    };
+  }, [isDragging]);
 
   const isBeingDragged = draggingIndex === index;
 
@@ -268,14 +263,14 @@ const SwipeableListItem = ({
     <div
       ref={itemRef}
       className={cn(
-        "relative select-none",
-        isBeingDragged && "z-20",
+        "relative select-none mb-2", /* Added margin bottom for spacing */
+        isBeingDragged && "z-50 overflow-hidden rounded-lg", /* Clip corners during drag */
         !isBeingDragged && draggingIndex !== null && "z-10",
         className
       )}
       style={{
-        transform: isBeingDragged 
-          ? `translateY(${localOffset}px) scale(1.02)` 
+        transform: isBeingDragged
+          ? `translateY(${localOffset}px) scale(1.02)`
           : `translateY(${displacement}px)`,
         transition: isBeingDragged ? 'none' : 'transform 0.2s ease-out',
         boxShadow: isBeingDragged ? '0 8px 25px rgba(0,0,0,0.15)' : 'none',

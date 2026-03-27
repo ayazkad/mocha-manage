@@ -16,7 +16,14 @@ const App = () => (
     <TooltipProvider>
       <POSProvider>
         <Toaster />
-        <Sonner />
+        <Sonner
+          position="top-center"
+          toastOptions={{
+            style: {
+              marginTop: 'max(env(safe-area-inset-top), 44px)',
+            },
+          }}
+        />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Login />} />

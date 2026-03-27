@@ -15,7 +15,10 @@ interface UnifiedScannerProps {
   onClose: () => void;
 }
 
+import { useNavigate } from 'react-router-dom';
+
 const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
+  const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [processing, setProcessing] = useState(false);
   const [nativeScanning, setNativeScanning] = useState(false);
@@ -62,7 +65,7 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
 
   const handleScan = async (scannedCode: string) => {
     if (!scannedCode || processing) return;
-    
+
     setProcessing(true);
     setCode(scannedCode);
 
@@ -96,35 +99,83 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
       return;
     }
 
-    // Build all cart items first
+    // 1. Reconstruct cart items and correct base price
+    // We must subtract modifiers from unit_price because POSContext will re-add them based on selected options
     const cartItems = order.order_items.map((item: any) => {
-      const options = item.selected_options 
-        ? (typeof item.selected_options === 'string' ? JSON.parse(item.selected_options) : item.selected_options) 
+      const options = item.selected_options
+        ? (typeof item.selected_options === 'string' ? JSON.parse(item.selected_options) : item.selected_options)
         : null;
-      
+
+      const sizeMod = options?.size?.priceModifier || 0;
+      const milkMod = options?.milk?.priceModifier || 0;
+
+      // The unit_price in DB includes modifiers, so we subtract them to get the clean basePrice
+      const correctedBasePrice = item.unit_price - sizeMod - milkMod;
+
       return {
         productId: item.product_id || '',
         productName: item.product_name,
         quantity: item.quantity,
-        basePrice: item.unit_price,
+        basePrice: correctedBasePrice,
         selectedSize: options?.size,
         selectedMilk: options?.milk,
         notes: item.notes || undefined,
+        discount: 0, // Will be calculated below
       };
     });
+
+    // 2. Calculate Theoretical Total (what POS would calculate without any discount)
+    const theoreticalTotal = cartItems.reduce((acc: number, item: any) => {
+      const qs = item.quantity;
+      const price = item.basePrice +
+        (item.selectedSize?.priceModifier || 0) +
+        (item.selectedMilk?.priceModifier || 0);
+      return acc + (price * qs);
+    }, 0);
+
+    // 3. Compare with Actual Paid Total to find the missing discount
+    const actualTotal = Number(order.total) || 0;
+
+    let impliedDiscountPercent = 0;
+
+    // REVERSE ENGINEERING: Force actualTotal to match theoreticalTotal via discount
+    // If Theoretical (3.50) > Actual (1.75) -> Discount needed
+    if (theoreticalTotal > actualTotal + 0.005) {
+      // Discount % = (Diff / Total) * 100
+      impliedDiscountPercent = ((theoreticalTotal - actualTotal) / theoreticalTotal) * 100;
+      // Round to 2 decimals e.g. 50.00
+      impliedDiscountPercent = Math.round(impliedDiscountPercent * 100) / 100;
+    }
+
+    console.log('REVERSE DISC CALC:', {
+      theoreticalTotal,
+      actualTotal,
+      impliedDiscountPercent
+    });
+
+    if (impliedDiscountPercent > 0.1) {
+      toast.info(`Discount restauré: ${impliedDiscountPercent.toFixed(1)}%`);
+    }
+
+    // 4. Apply the calculated discount to all items
+    const finalCartItems = cartItems.map((item: any) => ({
+      ...item,
+      discount: impliedDiscountPercent > 0.01 ? Number(impliedDiscountPercent.toFixed(2)) : 0
+    }));
 
     // Load order for modification - this sets originalOrder and isModifyingOrder
     const originalOrderData = {
       orderId: order.id,
       orderNumber: order.order_number,
       originalTotal: Number(order.total),
-      items: cartItems,
+      items: finalCartItems,
     };
-    
-    loadOrderForModification(originalOrderData, cartItems);
+
+    loadOrderForModification(originalOrderData, finalCartItems);
 
     toast.success(`Ticket #${order.order_number} chargé pour modification`);
     onClose();
+    navigate('/pos');
   };
 
   const handleBarcodeScan = async (barcode: string) => {
@@ -143,7 +194,7 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
     }
 
     const productName = product.name_en || product.name_fr;
-    
+
     addToCart({
       productId: product.id,
       productName: productName,
@@ -164,8 +215,8 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
           <p>Scannez un code-barres ou QR code</p>
         </div>
-        <Button 
-          variant="secondary" 
+        <Button
+          variant="secondary"
           onClick={stopNativeScan}
           className="px-8"
         >
@@ -183,26 +234,26 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
         onClose();
       }
     }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[90%] sm:max-w-md rounded-2xl border-none shadow-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ScanLine className="w-5 h-5" />
             Scanner
           </DialogTitle>
         </DialogHeader>
-        
+
         {isNative ? (
           // Native platform: show scan button and manual input
           <div className="space-y-4">
-            <Button 
-              onClick={startNativeScan} 
+            <Button
+              onClick={startNativeScan}
               className="w-full h-32 flex flex-col gap-2"
               disabled={processing}
             >
               <Camera className="w-8 h-8" />
               <span>Ouvrir la caméra</span>
             </Button>
-            
+
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -211,7 +262,7 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
                 <span className="bg-background px-2 text-muted-foreground">ou</span>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Input
                 placeholder="Saisissez le code manuellement"
@@ -224,8 +275,8 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
                 }}
               />
               <div className="flex gap-2">
-                <Button 
-                  onClick={() => handleScan(code)} 
+                <Button
+                  onClick={() => handleScan(code)}
                   className="flex-1"
                   disabled={!code || processing}
                 >
@@ -250,7 +301,7 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
                 Manuel
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="camera" className="space-y-4">
               <div className="rounded-lg overflow-hidden bg-muted aspect-square max-w-sm mx-auto">
                 <Scanner
@@ -278,7 +329,7 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
                 Scannez un QR code (ticket) ou un code-barres (produit)
               </p>
             </TabsContent>
-            
+
             <TabsContent value="manual" className="space-y-4">
               <div className="space-y-2">
                 <Input
@@ -297,8 +348,8 @@ const UnifiedScanner = ({ open, onClose }: UnifiedScannerProps) => {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  onClick={() => handleScan(code)} 
+                <Button
+                  onClick={() => handleScan(code)}
                   className="flex-1"
                   disabled={!code || processing}
                 >
