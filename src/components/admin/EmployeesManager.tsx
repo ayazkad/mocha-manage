@@ -10,10 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAuth } from '@/contexts/AuthContext';
 
 const EmployeesManager = () => {
-  const { businessId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -26,18 +24,15 @@ const EmployeesManager = () => {
   });
 
   const { data: employees } = useQuery({
-    queryKey: ['employees', businessId],
+    queryKey: ['employees'],
     queryFn: async () => {
-      if (!businessId) return [];
       const { data, error } = await supabase
         .from('employees')
         .select('*')
-        .eq('business_id', businessId)
         .order('name');
       if (error) throw error;
       return data;
     },
-    enabled: !!businessId,
   });
 
   const saveMutation = useMutation({
@@ -46,13 +41,12 @@ const EmployeesManager = () => {
         const { error } = await supabase
           .from('employees')
           .update(data)
-          .eq('id', editingId)
-          .eq('business_id', businessId);
+          .eq('id', editingId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('employees')
-          .insert([{ ...data, business_id: businessId }]);
+          .insert([data]);
         if (error) throw error;
       }
     },
@@ -79,8 +73,7 @@ const EmployeesManager = () => {
       const { error } = await supabase
         .from('employees')
         .delete()
-        .eq('id', id)
-        .eq('business_id', businessId);
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {

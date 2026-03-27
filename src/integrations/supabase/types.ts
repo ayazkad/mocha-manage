@@ -25,7 +25,6 @@ export type Database = {
           name_ge: string | null
           name_ru: string | null
           sort_order: number | null
-          business_id: string | null
         }
         Insert: {
           active?: boolean | null
@@ -60,7 +59,6 @@ export type Database = {
           order_id: string | null
           points_added: number
           points_redeemed: number
-          business_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -172,7 +170,6 @@ export type Database = {
           session_id?: string | null
           total_loss?: number
           unit_price?: number
-          business_id?: string | null
         }
         Relationships: [
           {
@@ -249,7 +246,6 @@ export type Database = {
           pin_code: string
           role: Database["public"]["Enums"]["employee_role"]
           updated_at: string | null
-          business_id: string | null
         }
         Insert: {
           active?: boolean | null
@@ -357,7 +353,6 @@ export type Database = {
           selected_options?: Json | null
           total_price?: number
           unit_price?: number
-          business_id?: string | null
         }
         Relationships: [
           {
@@ -393,7 +388,6 @@ export type Database = {
           tax_amount: number | null
           tip_amount: number | null
           total: number
-          business_id: string | null
         }
         Insert: {
           cash_received?: number | null
@@ -411,7 +405,6 @@ export type Database = {
           tax_amount?: number | null
           tip_amount?: number | null
           total: number
-          business_id?: string | null
         }
         Update: {
           cash_received?: number | null
@@ -429,7 +422,6 @@ export type Database = {
           tax_amount?: number | null
           tip_amount?: number | null
           total?: number
-          business_id?: string | null
         }
         Relationships: [
           {
@@ -611,7 +603,6 @@ export type Database = {
           start_time: string
           total_orders: number | null
           total_sales: number | null
-          business_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -621,7 +612,6 @@ export type Database = {
           start_time?: string
           total_orders?: number | null
           total_sales?: number | null
-          business_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -631,7 +621,6 @@ export type Database = {
           start_time?: string
           total_orders?: number | null
           total_sales?: number | null
-          business_id?: string | null
         }
         Relationships: [
           {
@@ -641,98 +630,6 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      profiles: {
-        Row: {
-          id: string
-          business_name: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id: string
-          business_name?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          business_name?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      global_options: {
-        Row: {
-          id: string
-          name_fr: string
-          name_en: string | null
-          option_type: string
-          active: boolean | null
-          business_id: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          name_fr: string
-          name_en?: string | null
-          option_type: string
-          active?: boolean | null
-          business_id?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          name_fr?: string
-          name_en?: string | null
-          option_type?: string
-          active?: boolean | null
-          business_id?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      global_option_values: {
-        Row: {
-          id: string
-          global_option_id: string | null
-          name_fr: string
-          name_en: string | null
-          price_modifier: number | null
-          active: boolean | null
-          business_id: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          global_option_id?: string | null
-          name_fr: string
-          name_en?: string | null
-          price_modifier?: number | null
-          active?: boolean | null
-          business_id?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          global_option_id?: string | null
-          name_fr?: string
-          name_en?: string | null
-          price_modifier?: number | null
-          active?: boolean | null
-          business_id?: string | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "global_option_values_global_option_id_fkey"
-            columns: ["global_option_id"]
-            isOneToOne: false
-            referencedRelation: "global_options"
-            referencedColumns: ["id"]
-          }
         ]
       }
     }

@@ -16,10 +16,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import PrintReceiptDialog from '@/components/pos/PrintReceiptDialog';
 import { usePOS } from '@/contexts/POSContext'; // Import usePOS
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { useAuth } from '@/contexts/AuthContext';
 
 const OrdersManager = () => {
-  const { businessId } = useAuth();
   const queryClient = useQueryClient();
   const { loadOrderForModification, cart } = usePOS(); // Get loadOrderForModification from context
   const navigate = useNavigate(); // Get navigate hook
@@ -30,9 +28,8 @@ const OrdersManager = () => {
 
   // Fetch orders with employee and items
   const { data: orders, isLoading } = useQuery({
-    queryKey: ['orders', businessId],
+    queryKey: ['orders'],
     queryFn: async () => {
-      if (!businessId) return [];
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -47,13 +44,11 @@ const OrdersManager = () => {
             selected_options
           )
         `)
-        .eq('business_id', businessId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data;
     },
-    enabled: !!businessId,
   });
 
   // Delete order mutation
@@ -63,8 +58,7 @@ const OrdersManager = () => {
       const { error: itemsError } = await supabase
         .from('order_items')
         .delete()
-        .eq('order_id', orderId)
-        .eq('business_id', businessId);
+        .eq('order_id', orderId);
       
       if (itemsError) throw itemsError;
 
@@ -72,8 +66,7 @@ const OrdersManager = () => {
       const { error } = await supabase
         .from('orders')
         .delete()
-        .eq('id', orderId)
-        .eq('business_id', businessId);
+        .eq('id', orderId);
       
       if (error) throw error;
     },

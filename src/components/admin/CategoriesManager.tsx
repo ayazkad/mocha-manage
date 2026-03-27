@@ -10,10 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash2, GripVertical, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import SwipeableListItem, { SwipeableList } from './SwipeableListItem';
-import { useAuth } from '@/contexts/AuthContext';
 
 const CategoriesManager = () => {
-  const { businessId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,18 +22,15 @@ const CategoriesManager = () => {
   });
 
   const { data: categories } = useQuery({
-    queryKey: ['categories', businessId],
+    queryKey: ['categories'],
     queryFn: async () => {
-      if (!businessId) return [];
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('business_id', businessId)
         .order('sort_order', { ascending: true });
       if (error) throw error;
       return data;
     },
-    enabled: !!businessId,
   });
 
   const saveMutation = useMutation({
@@ -49,7 +44,7 @@ const CategoriesManager = () => {
       } else {
         const { error } = await supabase
           .from('categories')
-          .insert([{ ...data, business_id: businessId }]);
+          .insert([data]);
         if (error) throw error;
       }
     },
@@ -134,11 +129,7 @@ const CategoriesManager = () => {
     try {
       await Promise.all(
         next.map((cat, idx) =>
-          supabase
-            .from('categories')
-            .update({ sort_order: idx })
-            .eq('id', cat.id)
-            .eq('business_id', businessId)
+          supabase.from('categories').update({ sort_order: idx }).eq('id', cat.id)
         )
       );
       queryClient.invalidateQueries({ queryKey: ['categories'] });

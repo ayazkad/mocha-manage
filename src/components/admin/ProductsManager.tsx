@@ -14,10 +14,8 @@ import AdminBarcodeScanner from './AdminBarcodeScanner';
 import SwipeableListItem, { SwipeableList } from './SwipeableListItem';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
-import { useAuth } from '@/contexts/AuthContext';
 
 const ProductsManager = () => {
-  const { businessId } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -63,34 +61,28 @@ const ProductsManager = () => {
   }, []);
 
   const { data: products, refetch: refetchProducts } = useQuery({
-    queryKey: ['products', businessId],
+    queryKey: ['products'],
     queryFn: async () => {
-      if (!businessId) return [];
       const { data, error } = await supabase
         .from('products')
         .select('*, categories(name_en, sort_order)')
-        .eq('business_id', businessId)
         .order('sort_order', { ascending: true });
       if (error) throw error;
       return data;
     },
-    enabled: !!businessId,
   });
 
   const { data: categories } = useQuery({
-    queryKey: ['categories', businessId],
+    queryKey: ['categories'],
     queryFn: async () => {
-      if (!businessId) return [];
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('business_id', businessId)
         .eq('active', true)
         .order('sort_order');
       if (error) throw error;
       return data;
     },
-    enabled: !!businessId,
   });
 
   // Group products by category
@@ -132,7 +124,7 @@ const ProductsManager = () => {
       // Upload image if there's a new file
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${businessId}/${Math.random()}.${fileExt}`;
+        const fileName = `${Math.random()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('product-images')
           .upload(fileName, imageFile);
@@ -152,13 +144,12 @@ const ProductsManager = () => {
         const { error } = await supabase
           .from('products')
           .update(productData)
-          .eq('id', editingId)
-          .eq('business_id', businessId);
+          .eq('id', editingId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('products')
-          .insert([{ ...productData, business_id: businessId }]);
+          .insert([productData]);
         if (error) throw error;
       }
     },
@@ -201,11 +192,7 @@ const ProductsManager = () => {
     try {
       await Promise.all(
         next.map((p: any, idx: number) =>
-          supabase
-            .from('products')
-            .update({ sort_order: idx })
-            .eq('id', p.id)
-            .eq('business_id', businessId)
+          supabase.from('products').update({ sort_order: idx }).eq('id', p.id)
         )
       );
 

@@ -1,5 +1,4 @@
 import { usePOS } from '@/contexts/POSContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -200,7 +199,6 @@ const Cart = ({ onClose }: CartProps) => {
     cancelOrderModification,
     getPriceDifference,
   } = usePOS();
-  const { businessId } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [showPaymentMethod, setShowPaymentMethod] = useState(false);
@@ -252,17 +250,12 @@ const Cart = ({ onClose }: CartProps) => {
   const subtotal = getRawSubtotal();
   const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // État pour stocker les boissons (Coffee/Non Coffee)
-  const [drinkProductIds, setDrinkProductIds] = useState<string[]>([]);
-
   // Calculer la réduction automatique des offres
   useEffect(() => {
     const checkOffers = async () => {
-      if (!businessId) return;
       const { data: offers } = await supabase
         .from('offers')
         .select('*')
-        .eq('business_id', businessId)
         .eq('active', true)
         .lte('min_items', itemsCount)
         .lte('min_amount', subtotal)
@@ -290,43 +283,7 @@ const Cart = ({ onClose }: CartProps) => {
     } else {
       setAppliedOffer(null);
     }
-  }, [cart, subtotal, itemsCount, businessId]);
-
-  // Charger les produits de catégorie Coffee/Non Coffee
-  useEffect(() => {
-    const loadDrinkCategories = async () => {
-      const productIds = cart.map(item => item.productId).filter(Boolean);
-      if (!businessId || productIds.length === 0) {
-        setDrinkProductIds([]);
-        return;
-      }
-
-      const { data: products } = await supabase
-        .from('products')
-        .select(`
-          id,
-          category_id,
-          categories!inner (
-            name_en,
-            name_fr
-          )
-        `)
-        .eq('business_id', businessId)
-        .in('id', productIds);
-
-      if (products) {
-        const drinkIds = products.filter((p: any) => {
-          const categoryNameEn = (p.categories?.name_en || '').trim().toLowerCase();
-          const categoryNameFr = (p.categories?.name_fr || '').trim().toLowerCase();
-          return categoryNameEn === 'coffee' || categoryNameEn === 'non coffee' ||
-            categoryNameFr === 'coffee' || categoryNameFr === 'non coffee';
-        }).map((p: any) => p.id);
-        setDrinkProductIds(drinkIds);
-      }
-    };
-
-    loadDrinkCategories();
-  }, [cart, businessId]);
+  }, [cart, subtotal, itemsCount]);
 
   // Calculer la réduction automatique des offres
   const automaticDiscount = appliedOffer
@@ -343,6 +300,44 @@ const Cart = ({ onClose }: CartProps) => {
     const discount = item.discount || 0;
     return sum + (itemPrice * discount / 100);
   }, 0);
+
+  // État pour stocker les boissons (Coffee/Non Coffee)
+  const [drinkProductIds, setDrinkProductIds] = useState<string[]>([]);
+
+  // Charger les produits de catégorie Coffee/Non Coffee
+  useEffect(() => {
+    const loadDrinkCategories = async () => {
+      const productIds = cart.map(item => item.productId).filter(Boolean);
+      if (productIds.length === 0) {
+        setDrinkProductIds([]);
+        return;
+      }
+
+      const { data: products } = await supabase
+        .from('products')
+        .select(`
+          id,
+          category_id,
+          categories!inner (
+            name_en,
+            name_fr
+          )
+        `)
+        .in('id', productIds);
+
+      if (products) {
+        const drinkIds = products.filter((p: any) => {
+          const categoryNameEn = (p.categories?.name_en || '').trim().toLowerCase();
+          const categoryNameFr = (p.categories?.name_fr || '').trim().toLowerCase();
+          return categoryNameEn === 'coffee' || categoryNameEn === 'non coffee' ||
+            categoryNameFr === 'coffee' || categoryNameFr === 'non coffee';
+        }).map((p: any) => p.id);
+        setDrinkProductIds(drinkIds);
+      }
+    };
+
+    loadDrinkCategories();
+  }, [cart]);
 
   // Calculer la boisson gratuite si le client a >= 10 points (seulement pour Coffee/Non Coffee)
   const freeDrinkDiscount = selectedCustomer && selectedCustomer.points >= 10
@@ -475,15 +470,12 @@ const Cart = ({ onClose }: CartProps) => {
       await supabase
         .from('order_items')
         .delete()
-        .eq('order_id', originalOrder.orderId)
-        .eq('business_id', businessId);
+        .eq('order_id', originalOrder.orderId);
 
       // Insert new order items
       const orderItems = cart.map((item) => ({
         order_id: originalOrder.orderId,
-        business_id: businessId,
         product_id: item.productId,
-// ...
         product_name: item.productName,
         quantity: item.quantity,
         unit_price: item.basePrice +
@@ -510,8 +502,7 @@ const Cart = ({ onClose }: CartProps) => {
           total,
           notes: `Modifié: différence ${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)} ₾`,
         })
-        .eq('id', originalOrder.orderId)
-        .eq('business_id', businessId);
+        .eq('id', originalOrder.orderId);
 
       // Update session totals with the difference
       if (priceDiff !== 0) {
@@ -519,7 +510,6 @@ const Cart = ({ onClose }: CartProps) => {
           .from('sessions')
           .select('total_sales')
           .eq('id', currentSession.id)
-          .eq('business_id', businessId)
           .single();
 
         if (sessionData) {
@@ -528,8 +518,7 @@ const Cart = ({ onClose }: CartProps) => {
             .update({
               total_sales: (sessionData.total_sales || 0) + priceDiff,
             })
-            .eq('id', currentSession.id)
-            .eq('business_id', businessId);
+            .eq('id', currentSession.id);
         }
       }
 
@@ -602,7 +591,6 @@ const Cart = ({ onClose }: CartProps) => {
           order_number: '',
           session_id: currentSession.id,
           employee_id: currentEmployee.id,
-          business_id: businessId,
           status: 'pending',
           subtotal,
           tax_amount: 0,
@@ -620,7 +608,6 @@ const Cart = ({ onClose }: CartProps) => {
       // Create order items
       const orderItems = cart.map((item) => ({
         order_id: orderData.id,
-        business_id: businessId,
         product_id: item.productId,
         product_name: item.productName,
         quantity: item.quantity,
@@ -650,8 +637,7 @@ const Cart = ({ onClose }: CartProps) => {
           status: 'completed',
           completed_at: new Date().toISOString(),
         })
-        .eq('id', orderData.id)
-        .eq('business_id', businessId);
+        .eq('id', orderData.id);
 
       if (completeError) throw completeError;
 
@@ -716,15 +702,13 @@ const Cart = ({ onClose }: CartProps) => {
               points: newPoints,
               total_purchases: selectedCustomer.total_purchases + totalItemsCount
             })
-            .eq('id', selectedCustomer.id)
-            .eq('business_id', businessId);
+            .eq('id', selectedCustomer.id);
 
           await supabase
             .from('customer_transactions')
             .insert([{
               customer_id: selectedCustomer.id,
               order_id: orderData.id,
-              business_id: businessId,
               points_redeemed: 10,
               notes: 'Boisson offerte utilisée'
             }]);
@@ -740,15 +724,13 @@ const Cart = ({ onClose }: CartProps) => {
                 points: selectedCustomer.points + drinkCount,
                 total_purchases: selectedCustomer.total_purchases + totalItemsCount
               })
-              .eq('id', selectedCustomer.id)
-              .eq('business_id', businessId);
+              .eq('id', selectedCustomer.id);
 
             await supabase
               .from('customer_transactions')
               .insert([{
                 customer_id: selectedCustomer.id,
                 order_id: orderData.id,
-                business_id: businessId,
                 points_added: drinkCount,
               }]);
           } else {
@@ -759,8 +741,7 @@ const Cart = ({ onClose }: CartProps) => {
               .update({
                 total_purchases: selectedCustomer.total_purchases + totalItemsCount
               })
-              .eq('id', selectedCustomer.id)
-              .eq('business_id', businessId);
+              .eq('id', selectedCustomer.id);
           }
         }
       }
@@ -779,8 +760,7 @@ const Cart = ({ onClose }: CartProps) => {
             total_sales: (sessionData.total_sales || 0) + total,
             total_orders: (sessionData.total_orders || 0) + 1,
           })
-          .eq('id', currentSession.id)
-          .eq('business_id', businessId);
+          .eq('id', currentSession.id);
       }
 
       // Incrémenter le compteur de tickets avec réduction personnel si applicable et marquer comme utilisé
@@ -791,7 +771,6 @@ const Cart = ({ onClose }: CartProps) => {
           .select('discount_tickets_count, discount_used')
           .eq('employee_id', currentEmployee.id)
           .eq('benefit_date', today)
-          .eq('business_id', businessId)
           .maybeSingle();
 
         if (benefitsData) {
@@ -802,8 +781,7 @@ const Cart = ({ onClose }: CartProps) => {
               discount_used: true
             })
             .eq('employee_id', currentEmployee.id)
-            .eq('benefit_date', today)
-            .eq('business_id', businessId);
+            .eq('benefit_date', today);
         } else {
           await supabase
             .from('employee_daily_benefits')
@@ -811,8 +789,7 @@ const Cart = ({ onClose }: CartProps) => {
               employee_id: currentEmployee.id,
               benefit_date: today,
               discount_tickets_count: 1,
-              discount_used: true,
-              business_id: businessId
+              discount_used: true
             });
         }
       }
@@ -824,8 +801,7 @@ const Cart = ({ onClose }: CartProps) => {
           .from('employee_daily_benefits')
           .update({ free_drink_used: true })
           .eq('employee_id', currentEmployee.id)
-          .eq('benefit_date', today)
-          .eq('business_id', businessId);
+          .eq('benefit_date', today);
       }
 
       // Marquer le snack gratuit comme utilisé si applicable
@@ -835,8 +811,7 @@ const Cart = ({ onClose }: CartProps) => {
           .from('employee_daily_benefits')
           .update({ free_snack_used: true })
           .eq('employee_id', currentEmployee.id)
-          .eq('benefit_date', today)
-          .eq('business_id', businessId);
+          .eq('benefit_date', today);
       }
 
       toast.success(`Order ${orderData.order_number} completed`);

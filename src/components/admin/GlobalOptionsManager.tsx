@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Save, X, Plus, Trash2, GripVertical } from 'lucide-react';
 import SwipeableListItem, { SwipeableList } from './SwipeableListItem';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface OptionGroup {
   name_en: string;
@@ -18,7 +17,6 @@ interface OptionGroup {
 }
 
 const GlobalOptionsManager = () => {
-  const { businessId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingOption, setEditingOption] = useState<OptionGroup | null>(null);
@@ -27,12 +25,11 @@ const GlobalOptionsManager = () => {
 
   // Fetch unique options grouped by name and type
   const { data: options, isLoading } = useQuery({
-    queryKey: ['global-options', businessId],
+    queryKey: ['global-options'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('product_options')
         .select('name_en, option_type, price_modifier, sort_order')
-        .eq('business_id', businessId)
         .order('option_type')
         .order('sort_order');
       
@@ -56,7 +53,6 @@ const GlobalOptionsManager = () => {
 
       return Object.values(grouped);
     },
-    enabled: !!businessId,
   });
 
   // Update all options with the same name and type
@@ -70,8 +66,7 @@ const GlobalOptionsManager = () => {
           price_modifier: newPrice,
         })
         .eq('name_en', oldName)
-        .eq('option_type', oldType)
-        .eq('business_id', businessId);
+        .eq('option_type', oldType);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -93,8 +88,7 @@ const GlobalOptionsManager = () => {
         .from('product_options')
         .delete()
         .eq('name_en', name)
-        .eq('option_type', type)
-        .eq('business_id', businessId);
+        .eq('option_type', type);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -114,7 +108,6 @@ const GlobalOptionsManager = () => {
       const { data: products, error: fetchError } = await supabase
         .from('products')
         .select('id')
-        .eq('business_id', businessId)
         .eq(column, true);
       
       if (fetchError) throw fetchError;
@@ -125,7 +118,6 @@ const GlobalOptionsManager = () => {
       const { data: existingOptions } = await supabase
         .from('product_options')
         .select('sort_order')
-        .eq('business_id', businessId)
         .eq('option_type', type)
         .order('sort_order', { ascending: false })
         .limit(1);
@@ -134,7 +126,6 @@ const GlobalOptionsManager = () => {
 
       const inserts = products.map(product => ({
         product_id: product.id,
-        business_id: businessId,
         option_type: type,
         name_en: name,
         name_fr: name,
@@ -199,7 +190,6 @@ const GlobalOptionsManager = () => {
             .update({ sort_order: idx })
             .eq('name_en', opt.name_en)
             .eq('option_type', opt.option_type)
-            .eq('business_id', businessId)
         )
       );
       queryClient.invalidateQueries({ queryKey: ['global-options'] });

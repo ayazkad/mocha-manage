@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
 
 interface Employee {
   id: string;
@@ -74,8 +73,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [freeSnackActive, setFreeSnackActive] = useState(false);
   const [originalOrder, setOriginalOrder] = useState<OriginalOrder | null>(null);
 
-  const { businessId } = useAuth();
-
   useEffect(() => {
     // Apply dark mode class to document
     if (darkMode) {
@@ -97,15 +94,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const login = async (code: string, pin: string): Promise<boolean> => {
-    if (!businessId) return false;
-
     try {
       const { data, error } = await supabase
         .from('employees')
         .select('*')
         .eq('employee_code', code)
         .eq('pin_code', pin)
-        .eq('business_id', businessId)
         .eq('active', true)
         .single();
 
@@ -118,7 +112,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .from('sessions')
         .insert({
           employee_id: data.id,
-          business_id: businessId,
           start_time: new Date().toISOString(),
         })
         .select()

@@ -1,20 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SalesStatistics = () => {
-  const { businessId } = useAuth();
   // Global sales statistics
   const { data: globalStats, isLoading: loadingGlobal } = useQuery({
-    queryKey: ['global-stats', businessId],
+    queryKey: ['global-stats'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
         .select('total, created_at, status')
-        .eq('business_id', businessId)
         .eq('status', 'completed');
       
       if (error) throw error;
@@ -25,12 +22,11 @@ const SalesStatistics = () => {
       
       return { totalSales, totalOrders, averageOrder };
     },
-    enabled: !!businessId,
   });
 
   // Sales by employee
   const { data: employeeStats, isLoading: loadingEmployees } = useQuery({
-    queryKey: ['employee-stats', businessId],
+    queryKey: ['employee-stats'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
@@ -39,7 +35,6 @@ const SalesStatistics = () => {
           employee_id,
           employees (name)
         `)
-        .eq('business_id', businessId)
         .eq('status', 'completed');
       
       if (error) throw error;
@@ -64,17 +59,15 @@ const SalesStatistics = () => {
       
       return Array.from(statsMap.values()).sort((a, b) => b.totalSales - a.totalSales);
     },
-    enabled: !!businessId,
   });
 
   // Top 3 most sold products overall
   const { data: topSoldProducts, isLoading: loadingTopSold } = useQuery({
-    queryKey: ['top-sold-products', businessId],
+    queryKey: ['top-sold-products'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('order_items')
-        .select('product_id, product_name, quantity')
-        .eq('business_id', businessId);
+        .select('product_id, product_name, quantity');
       
       if (error) throw error;
       
@@ -94,12 +87,11 @@ const SalesStatistics = () => {
         least3: sorted.slice(-3).reverse(),
       };
     },
-    enabled: !!businessId,
   });
 
   // Top 3 products by category
   const { data: topProducts, isLoading: loadingProducts } = useQuery({
-    queryKey: ['top-products-by-category', businessId],
+    queryKey: ['top-products-by-category'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('order_items')
@@ -111,8 +103,7 @@ const SalesStatistics = () => {
             category_id,
             categories (name_fr)
           )
-        `)
-        .eq('business_id', businessId);
+        `);
       
       if (error) throw error;
       
@@ -156,7 +147,6 @@ const SalesStatistics = () => {
       
       return result;
     },
-    enabled: !!businessId,
   });
 
   if (loadingGlobal || loadingEmployees || loadingProducts || loadingTopSold) {
