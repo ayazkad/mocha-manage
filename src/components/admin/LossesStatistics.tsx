@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { CalendarIcon, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
