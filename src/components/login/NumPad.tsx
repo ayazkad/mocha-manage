@@ -41,10 +41,10 @@ const NumPad = ({ value, onChange, maxLength = 4 }: NumPadProps) => {
         <Button
           type="button"
           variant="outline"
-          onClick={handleDelete}
-          className="h-16 flex items-center justify-center active:bg-primary active:text-primary-foreground transition-colors"
+          onClick={handleClear}
+          className="h-16 text-sm font-medium active:bg-destructive active:text-destructive-foreground"
         >
-          <Delete className="w-6 h-6" />
+          Effacer
         </Button>
         <Button
           type="button"
@@ -57,10 +57,10 @@ const NumPad = ({ value, onChange, maxLength = 4 }: NumPadProps) => {
         <Button
           type="button"
           variant="outline"
-          onClick={handleClear}
-          className="h-16 text-sm font-medium active:bg-destructive active:text-destructive-foreground"
+          onClick={handleDelete}
+          className="h-16 flex items-center justify-center active:bg-primary active:text-primary-foreground transition-colors"
         >
-          Effacer
+          <Delete className="w-6 h-6" />
         </Button>
       </div>
     </div>
