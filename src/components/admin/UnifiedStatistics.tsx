@@ -12,6 +12,7 @@ import { fr } from 'date-fns/locale';
 import { CalendarIcon, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DateRange {
   from: Date | undefined;
@@ -19,6 +20,7 @@ interface DateRange {
 }
 
 const UnifiedStatistics = () => {
+  const { businessId } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
@@ -50,13 +52,14 @@ const UnifiedStatistics = () => {
 
   // Sales data query
   const { data: salesData, isLoading: loadingSales } = useQuery({
-    queryKey: ['sales-period', dateRange.from, dateRange.to],
+    queryKey: ['sales-period', dateRange.from, dateRange.to, businessId],
     queryFn: async () => {
       if (!dateRange.from || !dateRange.to) return null;
 
       const { data, error } = await supabase
         .from('orders')
         .select('total, created_at, employee_id, employees(name)')
+        .eq('business_id', businessId)
         .eq('status', 'completed')
         .gte('created_at', format(dateRange.from, 'yyyy-MM-dd'))
         .lte('created_at', format(dateRange.to, 'yyyy-MM-dd') + 'T23:59:59');
@@ -111,18 +114,19 @@ const UnifiedStatistics = () => {
         dailyData,
       };
     },
-    enabled: !!dateRange.from && !!dateRange.to,
+    enabled: !!dateRange.from && !!dateRange.to && !!businessId,
   });
 
   // Losses data query
   const { data: lossesData, isLoading: loadingLosses } = useQuery({
-    queryKey: ['losses-period', dateRange.from, dateRange.to],
+    queryKey: ['losses-period', dateRange.from, dateRange.to, businessId],
     queryFn: async () => {
       if (!dateRange.from || !dateRange.to) return null;
 
       const { data, error } = await supabase
         .from('daily_losses')
         .select('product_name, quantity, total_loss, loss_date, employee_id, employees(name)')
+        .eq('business_id', businessId)
         .gte('loss_date', format(dateRange.from, 'yyyy-MM-dd'))
         .lte('loss_date', format(dateRange.to, 'yyyy-MM-dd'))
         .order('created_at', { ascending: false });
@@ -163,12 +167,12 @@ const UnifiedStatistics = () => {
         dailyData,
       };
     },
-    enabled: !!dateRange.from && !!dateRange.to,
+    enabled: !!dateRange.from && !!dateRange.to && !!businessId,
   });
 
   // Top/Least sold products for the selected period
   const { data: productSalesStats, isLoading: loadingProductSales } = useQuery({
-    queryKey: ['product-sales-period', dateRange.from, dateRange.to],
+    queryKey: ['product-sales-period', dateRange.from, dateRange.to, businessId],
     queryFn: async () => {
       if (!dateRange.from || !dateRange.to) return null;
 
@@ -179,9 +183,11 @@ const UnifiedStatistics = () => {
           product_name,
           quantity,
           orders!inner (
-            created_at
+            created_at,
+            business_id
           )
         `)
+        .eq('orders.business_id', businessId)
         .gte('orders.created_at', format(dateRange.from, 'yyyy-MM-dd'))
         .lte('orders.created_at', format(dateRange.to, 'yyyy-MM-dd') + 'T23:59:59');
 
@@ -204,7 +210,7 @@ const UnifiedStatistics = () => {
         least3: sortedProducts.slice(-3).reverse(), // Reverse to get least sold in ascending order
       };
     },
-    enabled: !!dateRange.from && !!dateRange.to,
+    enabled: !!dateRange.from && !!dateRange.to && !!businessId,
   });
 
   if (loadingSales || loadingLosses || loadingProductSales) {

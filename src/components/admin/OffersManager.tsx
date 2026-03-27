@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Plus, Trash2, Edit, Gift, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Offer {
   id: string;
@@ -38,6 +39,7 @@ interface Category {
 }
 
 const OffersManager = () => {
+  const { businessId } = useAuth();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -53,15 +55,19 @@ const OffersManager = () => {
   });
 
   useEffect(() => {
-    loadOffers();
-    loadCategories();
-    loadProducts();
-  }, []);
+    if (businessId) {
+      loadOffers();
+      loadCategories();
+      loadProducts();
+    }
+  }, [businessId]);
 
   const loadOffers = async () => {
+    if (!businessId) return;
     const { data, error } = await supabase
       .from('offers')
       .select('*')
+      .eq('business_id', businessId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -73,9 +79,11 @@ const OffersManager = () => {
   };
 
   const loadCategories = async () => {
+    if (!businessId) return;
     const { data } = await supabase
       .from('categories')
       .select('id, name_en, name_fr, sort_order')
+      .eq('business_id', businessId)
       .eq('active', true)
       .order('sort_order');
 
@@ -83,9 +91,11 @@ const OffersManager = () => {
   };
 
   const loadProducts = async () => {
+    if (!businessId) return;
     const { data } = await supabase
       .from('products')
       .select('id, name_fr, name_en, category_id, sort_order')
+      .eq('business_id', businessId)
       .eq('active', true)
       .order('sort_order');
 
@@ -127,7 +137,8 @@ const OffersManager = () => {
       const { error } = await supabase
         .from('offers')
         .update(offerData)
-        .eq('id', editingOffer.id);
+        .eq('id', editingOffer.id)
+        .eq('business_id', businessId);
 
       if (error) {
         toast.error('Error updating offer');
@@ -138,7 +149,7 @@ const OffersManager = () => {
     } else {
       const { error } = await supabase
         .from('offers')
-        .insert([offerData]);
+        .insert([{ ...offerData, business_id: businessId }]);
 
       if (error) {
         toast.error('Error creating offer');
@@ -171,7 +182,8 @@ const OffersManager = () => {
     const { error } = await supabase
       .from('offers')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('business_id', businessId);
 
     if (error) {
       toast.error('Error deleting offer');
@@ -215,7 +227,8 @@ const OffersManager = () => {
     const { error } = await supabase
       .from('offers')
       .update({ active: !offer.active })
-      .eq('id', offer.id);
+      .eq('id', offer.id)
+      .eq('business_id', businessId);
 
     if (error) {
       toast.error('Error updating offer');

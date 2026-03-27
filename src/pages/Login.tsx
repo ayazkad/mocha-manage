@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePOS } from '@/contexts/POSContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { LogIn } from 'lucide-react';
 import NumPad from '@/components/login/NumPad';
 import logoLatte from '@/assets/logo-latte.png';
 import { usePreventVerticalScroll } from '@/hooks/use-prevent-vertical-scroll';
 
 const Login = () => {
+  const { user, loading: authLoading, signOut: ownerSignOut } = useAuth();
   const [employeeCode, setEmployeeCode] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,6 +68,46 @@ const Login = () => {
     }
   }, [pin, step]);
 
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+
+    if (error) {
+      toast.error('Error signing in with Google');
+    }
+  };
+
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-latte flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-card rounded-2xl shadow-strong p-8 space-y-8 text-center">
+          <div className="flex justify-center">
+            <img src={logoLatte} alt="Latte Logo" className="h-24 w-auto object-contain" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">Bienvenue sur Latte POS</h1>
+            <p className="text-muted-foreground">Veuillez vous connecter pour gérer votre établissement</p>
+          </div>
+          <Button 
+            onClick={handleGoogleLogin} 
+            className="w-full flex gap-2 h-12 text-lg"
+          >
+            <LogIn className="w-5 h-5" />
+            Se connecter avec Google
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-latte flex items-center justify-center p-4 login-page">
       <div className="w-full max-w-md">
@@ -76,7 +120,15 @@ const Login = () => {
                 className="h-24 w-auto object-contain"
               />
             </div>
-            <p className="text-muted-foreground">Employee Login</p>
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-muted-foreground">Employee Login</p>
+              <button 
+                onClick={ownerSignOut}
+                className="text-xs text-primary underline"
+              >
+                Changer de compte
+              </button>
+            </div>
           </div>
 
           <div className="space-y-6">

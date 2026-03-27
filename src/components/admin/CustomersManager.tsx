@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { Loader2, Mail, QrCode, Trash2 } from 'lucide-react';
 import QRCode from 'qrcode';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Customer {
   id: string;
@@ -21,6 +22,7 @@ interface Customer {
 }
 
 const CustomersManager = () => {
+  const { businessId } = useAuth();
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -28,23 +30,26 @@ const CustomersManager = () => {
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
 
   const { data: customers, isLoading } = useQuery({
-    queryKey: ['customers'],
+    queryKey: ['customers', businessId],
     queryFn: async () => {
+      if (!businessId) return [];
       const { data, error } = await supabase
         .from('customers')
         .select('*')
+        .eq('business_id', businessId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data as Customer[];
     },
+    enabled: !!businessId,
   });
 
   const createCustomerMutation = useMutation({
     mutationFn: async (newCustomer: { name: string; email: string; phone: string }) => {
       const { data, error } = await supabase
         .from('customers')
-        .insert([newCustomer])
+        .insert([{ ...newCustomer, business_id: businessId }])
         .select()
         .single();
       
@@ -71,7 +76,8 @@ const CustomersManager = () => {
       const { error } = await supabase
         .from('customers')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('business_id', businessId);
       
       if (error) throw error;
     },

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePOS } from '@/contexts/POSContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import ProductGrid from '@/components/pos/ProductGrid';
 import Cart from '@/components/pos/Cart';
 import Header from '@/components/pos/Header';
@@ -23,6 +24,7 @@ interface Category {
 }
 
 const POS = () => {
+  const { businessId } = useAuth();
   const { currentEmployee, cart } = usePOS();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -45,9 +47,11 @@ const POS = () => {
   }, [currentEmployee, navigate]);
 
   const loadCategories = async () => {
+    if (!businessId) return;
     const { data, error } = await supabase
       .from('categories')
       .select('*')
+      .eq('business_id', businessId)
       .eq('active', true)
       .order('sort_order');
 

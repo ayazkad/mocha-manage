@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -16,14 +17,17 @@ interface LossData {
 }
 
 const LossesStatistics = () => {
+  const { businessId } = useAuth();
   const [date, setDate] = useState<Date>(new Date());
   const [losses, setLosses] = useState<LossData[]>([]);
   const [totalLoss, setTotalLoss] = useState(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadLosses();
-  }, [date]);
+    if (businessId) {
+      loadLosses();
+    }
+  }, [date, businessId]);
 
   const loadLosses = async () => {
     setLoading(true);
@@ -39,6 +43,7 @@ const LossesStatistics = () => {
           employee_id,
           employees(name)
         `)
+        .eq('business_id', businessId)
         .eq('loss_date', selectedDate)
         .order('created_at', { ascending: false });
 

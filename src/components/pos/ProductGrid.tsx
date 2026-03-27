@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePOS } from '@/contexts/POSContext';
+import { useAuth } from '@/contexts/AuthContext';
 import ProductCard from './ProductCard';
 import ProductOptionsDialog from './ProductOptionsDialog';
 import QuickEditProductDialog from './QuickEditProductDialog';
@@ -29,6 +30,7 @@ interface ProductGridProps {
 }
 
 const ProductGrid = ({ categoryId }: ProductGridProps) => {
+  const { businessId } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -49,9 +51,11 @@ const ProductGrid = ({ categoryId }: ProductGridProps) => {
   }, [categoryId]);
 
   const loadProducts = async () => {
+    if (!businessId || !categoryId) return;
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .eq('business_id', businessId)
       .eq('category_id', categoryId)
       .eq('active', true)
       .eq('visible_in_categories', true)
