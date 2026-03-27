@@ -66,8 +66,8 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
     onClose();
   };
 
-  // Georgian Lari bills
-  const bills = [1, 2, 5, 10, 20, 50, 100, 200];
+  // Moroccan bills
+  const bills = [20, 50, 100, 200];
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -86,11 +86,11 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
               <>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Montant à rendre</span>
-                  <span className="text-xl font-bold text-green-600">{refundAmount.toFixed(2)} ₾</span>
+                  <span className="text-xl font-bold text-green-600">{refundAmount.toFixed(2)} Dhs</span>
                 </div>
                 <div className="pt-2 border-t border-border text-center">
                   <p className="text-sm text-muted-foreground">
-                    Rendez {refundAmount.toFixed(2)} ₾ au client
+                    Rendez {refundAmount.toFixed(2)} Dhs au client
                   </p>
                 </div>
               </>
@@ -98,18 +98,18 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
               <>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Total à payer</span>
-                  <span className="text-lg font-bold text-foreground">{total.toFixed(2)} ₾</span>
+                  <span className="text-lg font-bold text-foreground">{total.toFixed(2)} Dhs</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Montant reçu</span>
                   <span className="text-xl font-bold text-primary">
-                    {amountReceived || '0'} ₾
+                    {amountReceived || '0'} Dhs
                   </span>
                 </div>
                 {amount >= total && (
                   <div className="flex justify-between items-center pt-2 border-t border-border">
                     <span className="text-xs font-semibold text-foreground">Rendu monnaie</span>
-                    <span className="text-xl font-bold text-green-600">{change.toFixed(2)} ₾</span>
+                    <span className="text-xl font-bold text-green-600">{change.toFixed(2)} Dhs</span>
                   </div>
                 )}
               </>
@@ -119,9 +119,9 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
           {/* Only show bills and numpad for non-refund payments */}
           {!isRefundMode && (
             <>
-              {/* Georgian bills */}
+              {/* Marocn bills */}
               <div className="space-y-1.5">
-                <p className="text-[10px] font-medium text-center text-muted-foreground">Billets Lari géorgien</p>
+                <p className="text-[10px] font-medium text-center text-muted-foreground">Billets Dirham marocain</p>
                 <div className="grid grid-cols-4 gap-1.5">
                   {bills.map(bill => (
                     <Button
@@ -131,7 +131,7 @@ const CashPaymentDialog = ({ open, onClose, total, onConfirm, processing, isRefu
                       className="h-10 text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-colors rounded-lg border"
                       disabled={processing}
                     >
-                      {bill} ₾
+                      {bill} Dhs
                     </Button>
                   ))}
                 </div>

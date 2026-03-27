@@ -139,15 +139,15 @@ const SwipeableCartItem = ({
                 {itemDiscount > 0 ? (
                   <>
                     <span className="text-[10px] text-muted-foreground line-through">
-                      {itemTotal.toFixed(2)} ₾
+                      {itemTotal.toFixed(2)} Dhs
                     </span>
                     <span className="font-bold text-sm text-primary">
-                      {discountedTotal.toFixed(2)} ₾
+                      {discountedTotal.toFixed(2)} Dhs
                     </span>
                   </>
                 ) : (
                   <span className="font-bold text-sm text-card-foreground">
-                    {itemTotal.toFixed(2)} ₾
+                    {itemTotal.toFixed(2)} Dhs
                   </span>
                 )}
               </div>
@@ -418,7 +418,7 @@ const Cart = ({ onClose }: CartProps) => {
 
   const handlePaymentMethodClick = () => {
     if (cart.length === 0) {
-      toast.error('Cart is empty');
+      toast.error('Le panier est vide');
       return;
     }
     setShowPaymentMethod(true);
@@ -500,7 +500,7 @@ const Cart = ({ onClose }: CartProps) => {
           subtotal,
           discount_amount: totalDiscount,
           total,
-          notes: `Modifié: différence ${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)} ₾`,
+          notes: `Modifié: différence ${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)} Dhs`,
         })
         .eq('id', originalOrder.orderId);
 
@@ -551,9 +551,9 @@ const Cart = ({ onClose }: CartProps) => {
       };
 
       if (priceDiff < 0) {
-        toast.success(`Remboursement: ${Math.abs(priceDiff).toFixed(2)} ₾ à rendre`);
+        toast.success(`Remboursement: ${Math.abs(priceDiff).toFixed(2)} Dhs à rendre`);
       } else if (priceDiff > 0) {
-        toast.success(`Encaissé: ${priceDiff.toFixed(2)} ₾`);
+        toast.success(`Encaissé: ${priceDiff.toFixed(2)} Dhs`);
       } else {
         toast.success('Ticket modifié (pas de différence)');
       }
@@ -572,7 +572,7 @@ const Cart = ({ onClose }: CartProps) => {
 
   const handleCompleteOrder = async (paymentMethod: 'cash' | 'card', cashAmount: number = 0) => {
     if (!currentSession || !currentEmployee) {
-      toast.error('Invalid session');
+      toast.error('Session invalide');
       return;
     }
 
@@ -814,7 +814,7 @@ const Cart = ({ onClose }: CartProps) => {
           .eq('benefit_date', today);
       }
 
-      toast.success(`Order ${orderData.order_number} completed`);
+      toast.success(`Commande ${orderData.order_number} terminée`);
 
       // Prepare receipt data
       const now = new Date();
@@ -822,8 +822,8 @@ const Cart = ({ onClose }: CartProps) => {
         orderId: orderData.id,
         orderNumber: orderData.order_number,
         employeeName: currentEmployee.name,
-        date: now.toLocaleDateString('en-US'),
-        time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        date: now.toLocaleDateString('fr-FR'),
+        time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
         items: cart.map(item => ({
           productName: item.productName,
           quantity: item.quantity,
@@ -862,7 +862,7 @@ const Cart = ({ onClose }: CartProps) => {
       setSelectedItems([]);
     } catch (error) {
       console.error('Error completing order:', error);
-      toast.error('Error completing order');
+      toast.error('Erreur lors de la commande');
     } finally {
       setProcessing(false);
     }
@@ -917,10 +917,10 @@ const Cart = ({ onClose }: CartProps) => {
             <div className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 text-primary" />
               <h2 className="text-base font-semibold text-card-foreground">
-                {isModifyingOrder ? 'Modification' : 'Cart'}
+                {isModifyingOrder ? 'Modification' : 'Panier'}
               </h2>
               <span className="text-xs text-muted-foreground">
-                {cart.length} item{cart.length !== 1 ? 's' : ''}
+                {cart.length} article{cart.length !== 1 ? 's' : ''}
               </span>
             </div>
             {onClose && (
@@ -957,7 +957,7 @@ const Cart = ({ onClose }: CartProps) => {
                 )}
               </div>
               <p className="text-[10px] text-muted-foreground mt-1">
-                Original: {originalOrder.originalTotal.toFixed(2)} ₾
+                Original: {originalOrder.originalTotal.toFixed(2)} Dhs
               </p>
             </div>
           )}
@@ -968,7 +968,7 @@ const Cart = ({ onClose }: CartProps) => {
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground py-12 min-h-[300px]">
               <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
-              <p className="text-sm">Your cart is empty</p>
+              <p className="text-sm">Votre panier est vide</p>
             </div>
           ) : (
             <div className="p-3 space-y-2">
@@ -1007,8 +1007,8 @@ const Cart = ({ onClose }: CartProps) => {
           <div className="p-3 space-y-2">
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} ₾</span>
+                <span className="text-muted-foreground">Sous-total</span>
+                <span className="font-semibold text-card-foreground">{subtotal.toFixed(2)} Dhs</span>
               </div>
 
               {(appliedOffer || itemDiscounts > 0 || freeDrinkDiscount > 0) && (
@@ -1017,15 +1017,15 @@ const Cart = ({ onClose }: CartProps) => {
                     {appliedOffer && <Gift className="w-3 h-3" />}
                     {itemDiscounts > 0 && <Percent className="w-3 h-3" />}
                     {freeDrinkDiscount > 0 && <Gift className="w-3 h-3 text-green-600" />}
-                    Discount
+                    Remise
                     {freeDrinkDiscount > 0 && (
                       <span className="text-green-600 font-medium">
-                        (Free Drink!)
+                        (Boisson offerte !)
                       </span>
                     )}
                   </span>
                   <span className="font-semibold text-destructive">
-                    -{totalDiscount.toFixed(2)} ₾
+                    -{totalDiscount.toFixed(2)} Dhs
                   </span>
                 </div>
               )}
@@ -1033,8 +1033,8 @@ const Cart = ({ onClose }: CartProps) => {
               <Separator />
 
               <div className="flex justify-between text-base font-bold">
-                <span className="text-card-foreground">Total Payment</span>
-                <span className="text-primary">{total.toFixed(2)} ₾</span>
+                <span className="text-card-foreground">Total à payer</span>
+                <span className="text-primary">{total.toFixed(2)} Dhs</span>
               </div>
 
               {/* Price difference when modifying an order */}
@@ -1048,10 +1048,10 @@ const Cart = ({ onClose }: CartProps) => {
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-medium">
                       {getPriceDifference() > 0
-                        ? '💰 To Collect'
+                        ? '💰 À encaisser'
                         : getPriceDifference() < 0
-                          ? '💵 To Refund'
-                          : '✓ No Difference'}
+                          ? '💵 À rembourser'
+                          : '✓ Pas de différence'}
                     </span>
                     <span className={`text-sm font-bold ${getPriceDifference() > 0
                       ? 'text-red-600'
@@ -1059,7 +1059,7 @@ const Cart = ({ onClose }: CartProps) => {
                         ? 'text-green-600'
                         : 'text-muted-foreground'
                       }`}>
-                      {getPriceDifference() > 0 ? '+' : ''}{getPriceDifference().toFixed(2)} ₾
+                      {getPriceDifference() > 0 ? '+' : ''}{getPriceDifference().toFixed(2)} Dhs
                     </span>
                   </div>
                 </div>
@@ -1075,8 +1075,8 @@ const Cart = ({ onClose }: CartProps) => {
                   <span className="flex items-center gap-1.5">
                     <Percent className="w-3 h-3" />
                     {selectedItems.length > 0
-                      ? `Discount (${selectedItems.length})`
-                      : 'Discount'
+                      ? `Remise (${selectedItems.length})`
+                      : 'Remise'
                     }
                   </span>
                 </Button>
@@ -1096,7 +1096,7 @@ const Cart = ({ onClose }: CartProps) => {
                   className="rounded-lg h-9 text-xs text-destructive hover:text-destructive"
                   disabled={cart.length === 0 || itemDiscounts === 0}
                 >
-                  Remove
+                  Supprimer
                 </Button>
               </div>
             </div>
@@ -1107,14 +1107,14 @@ const Cart = ({ onClose }: CartProps) => {
                 disabled={processing}
                 className="w-full h-11 bg-[#F5A623] hover:bg-[#E09612] text-white transition-colors gap-2 text-base font-semibold rounded-lg shadow-md"
               >
-                Pay Now
+                Payer maintenant
               </Button>
             )}
 
             {showPaymentMethod && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-center text-muted-foreground">
-                  Choose payment method
+                  Choisir le mode de paiement
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
@@ -1124,7 +1124,7 @@ const Cart = ({ onClose }: CartProps) => {
                     variant="outline"
                   >
                     <Banknote className="w-6 h-6" />
-                    <span className="text-xs font-semibold">Cash</span>
+                    <span className="text-xs font-semibold">Espèces</span>
                   </Button>
                   <Button
                     onClick={handleCardPayment}
@@ -1133,7 +1133,7 @@ const Cart = ({ onClose }: CartProps) => {
                     variant="outline"
                   >
                     <CreditCard className="w-6 h-6" />
-                    <span className="text-xs font-semibold">Card</span>
+                    <span className="text-xs font-semibold">Carte</span>
                   </Button>
                 </div>
                 <Button
@@ -1142,7 +1142,7 @@ const Cart = ({ onClose }: CartProps) => {
                   className="w-full rounded-lg h-8 text-xs"
                   disabled={processing}
                 >
-                  Back
+                  Retour
                 </Button>
               </div>
             )}

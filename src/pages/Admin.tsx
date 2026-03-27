@@ -154,14 +154,14 @@ const Admin = () => {
               className="overflow-x-auto px-6 py-2 no-scrollbar"
             >
               <TabsList className="inline-flex w-auto min-w-full md:grid md:grid-cols-9 md:max-w-7xl">
-                <TabsTrigger id="tab-trigger-statistics" value="statistics" className="whitespace-nowrap">Statistics</TabsTrigger>
-                <TabsTrigger id="tab-trigger-orders" value="orders" className="whitespace-nowrap">Orders</TabsTrigger>
-                <TabsTrigger id="tab-trigger-products" value="products" className="whitespace-nowrap">Products</TabsTrigger>
+                <TabsTrigger id="tab-trigger-statistics" value="statistics" className="whitespace-nowrap">Statistiques</TabsTrigger>
+                <TabsTrigger id="tab-trigger-orders" value="orders" className="whitespace-nowrap">Commandes</TabsTrigger>
+                <TabsTrigger id="tab-trigger-products" value="products" className="whitespace-nowrap">Produits</TabsTrigger>
                 <TabsTrigger id="tab-trigger-options" value="options" className="whitespace-nowrap">Options</TabsTrigger>
-                <TabsTrigger id="tab-trigger-categories" value="categories" className="whitespace-nowrap">Categories</TabsTrigger>
-                <TabsTrigger id="tab-trigger-offers" value="offers" className="whitespace-nowrap">Offers</TabsTrigger>
-                <TabsTrigger id="tab-trigger-employees" value="employees" className="whitespace-nowrap">Employees</TabsTrigger>
-                <TabsTrigger id="tab-trigger-customers" value="customers" className="whitespace-nowrap">Customers</TabsTrigger>
+                <TabsTrigger id="tab-trigger-categories" value="categories" className="whitespace-nowrap">Catégories</TabsTrigger>
+                <TabsTrigger id="tab-trigger-offers" value="offers" className="whitespace-nowrap">Offres</TabsTrigger>
+                <TabsTrigger id="tab-trigger-employees" value="employees" className="whitespace-nowrap">Employés</TabsTrigger>
+                <TabsTrigger id="tab-trigger-customers" value="customers" className="whitespace-nowrap">Clients</TabsTrigger>
                 <TabsTrigger id="tab-trigger-printer" value="printer" className="whitespace-nowrap">Impression</TabsTrigger>
               </TabsList>
             </div>

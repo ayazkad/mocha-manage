@@ -61,10 +61,10 @@ const EmployeesManager = () => {
         active: true,
       });
       setIsDialogOpen(false);
-      toast({ title: editingId ? 'Employee updated' : 'Employee created' });
+      toast({ title: editingId ? 'Employé mis à jour' : 'Employé créé' });
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -78,7 +78,7 @@ const EmployeesManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({ title: 'Employee deleted' });
+      toast({ title: 'Employé supprimé' });
     },
   });
 
@@ -120,19 +120,19 @@ const EmployeesManager = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Employees List</h2>
-        <Button onClick={handleAdd}>Add New Employee</Button>
+        <h2 className="text-xl font-semibold">Liste des employés</h2>
+        <Button onClick={handleAdd}>Ajouter un employé</Button>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-[90%] rounded-2xl border-none shadow-xl sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
+            <DialogTitle>{editingId ? 'Modifier l\'employé' : 'Ajouter un employé'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Nom</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -141,7 +141,7 @@ const EmployeesManager = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="employee_code">Employee Code</Label>
+                <Label htmlFor="employee_code">Code Employé</Label>
                 <Input
                   id="employee_code"
                   value={formData.employee_code}
@@ -153,7 +153,7 @@ const EmployeesManager = () => {
 
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <Label htmlFor="pin_code">PIN Code</Label>
+                <Label htmlFor="pin_code">Code PIN</Label>
                 <Input
                   id="pin_code"
                   type="text"
@@ -163,7 +163,7 @@ const EmployeesManager = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">Rôle</Label>
                 <Select
                   value={formData.role}
                   onValueChange={(value: 'employee' | 'admin') => setFormData({ ...formData, role: value })}
@@ -172,8 +172,8 @@ const EmployeesManager = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="employee">Employee</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="employee">Employé</SelectItem>
+                    <SelectItem value="admin">Administrateur</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -185,15 +185,15 @@ const EmployeesManager = () => {
                 checked={formData.active}
                 onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
               />
-              <Label htmlFor="active">Active</Label>
+              <Label htmlFor="active">Actif</Label>
             </div>
 
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                Annuler
               </Button>
               <Button type="submit">
-                {editingId ? 'Update' : 'Create'}
+                {editingId ? 'Mettre à jour' : 'Créer'}
               </Button>
             </div>
           </form>
@@ -210,8 +210,8 @@ const EmployeesManager = () => {
             <div>
               <h3 className="font-semibold">{employee.name}</h3>
               <p className="text-sm text-muted-foreground">
-                Code: {employee.employee_code} • PIN: {employee.pin_code} • Role: {employee.role}
-                {!employee.active && ' • Inactive'}
+                Code: {employee.employee_code} • PIN: {employee.pin_code} • Rôle: {employee.role === 'admin' ? 'Administrateur' : 'Employé'}
+                {!employee.active && ' • Inactif'}
               </p>
             </div>
             <div className="flex gap-2">

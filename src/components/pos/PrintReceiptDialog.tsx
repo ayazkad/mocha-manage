@@ -35,9 +35,33 @@ interface ReceiptData {
   change?: number;
 }
 
-type Language = 'en' | 'ru' | 'ge';
+type Language = 'fr' | 'en';
 
 const translations = {
+  fr: {
+    title: 'LATTE',
+    subtitle: 'Votre café, notre passion',
+    orderNumber: 'N° Commande :',
+    date: 'Date :',
+    time: 'Heure :',
+    employee: 'Serveur :',
+    customer: 'Client :',
+    subtotal: 'Sous-total :',
+    discount: 'Remise :',
+    total: 'TOTAL :',
+    payment: 'Paiement :',
+    cash: 'ESPÈCES',
+    card: 'CARTE',
+    amountPaid: 'Payé :',
+    change: 'Rendu :',
+    points: 'points fidélité !',
+    thanks: 'Merci de votre visite !',
+    goodbye: 'À bientôt !',
+    printButton: 'Imprimer ticket',
+    skipButton: 'Passer',
+    copyButton: 'Copier',
+    copied: 'Copié !'
+  },
   en: {
     title: 'LATTE',
     subtitle: 'Your coffee, our passion',
@@ -61,54 +85,6 @@ const translations = {
     skipButton: 'Skip',
     copyButton: 'Copy',
     copied: 'Copied!'
-  },
-  ru: {
-    title: 'LATTE',
-    subtitle: 'Ваш кофе, наша страсть',
-    orderNumber: '№ Заказа:',
-    date: 'Дата:',
-    time: 'Время:',
-    employee: 'Сотрудник:',
-    customer: 'Клиент:',
-    subtotal: 'Промежуточно:',
-    discount: 'Скидка:',
-    total: 'ИТОГО:',
-    payment: 'Оплата:',
-    cash: 'НАЛИЧНЫЕ',
-    card: 'КАРТА',
-    amountPaid: 'Получено:',
-    change: 'Сдача:',
-    points: 'баллов!',
-    thanks: 'Спасибо за визит!',
-    goodbye: 'До скорой встречи!',
-    printButton: 'Распечатать',
-    skipButton: 'Пропустить',
-    copyButton: 'Копировать',
-    copied: 'Скопировано!'
-  },
-  ge: {
-    title: 'LATTE',
-    subtitle: 'თქვენი ყავა, ჩვენი გატაცება',
-    orderNumber: 'შეკვეთა №:',
-    date: 'თარიღი:',
-    time: 'დრო:',
-    employee: 'თანამშრომელი:',
-    customer: 'კლიენტი:',
-    subtotal: 'შუალედური:',
-    discount: 'ფასდაკლება:',
-    total: 'სულ:',
-    payment: 'გადახდა:',
-    cash: 'ნაღდი',
-    card: 'ბარათი',
-    amountPaid: 'მიღებული:',
-    change: 'ხურდა:',
-    points: 'ქულა!',
-    thanks: 'მადლობა!',
-    goodbye: 'მალე გნახავთ!',
-    printButton: 'ბეჭდვა',
-    skipButton: 'გამოტოვება',
-    copyButton: 'კოპირება',
-    copied: 'კოპირებულია!'
   }
 };
 
@@ -134,13 +110,13 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
     return left + ' '.repeat(spaces) + right;
   };
 
-  const formatPrice = (price: number): string => `${price.toFixed(2)} GEL`;
+  const formatPrice = (price: number): string => `${price.toFixed(2)} Dhs`;
 
   let receipt = '';
 
   // Header - Only address info (logo is shown separately)
   receipt += '\n';
-  receipt += center('Tbilisi, Georgia') + '\n';
+  receipt += center('Casablanca, Maroc') + '\n';
   receipt += center('Tel: +995 XXX XXX XXX') + '\n';
   receipt += '\n';
   receipt += LINE + '\n';
@@ -177,7 +153,7 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
 
     // Unit price if quantity > 1
     if (item.quantity > 1) {
-      receipt += `   @ ${item.unitPrice.toFixed(2)} GEL each\n`;
+      receipt += `   @ ${item.unitPrice.toFixed(2)} Dhs each\n`;
     }
   });
   receipt += '\n';
@@ -231,7 +207,7 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
 };
 
 const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogProps) => {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>('fr');
   const [receiptText, setReceiptText] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -331,7 +307,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="w-[90%] max-w-[340px] p-4 rounded-2xl border-none shadow-xl" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader className="pb-2">
-          <DialogTitle className="text-base">Receipt #{receiptData.orderNumber}</DialogTitle>
+          <DialogTitle className="text-base">Ticket #{receiptData.orderNumber}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -353,9 +329,8 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" sideOffset={4}>
+                <SelectItem value="fr">Français</SelectItem>
                 <SelectItem value="en">English</SelectItem>
-                <SelectItem value="ru">Русский</SelectItem>
-                <SelectItem value="ge">ქართული</SelectItem>
               </SelectContent>
             </Select>
           </div>

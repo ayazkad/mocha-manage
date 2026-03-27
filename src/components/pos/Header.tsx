@@ -18,7 +18,7 @@ const Header = () => {
   const handleLogout = async () => {
     const success = await logout();
     if (!success) {
-      toast.error('You must complete the ticket modification before logging out');
+      toast.error('Vous devez terminer la modification du ticket avant de vous déconnecter');
     }
   };
 
@@ -42,7 +42,7 @@ const Header = () => {
               className="gap-2 rounded-xl border-border/50"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden md:inline">Back to POS</span>
+              <span className="hidden md:inline">Retour au TPV</span>
             </Button>
           )}
 
@@ -56,7 +56,7 @@ const Header = () => {
               className="gap-2 rounded-xl border-border/50"
             >
               <Wrench className="w-4 h-4" />
-              <span className="hidden md:inline">Tools</span>
+              <span className="hidden md:inline">Outils</span>
             </Button>
           )}
 
@@ -84,7 +84,7 @@ const Header = () => {
             className="gap-2 rounded-xl border-border/50"
           >
             <LogOut className="w-4 h-4" />
-            <span className="hidden md:inline">Logout</span>
+            <span className="hidden md:inline">Déconnexion</span>
           </Button>
         </div>
       </div>

@@ -188,7 +188,7 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
                     </div>
                     <div>
                       <p className="text-muted-foreground">Total payé</p>
-                      <p className="font-medium text-primary">{orderDetails.total.toFixed(2)} ₾</p>
+                      <p className="font-medium text-primary">{orderDetails.total.toFixed(2)} Dhs</p>
                     </div>
                   </div>
                 </div>
@@ -202,7 +202,7 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
                         <div className="flex-1">
                           <p className="font-medium">{item.product_name}</p>
                           <p className="text-sm text-muted-foreground">
-                            Qté: {item.quantity} × {item.unit_price.toFixed(2)} ₾
+                            Qté: {item.quantity} × {item.unit_price.toFixed(2)} Dhs
                           </p>
                           {item.selected_options && (
                             <div className="text-xs text-muted-foreground mt-1">
@@ -218,7 +218,7 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
                             <p className="text-xs text-muted-foreground mt-1">Note: {item.notes}</p>
                           )}
                         </div>
-                        <p className="font-semibold">{item.total_price.toFixed(2)} ₾</p>
+                        <p className="font-semibold">{item.total_price.toFixed(2)} Dhs</p>
                       </div>
                     ))}
                   </div>
@@ -228,17 +228,17 @@ const OrderLookupDialog = ({ open, onClose }: OrderLookupDialogProps) => {
                 <div className="border-t pt-3 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Sous-total</span>
-                    <span>{orderDetails.subtotal.toFixed(2)} ₾</span>
+                    <span>{orderDetails.subtotal.toFixed(2)} Dhs</span>
                   </div>
                   {orderDetails.discount_amount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Réduction</span>
-                      <span className="text-red-600">-{orderDetails.discount_amount.toFixed(2)} ₾</span>
+                      <span className="text-red-600">-{orderDetails.discount_amount.toFixed(2)} Dhs</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span>Total</span>
-                    <span>{orderDetails.total.toFixed(2)} ₾</span>
+                    <span>{orderDetails.total.toFixed(2)} Dhs</span>
                   </div>
                 </div>
 

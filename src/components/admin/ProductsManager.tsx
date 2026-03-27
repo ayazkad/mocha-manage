@@ -97,7 +97,7 @@ const ProductsManager = () => {
     });
 
     // Add "No Category" group
-    groups['no-category'] = { name: 'No Category', sortOrder: 9999, products: [] };
+    groups['no-category'] = { name: 'Sans catégorie', sortOrder: 9999, products: [] };
 
     // Distribute products into groups
     products.forEach(product => {
@@ -156,7 +156,7 @@ const ProductsManager = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       resetForm();
-      toast({ title: editingId ? 'Product updated' : 'Product created' });
+      toast({ title: editingId ? 'Produit mis à jour' : 'Produit créé' });
     },
     onError: (error: any) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -173,7 +173,7 @@ const ProductsManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast({ title: 'Product deleted' });
+      toast({ title: 'Produit supprimé' });
     },
   });
 
@@ -197,11 +197,11 @@ const ProductsManager = () => {
       );
 
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast({ title: 'Order updated' });
+      toast({ title: 'Ordre mis à jour' });
     } catch (error: any) {
       console.error('Error updating order:', error);
       toast({
-        title: 'Error updating order',
+        title: 'Erreur lors de la mise à jour de l\'ordre',
         description: error?.message,
         variant: 'destructive',
       });
@@ -288,8 +288,8 @@ const ProductsManager = () => {
 
       if (isDuplicate) {
         toast({
-          title: 'Duplicate product',
-          description: 'A product with this name already exists',
+          title: 'Produit en double',
+          description: 'Un produit avec ce nom existe déjà',
           variant: 'destructive'
         });
         return;
@@ -315,13 +315,13 @@ const ProductsManager = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? 'Edit Product' : 'Add New Product'}</CardTitle>
+          <CardTitle>{editingId ? 'Modifier le produit' : 'Ajouter un produit'}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name_en">Product Name</Label>
+                <Label htmlFor="name_en">Nom du produit</Label>
                 <Input
                   id="name_en"
                   value={formData.name_en}
@@ -330,7 +330,7 @@ const ProductsManager = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="base_price">Base Price</Label>
+                <Label htmlFor="base_price">Prix de base</Label>
                 <Input
                   id="base_price"
                   type="number"
@@ -343,13 +343,13 @@ const ProductsManager = () => {
             </div>
 
             <div>
-              <Label htmlFor="category_id">Category</Label>
+              <Label htmlFor="category_id">Catégorie</Label>
               <Select
                 value={formData.category_id}
                 onValueChange={handleCategoryChange}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Sélectionner une catégorie" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories?.map((cat) => (
@@ -371,13 +371,13 @@ const ProductsManager = () => {
             </div>
 
             <div>
-              <Label htmlFor="barcode">Barcode (optional)</Label>
+              <Label htmlFor="barcode">Code-barres (optionnel)</Label>
               <div className="flex gap-2">
                 <Input
                   id="barcode"
                   value={formData.barcode}
                   onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                  placeholder="Scan or enter barcode"
+                   placeholder="Scanner ou saisir le code-barres"
                   className="flex-1"
                 />
                 <AdminBarcodeScanner
@@ -385,12 +385,12 @@ const ProductsManager = () => {
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Products with barcodes can be scanned in POS
+                Les produits avec code-barres peuvent être scannés dans le TPV
               </p>
             </div>
 
             <div>
-              <Label htmlFor="image">Product Image</Label>
+              <Label htmlFor="image">Image du produit</Label>
               <div className="space-y-2">
                 {(imagePreview || formData.image_url) && (
                   <div className="relative w-32 h-32">
@@ -423,7 +423,7 @@ const ProductsManager = () => {
                     className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
                   >
                     <Upload className="w-4 h-4" />
-                    Upload Image
+                    Télécharger une image
                   </Label>
                 </div>
               </div>
@@ -436,7 +436,7 @@ const ProductsManager = () => {
                   checked={formData.has_size_options}
                   onCheckedChange={(checked) => setFormData({ ...formData, has_size_options: checked })}
                 />
-                <Label htmlFor="has_size_options">Has Size Options</Label>
+                <Label htmlFor="has_size_options">Options de taille</Label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -445,7 +445,7 @@ const ProductsManager = () => {
                   checked={formData.has_milk_options}
                   onCheckedChange={(checked) => setFormData({ ...formData, has_milk_options: checked })}
                 />
-                <Label htmlFor="has_milk_options">Has Milk Options</Label>
+                <Label htmlFor="has_milk_options">Options de lait</Label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -454,7 +454,7 @@ const ProductsManager = () => {
                   checked={formData.has_temperature_options}
                   onCheckedChange={(checked) => setFormData({ ...formData, has_temperature_options: checked })}
                 />
-                <Label htmlFor="has_temperature_options">Hot / Cold</Label>
+                <Label htmlFor="has_temperature_options">Chaud / Froid</Label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -463,7 +463,7 @@ const ProductsManager = () => {
                   checked={formData.active}
                   onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                 />
-                <Label htmlFor="active">Active</Label>
+                <Label htmlFor="active">Actif</Label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -472,20 +472,20 @@ const ProductsManager = () => {
                   checked={formData.visible_in_categories}
                   onCheckedChange={(checked) => setFormData({ ...formData, visible_in_categories: checked })}
                 />
-                <Label htmlFor="visible_in_categories">Visible in categories</Label>
+                <Label htmlFor="visible_in_categories">Visible dans les catégories</Label>
               </div>
             </div>
             <p className="text-xs text-muted-foreground -mt-2">
-              If disabled, product will only be visible via barcode scan
+              Si désactivé, le produit ne sera visible que via scan
             </p>
 
             <div className="flex gap-2">
               <Button type="submit">
-                {editingId ? 'Update' : 'Create'}
+                {editingId ? 'Mettre à jour' : 'Créer'}
               </Button>
               {editingId && (
                 <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancel
+                  Annuler
                 </Button>
               )}
             </div>
@@ -495,8 +495,8 @@ const ProductsManager = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Products List</CardTitle>
-          <p className="text-sm text-muted-foreground">Long press and slide to reorder • Tap to edit</p>
+          <CardTitle>Liste des produits</CardTitle>
+          <p className="text-sm text-muted-foreground">Appuyez longuement et glissez pour réorganiser • Appuyez pour modifier</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -508,7 +508,7 @@ const ProductsManager = () => {
                   <h3 className="font-semibold text-lg border-b pb-2 text-primary">
                     {group.name}
                     <span className="text-sm font-normal text-muted-foreground ml-2">
-                      ({group.products.length} products)
+                      ({group.products.length} produits)
                     </span>
                   </h3>
                   <SwipeableList>
@@ -526,11 +526,11 @@ const ProductsManager = () => {
                             <div>
                               <h4 className="font-semibold">{product.name_en}</h4>
                               <p className="text-sm text-muted-foreground">
-                                {product.base_price} ₾
-                                {!product.active && ' • Inactive'}
+                                {product.base_price} Dhs
+                                {!product.active && ' • Inactif'}
                                 {product.barcode && ` • 📊 ${product.barcode}`}
-                                {!product.visible_in_categories && ' • Scan only'}
-                                {(product.has_size_options || product.has_milk_options) && ' • Has options'}
+                                {!product.visible_in_categories && ' • Scan uniquement'}
+                                {(product.has_size_options || product.has_milk_options) && ' • Options incluses'}
                               </p>
                             </div>
                           </div>

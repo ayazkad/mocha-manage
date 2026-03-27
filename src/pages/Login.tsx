@@ -31,7 +31,7 @@ const Login = () => {
 
   const handleSubmit = async () => {
     if (employeeCode.length !== 4 || pin.length !== 4) {
-      toast.error('Employee code and PIN must contain 4 digits');
+      toast.error('Le code employé et le PIN doivent contenir 4 chiffres');
       return;
     }
 
@@ -40,10 +40,10 @@ const Login = () => {
     setLoading(false);
 
     if (success) {
-      toast.success('Login successful');
+      toast.success('Connexion réussie');
       navigate('/pos');
     } else {
-      toast.error('Invalid employee code or PIN');
+      toast.error('Code employé ou PIN invalide');
       setEmployeeCode('');
       setPin('');
       setStep('code');
@@ -76,17 +76,17 @@ const Login = () => {
                 className="h-24 w-auto object-contain"
               />
             </div>
-            <p className="text-muted-foreground">Employee Login</p>
+            <p className="text-muted-foreground">Connexion Employé</p>
           </div>
 
           <div className="space-y-6">
             <div className="space-y-4">
               <div className="text-center">
                 <label className="text-lg font-semibold text-foreground">
-                  {step === 'code' ? 'Employee Code' : 'PIN Code'}
+                  {step === 'code' ? 'Code Employé' : 'Code PIN'}
                 </label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Enter 4 digits
+                  Entrez 4 chiffres
                 </p>
               </div>
 

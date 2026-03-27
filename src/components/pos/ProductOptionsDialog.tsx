@@ -179,7 +179,7 @@ const ProductOptionsDialog = ({
       notes: notes || undefined,
     });
 
-    toast.success('Added to cart');
+    toast.success('Ajouté au panier');
     onClose();
 
     // Reset form
@@ -215,7 +215,7 @@ const ProductOptionsDialog = ({
                       : 'bg-background hover:bg-primary/10'
                       }`}
                   >
-                    🔥 Hot
+                    🔥 Chaud
                   </button>
                   <button
                     type="button"
@@ -225,7 +225,7 @@ const ProductOptionsDialog = ({
                       : 'bg-background hover:bg-primary/10'
                       }`}
                   >
-                    ❄️ Cold
+                    ❄️ Froid
                   </button>
                 </div>
               </div>
@@ -250,7 +250,7 @@ const ProductOptionsDialog = ({
                       </div>
                       {option.price_modifier > 0 && (
                         <span className="text-primary font-semibold text-sm">
-                          +{option.price_modifier.toFixed(2)} ₾
+                          +{option.price_modifier.toFixed(2)} Dhs
                         </span>
                       )}
                     </label>
@@ -278,7 +278,7 @@ const ProductOptionsDialog = ({
                       </div>
                       {option.price_modifier > 0 && (
                         <span className="text-primary font-semibold text-sm">
-                          +{option.price_modifier.toFixed(2)} ₾
+                          +{option.price_modifier.toFixed(2)} Dhs
                         </span>
                       )}
                     </label>
@@ -344,7 +344,7 @@ const ProductOptionsDialog = ({
             <div className="text-left flex-shrink-0">
               <p className="text-sm text-muted-foreground">Total</p>
               <p className="text-xl font-bold text-primary whitespace-nowrap">
-                {calculateTotal().toFixed(2)} ₾
+                {calculateTotal().toFixed(2)} Dhs
               </p>
             </div>
             <Button

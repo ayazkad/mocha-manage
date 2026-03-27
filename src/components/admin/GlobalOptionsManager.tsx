@@ -73,10 +73,10 @@ const GlobalOptionsManager = () => {
       queryClient.invalidateQueries({ queryKey: ['global-options'] });
       queryClient.invalidateQueries({ queryKey: ['product-options'] });
       setEditingOption(null);
-      toast({ title: 'Options updated for all products' });
+      toast({ title: 'Options mises à jour pour tous les produits' });
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -94,10 +94,10 @@ const GlobalOptionsManager = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['global-options'] });
       queryClient.invalidateQueries({ queryKey: ['product-options'] });
-      toast({ title: 'Option deleted from all products' });
+      toast({ title: 'Option supprimée de tous les produits' });
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -112,7 +112,7 @@ const GlobalOptionsManager = () => {
       
       if (fetchError) throw fetchError;
       if (!products || products.length === 0) {
-        throw new Error('No products with this option type enabled');
+        throw new Error('Aucun produit avec ce type d\'option activé');
       }
 
       const { data: existingOptions } = await supabase
@@ -141,10 +141,10 @@ const GlobalOptionsManager = () => {
       queryClient.invalidateQueries({ queryKey: ['global-options'] });
       queryClient.invalidateQueries({ queryKey: ['product-options'] });
       setNewOption(null);
-      toast({ title: 'Option added to all products' });
+      toast({ title: 'Option ajoutée à tous les produits' });
     },
     onError: (error: any) => {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -196,21 +196,21 @@ const GlobalOptionsManager = () => {
       queryClient.invalidateQueries({ queryKey: ['product-options'] });
     } catch (error: any) {
       console.error('Error updating option order:', error);
-      toast({ title: 'Error', description: error?.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error?.message, variant: 'destructive' });
     }
   };
 
-  const sizeOptions = options?.filter(o => o.option_type === 'size').sort((a, b) => a.sort_order - b.sort_order) || [];
-  const milkOptions = options?.filter(o => o.option_type === 'milk').sort((a, b) => a.sort_order - b.sort_order) || [];
+  const sizeOptions = ((options || []) as any[]).filter(o => o.option_type === 'size').sort((a, b) => a.sort_order - b.sort_order) as OptionGroup[];
+  const milkOptions = ((options || []) as any[]).filter(o => o.option_type === 'milk').sort((a, b) => a.sort_order - b.sort_order) as OptionGroup[];
 
   if (isLoading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading options...</div>;
+    return <div className="text-center py-8 text-muted-foreground">Chargement des options...</div>;
   }
 
   const renderOptionsList = (optionsList: OptionGroup[], type: 'size' | 'milk') => (
     <>
       {optionsList.length === 0 && !newOption?.type?.includes(type) && (
-        <p className="text-sm text-muted-foreground">No {type} options configured</p>
+        <p className="text-sm text-muted-foreground">Aucune option de {type === 'size' ? 'taille' : 'lait'} configurée</p>
       )}
 
       <SwipeableList>
@@ -229,7 +229,7 @@ const GlobalOptionsManager = () => {
                   <Input
                     value={editedValues.name}
                     onChange={(e) => setEditedValues({ ...editedValues, name: e.target.value })}
-                    placeholder="Option name"
+                    placeholder="Nom de l'option"
                     className="flex-1"
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
@@ -244,7 +244,7 @@ const GlobalOptionsManager = () => {
                       className="w-24"
                       onClick={(e) => e.stopPropagation()}
                     />
-                    <span className="text-muted-foreground">₾</span>
+                    <span className="text-muted-foreground">Dhs</span>
                   </div>
                   <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }} disabled={updateMutation.isPending}>
                     <Save className="w-4 h-4 text-green-600" />
@@ -258,10 +258,10 @@ const GlobalOptionsManager = () => {
                   <GripVertical className="w-4 h-4 text-muted-foreground" />
                   <span className="flex-1 font-medium">{option.name_en}</span>
                   <span className="text-muted-foreground">
-                    {option.price_modifier > 0 ? `+${option.price_modifier} ₾` : 'Base price'}
+                    {option.price_modifier > 0 ? `+${option.price_modifier} Dhs` : 'Prix de base'}
                   </span>
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                    {option.count} products
+                    {option.count} produits
                   </span>
                   <Button 
                     size="icon" 
@@ -285,7 +285,7 @@ const GlobalOptionsManager = () => {
           <Input
             value={newOption.name}
             onChange={(e) => setNewOption({ ...newOption, name: e.target.value })}
-            placeholder={`New ${type} name`}
+            placeholder={`Nom du nouveau ${type === 'size' ? 'taille' : 'lait'}`}
             className="flex-1"
             autoFocus
           />
@@ -298,7 +298,7 @@ const GlobalOptionsManager = () => {
               onChange={(e) => setNewOption({ ...newOption, price: e.target.value })}
               className="w-24"
             />
-            <span className="text-muted-foreground">₾</span>
+            <span className="text-muted-foreground">Dhs</span>
           </div>
           <Button size="icon" variant="ghost" onClick={handleCreateOption} disabled={createMutation.isPending}>
             <Save className="w-4 h-4 text-green-600" />
@@ -317,8 +317,8 @@ const GlobalOptionsManager = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Size Options</CardTitle>
-            <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
+            <CardTitle>Options de taille</CardTitle>
+            <p className="text-sm text-muted-foreground">Appui long et glisser pour réorganiser</p>
           </div>
           <Button
             size="sm"
@@ -327,7 +327,7 @@ const GlobalOptionsManager = () => {
             disabled={!!newOption}
           >
             <Plus className="w-4 h-4 mr-1" />
-            Add Size
+            Ajouter une taille
           </Button>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -339,8 +339,8 @@ const GlobalOptionsManager = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Milk Options</CardTitle>
-            <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
+            <CardTitle>Options de lait</CardTitle>
+            <p className="text-sm text-muted-foreground">Appui long et glisser pour réorganiser</p>
           </div>
           <Button
             size="sm"
@@ -349,7 +349,7 @@ const GlobalOptionsManager = () => {
             disabled={!!newOption}
           >
             <Plus className="w-4 h-4 mr-1" />
-            Add Milk
+            Ajouter un lait
           </Button>
         </CardHeader>
         <CardContent className="space-y-2">

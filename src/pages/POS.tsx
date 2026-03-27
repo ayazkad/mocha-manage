@@ -60,7 +60,7 @@ const POS = () => {
   };
 
   const getCategoryName = (category: Category) => {
-    return category.name_en || category.name_fr;
+    return category.name_fr || category.name_en;
   };
 
   // Sync Tabs -> Carousel
@@ -179,7 +179,7 @@ const POS = () => {
               className="w-full h-14 text-base font-semibold gap-3 bg-gradient-primary hover:opacity-90 transition-opacity relative rounded-xl shadow-lg"
             >
               <ShoppingCart className="w-6 h-6" />
-              Cart
+              Panier
               {cartItemsCount > 0 && (
                 <Badge className="absolute -top-2 -right-2 h-8 w-8 rounded-full flex items-center justify-center bg-accent text-accent-foreground font-bold shadow-md">
                   {cartItemsCount}

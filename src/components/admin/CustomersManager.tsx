@@ -56,13 +56,13 @@ const CustomersManager = () => {
       setName('');
       setEmail('');
       setPhone('');
-      toast.success('Customer created successfully');
+      toast.success('Client créé avec succès');
       
       // Send welcome email with QR code
       await sendQRCodeEmail(customer);
     },
     onError: (error: any) => {
-      toast.error('Error creating customer: ' + error.message);
+      toast.error('Erreur lors de la création du client: ' + error.message);
     },
   });
 
@@ -77,10 +77,10 @@ const CustomersManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      toast.success('Customer deleted');
+      toast.success('Client supprimé');
     },
     onError: (error: any) => {
-      toast.error('Error deleting: ' + error.message);
+      toast.error('Erreur lors de la suppression: ' + error.message);
     },
   });
 
@@ -102,9 +102,9 @@ const CustomersManager = () => {
       });
 
       if (error) throw error;
-      toast.success('QR code sent by email');
+      toast.success('Code QR envoyé par email');
     } catch (error: any) {
-      toast.error('Error sending email: ' + error.message);
+      toast.error('Erreur lors de l\'envoi: ' + error.message);
     }
   };
 
@@ -113,7 +113,7 @@ const CustomersManager = () => {
       await sendQRCodeEmail(customer);
     },
     onSuccess: () => {
-      toast.success('QR code resent by email');
+      toast.success('Code QR renvoyé par email');
     },
   });
 
@@ -129,9 +129,9 @@ const CustomersManager = () => {
       link.href = qrCodeDataUrl;
       link.download = `qr-${customer.name}.png`;
       link.click();
-      toast.success('QR code downloaded');
+      toast.success('Code QR téléchargé');
     } catch (error) {
-      toast.error('Error downloading');
+      toast.error('Erreur lors du téléchargement');
     } finally {
       setIsGeneratingQR(false);
     }
@@ -140,7 +140,7 @@ const CustomersManager = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !phone) {
-      toast.error('All fields are required');
+      toast.error('Tous les champs sont obligatoires');
       return;
     }
     createCustomerMutation.mutate({ name, email, phone });
@@ -150,21 +150,21 @@ const CustomersManager = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Add Customer</CardTitle>
+          <CardTitle>Ajouter un client</CardTitle>
           <CardDescription>
-            Create a customer account with loyalty QR code (10 drinks = 1 free)
+            Créer un compte client avec code QR de fidélité (10 boissons = 1 offerte)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Nom</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Customer name"
+                  placeholder="Nom du client"
                 />
               </div>
               <div>
@@ -178,12 +178,12 @@ const CustomersManager = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">Téléphone</Label>
                 <Input
                   id="phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+995 555 12 34 56"
+                  placeholder="+212 600 00 00 00"
                 />
               </div>
             </div>
@@ -192,7 +192,7 @@ const CustomersManager = () => {
               disabled={createCustomerMutation.isPending}
             >
               {createCustomerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Customer
+              Créer le client
             </Button>
           </form>
         </CardContent>
@@ -200,9 +200,9 @@ const CustomersManager = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Customer List</CardTitle>
+          <CardTitle>Liste des clients</CardTitle>
           <CardDescription>
-            Manage customers and their loyalty points
+            Gérer les clients et leurs points de fidélité
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -214,11 +214,11 @@ const CustomersManager = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Nom</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
+                  <TableHead>Téléphone</TableHead>
                   <TableHead>Points</TableHead>
-                  <TableHead>Purchases</TableHead>
+                  <TableHead>Achats</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -241,7 +241,7 @@ const CustomersManager = () => {
                           size="icon"
                           onClick={() => downloadQRCode(customer)}
                           disabled={isGeneratingQR}
-                          title="Download QR code"
+                          title="Télécharger le code QR"
                         >
                           <QrCode className="h-4 w-4" />
                         </Button>
@@ -250,7 +250,7 @@ const CustomersManager = () => {
                           size="icon"
                           onClick={() => resendQRCodeMutation.mutate(customer)}
                           disabled={resendQRCodeMutation.isPending}
-                          title="Resend QR code by email"
+                          title="Renvoyer le code QR par email"
                         >
                           <Mail className="h-4 w-4" />
                         </Button>

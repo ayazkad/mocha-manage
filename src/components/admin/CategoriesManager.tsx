@@ -57,7 +57,7 @@ const CategoriesManager = () => {
         active: true,
       });
       setIsDialogOpen(false);
-      toast({ title: editingId ? 'Category updated' : 'Category created' });
+      toast({ title: editingId ? 'Catégorie mise à jour' : 'Catégorie créée' });
     },
     onError: (error: any) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -74,7 +74,7 @@ const CategoriesManager = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast({ title: 'Category deleted' });
+      toast({ title: 'Catégorie supprimée' });
     },
   });
 
@@ -136,7 +136,7 @@ const CategoriesManager = () => {
     } catch (error: any) {
       console.error('Error updating category order:', error);
       toast({
-        title: 'Error updating order',
+        title: 'Erreur lors de la mise à jour de l\'ordre',
         description: error?.message,
         variant: 'destructive',
       });
@@ -147,23 +147,23 @@ const CategoriesManager = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold">Categories List</h2>
-          <p className="text-sm text-muted-foreground">Long press and slide to reorder</p>
+          <h2 className="text-xl font-semibold">Liste des catégories</h2>
+          <p className="text-sm text-muted-foreground">Appuyez longuement et glissez pour réorganiser</p>
         </div>
         <Button onClick={handleAdd} size="sm" className="gap-2">
-          <Plus className="w-4 h-4" /> Add Category
+          <Plus className="w-4 h-4" /> Ajouter une catégorie
         </Button>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-[90%] rounded-2xl border-none shadow-xl sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+            <DialogTitle>{editingId ? 'Modifier la catégorie' : 'Nouvelle catégorie'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <Label htmlFor="name_en">Category Name</Label>
+                <Label htmlFor="name_en">Nom de la catégorie</Label>
                 <Input
                   id="name_en"
                   value={formData.name_en}
@@ -172,7 +172,7 @@ const CategoriesManager = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="icon">Icon (emoji)</Label>
+                <Label htmlFor="icon">Icône (emoji)</Label>
                 <Input
                   id="icon"
                   value={formData.icon}
@@ -193,10 +193,10 @@ const CategoriesManager = () => {
 
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                Annuler
               </Button>
               <Button type="submit">
-                {editingId ? 'Update' : 'Create'}
+                {editingId ? 'Mettre à jour' : 'Créer'}
               </Button>
             </div>
           </form>

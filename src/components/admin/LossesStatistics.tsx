@@ -48,7 +48,7 @@ const LossesStatistics = () => {
         product_name: item.product_name,
         quantity: item.quantity,
         total_loss: item.total_loss,
-        employee_name: item.employees?.name || 'Unknown',
+        employee_name: item.employees?.name || 'Inconnu',
       }));
 
       setLosses(formattedData);
@@ -84,7 +84,7 @@ const LossesStatistics = () => {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, 'PPP') : <span>Pick a date</span>}
+                  {date ? format(date, 'PPP', { locale: fr }) : <span>Choisir une date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -104,7 +104,7 @@ const LossesStatistics = () => {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-1">Perte Totale</p>
                   <p className="text-3xl font-bold text-destructive">
-                    {totalLoss.toFixed(2)} ₾
+                    {totalLoss.toFixed(2)} Dhs
                   </p>
                 </div>
               </CardContent>
@@ -153,7 +153,7 @@ const LossesStatistics = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-destructive">
-                          {loss.total_loss.toFixed(2)} ₾
+                          {loss.total_loss.toFixed(2)} Dhs
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Qté: {loss.quantity}

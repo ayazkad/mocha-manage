@@ -156,7 +156,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
             {getProductName(product)}
           </h3>
           <span className="bg-foreground/80 text-background px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-sm font-semibold w-fit backdrop-blur-sm">
-            {product.base_price.toFixed(2)} ₾
+            {product.base_price.toFixed(2)} Dhs
           </span>
         </div>
       </div>

@@ -105,7 +105,7 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
     },
     onSuccess: (result: any) => {
       if (result.type === 'none') {
-        toast.error('No customer, order, or product found');
+        toast.error('Aucun client, commande ou produit trouvé');
         setSearchResults([]);
         setShowResults(false);
       } else if (result.type === 'customer') {
@@ -117,24 +117,24 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
           setShowResults(false);
           setShowScanner(false);
           setSearchInput(''); // clear input on success
-          toast.success(`Customer found: ${customers[0].name}`);
+          toast.success(`Client trouvé : ${customers[0].name}`);
         } else {
           setSearchResults(customers);
           setShowResults(true);
-          toast.info(`${customers.length} customers found`);
+          toast.info(`${customers.length} clients trouvés`);
         }
       } else if (result.type === 'product') {
         const product = result.data;
         // Add product to cart
         addToCart({
           productId: product.id,
-          productName: product.name_en, // Default to English name
+          productName: product.name_fr || product.name_en, // Default to French name
           quantity: 1,
           basePrice: product.base_price,
           image_url: product.image_url,
           notes: '',
         });
-        toast.success(`Added ${product.name_en} to cart`);
+        toast.success(`Ajouté ${product.name_fr || product.name_en} au panier`);
         setSearchResults([]);
         setShowResults(false);
         setShowScanner(false); // Close scanner after product scan too
@@ -177,7 +177,7 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
       }
     },
     onError: () => {
-      toast.error('Search error');
+      toast.error('Erreur de recherche');
     },
   });
 
@@ -193,7 +193,7 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
     setSearchResults([]);
     setShowResults(false);
     setSearchInput('');
-    toast.success(`Customer selected: ${customer.name}`);
+    toast.success(`Client sélectionné : ${customer.name}`);
   };
 
   const clearCustomer = () => {
@@ -221,10 +221,10 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
       <CardHeader className="p-2 pb-1">
         <CardTitle className="flex items-center gap-1.5 text-sm">
           <Gift className="h-3.5 w-3.5" />
-          Loyalty Program
+          Programme de fidélité
         </CardTitle>
         <CardDescription className="text-xs">
-          Scan customer QR code to accumulate points
+          Scannez le code QR du client pour accumuler des points
         </CardDescription>
       </CardHeader>
       <CardContent className="p-2 space-y-2">
@@ -232,7 +232,7 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
           <form onSubmit={handleSearch} className="space-y-1.5">
             <div className="flex gap-1.5">
               <Input
-                placeholder="Name, phone or QR code..."
+                placeholder="Nom, téléphone ou code QR..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="flex-1 h-8 text-xs"
@@ -248,13 +248,13 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Search by name, phone number or scan QR code
+              Recherchez par nom, téléphone ou scannez le code QR
             </p>
           </form>
         ) : showScanner ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-xs">Scan QR Code</h3>
+              <h3 className="font-semibold text-xs">Scanner le code QR</h3>
               <Button
                 variant="ghost"
                 size="icon"
@@ -284,13 +284,13 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
               />
             </div>
             <p className="text-[10px] text-muted-foreground text-center">
-              Position the QR code in front of the camera
+              Placez le code QR devant la caméra
             </p>
           </div>
         ) : showResults ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-xs">Search Results</h3>
+              <h3 className="font-semibold text-xs">Résultats de recherche</h3>
               <Button
                 variant="ghost"
                 size="icon"
@@ -315,7 +315,7 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
                     <p className="text-[10px] text-muted-foreground">{customer.email}</p>
                     <p className="text-[10px] text-muted-foreground">{customer.phone}</p>
                     <p className="text-[10px] text-primary font-medium">
-                      {customer.points} points • {customer.total_purchases} purchases
+                      {customer.points} points • {customer.total_purchases} achats
                     </p>
                   </div>
                 </div>
@@ -331,13 +331,13 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
                 <p className="text-[10px] text-muted-foreground">{selectedCustomer.phone}</p>
                 <div className="mt-1 space-y-0.5">
                   <p className="text-[10px]">
-                    <span className="font-medium">Points:</span>{' '}
+                    <span className="font-medium">Points :</span>{' '}
                     <span className="text-sm font-bold text-primary">
                       {selectedCustomer.points}/10
                     </span>
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    Total: {selectedCustomer.total_purchases}
+                    Total : {selectedCustomer.total_purchases} achats
                   </p>
                 </div>
               </div>
@@ -355,10 +355,10 @@ const CustomerLoyalty = ({ onCustomerSelected, selectedCustomer: externalCustome
               <div className="p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
                 <p className="text-[10px] font-medium text-green-800 dark:text-green-200 flex items-center gap-1">
                   <Gift className="h-3 w-3" />
-                  🎉 Free Drink!
+                  🎉 Boisson offerte !
                 </p>
                 <p className="text-[10px] text-green-700 dark:text-green-300">
-                  Free drink available
+                  Boisson gratuite disponible
                 </p>
               </div>
             )}

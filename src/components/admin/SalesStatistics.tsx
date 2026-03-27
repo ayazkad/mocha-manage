@@ -42,7 +42,7 @@ const SalesStatistics = () => {
       const statsMap = new Map();
       data.forEach((order: any) => {
         const employeeId = order.employee_id;
-        const employeeName = order.employees?.name || 'Unknown';
+        const employeeName = order.employees?.name || 'Inconnu';
         
         if (!statsMap.has(employeeId)) {
           statsMap.set(employeeId, {
@@ -169,7 +169,7 @@ const SalesStatistics = () => {
             <CardDescription>Commandes complétées</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{globalStats?.totalSales.toFixed(2)} ₾</p>
+            <p className="text-3xl font-bold">{globalStats?.totalSales.toFixed(2)} Dhs</p>
           </CardContent>
         </Card>
         
@@ -189,7 +189,7 @@ const SalesStatistics = () => {
             <CardDescription>Par commande</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{globalStats?.averageOrder.toFixed(2)} ₾</p>
+            <p className="text-3xl font-bold">{globalStats?.averageOrder.toFixed(2)} Dhs</p>
           </CardContent>
         </Card>
       </div>
@@ -215,9 +215,9 @@ const SalesStatistics = () => {
                 <TableRow key={index}>
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell className="text-right">{employee.orderCount}</TableCell>
-                  <TableCell className="text-right">{employee.totalSales.toFixed(2)} ₾</TableCell>
+                  <TableCell className="text-right">{employee.totalSales.toFixed(2)} Dhs</TableCell>
                   <TableCell className="text-right">
-                    {(employee.totalSales / employee.orderCount).toFixed(2)} ₾
+                    {(employee.totalSales / employee.orderCount).toFixed(2)} Dhs
                   </TableCell>
                 </TableRow>
               ))}

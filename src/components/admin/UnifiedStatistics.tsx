@@ -70,7 +70,7 @@ const UnifiedStatistics = () => {
       const employeeMap = new Map();
       data.forEach((order: any) => {
         const employeeId = order.employee_id;
-        const employeeName = order.employees?.name || 'Unknown';
+        const employeeName = order.employees?.name || 'Inconnu';
         
         if (!employeeMap.has(employeeId)) {
           employeeMap.set(employeeId, {
@@ -157,7 +157,7 @@ const UnifiedStatistics = () => {
           product_name: item.product_name,
           quantity: item.quantity,
           total_loss: item.total_loss,
-          employee_name: item.employees?.name || 'Unknown',
+          employee_name: item.employees?.name || 'Inconnu',
           loss_date: item.loss_date,
         })),
         dailyData,
@@ -300,7 +300,7 @@ const UnifiedStatistics = () => {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-1">Total des ventes</p>
                 <p className="text-3xl font-bold text-primary">
-                  {salesData?.totalSales.toFixed(2) || 0} ₾
+                  {salesData?.totalSales.toFixed(2) || 0} Dhs
                 </p>
               </div>
             </CardContent>
@@ -319,7 +319,7 @@ const UnifiedStatistics = () => {
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-1">Panier moyen</p>
-                <p className="text-3xl font-bold">{salesData?.averageOrder.toFixed(2) || 0} ₾</p>
+                <p className="text-3xl font-bold">{salesData?.averageOrder.toFixed(2) || 0} Dhs</p>
               </div>
             </CardContent>
           </Card>
@@ -344,7 +344,7 @@ const UnifiedStatistics = () => {
                     dataKey="ventes" 
                     stroke="hsl(var(--primary))" 
                     strokeWidth={2}
-                    name="Ventes (₾)"
+                    name="Ventes (Dhs)"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -373,9 +373,9 @@ const UnifiedStatistics = () => {
                     <TableRow key={index}>
                       <TableCell className="font-medium">{employee.name}</TableCell>
                       <TableCell className="text-right">{employee.orderCount}</TableCell>
-                      <TableCell className="text-right">{employee.totalSales.toFixed(2)} ₾</TableCell>
+                      <TableCell className="text-right">{employee.totalSales.toFixed(2)} Dhs</TableCell>
                       <TableCell className="text-right">
-                        {(employee.totalSales / employee.orderCount).toFixed(2)} ₾
+                        {(employee.totalSales / employee.orderCount).toFixed(2)} Dhs
                       </TableCell>
                     </TableRow>
                   ))}
@@ -399,7 +399,7 @@ const UnifiedStatistics = () => {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-1">Perte Totale</p>
                 <p className="text-3xl font-bold text-destructive">
-                  {lossesData?.totalLoss.toFixed(2) || 0} ₾
+                  {lossesData?.totalLoss.toFixed(2) || 0} Dhs
                 </p>
               </div>
             </CardContent>
@@ -443,7 +443,7 @@ const UnifiedStatistics = () => {
                     dataKey="pertes" 
                     stroke="hsl(var(--destructive))" 
                     strokeWidth={2}
-                    name="Pertes (₾)"
+                    name="Pertes (Dhs)"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -470,7 +470,7 @@ const UnifiedStatistics = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-destructive">
-                          {loss.total_loss.toFixed(2)} ₾
+                          {loss.total_loss.toFixed(2)} Dhs
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Qté: {loss.quantity}
