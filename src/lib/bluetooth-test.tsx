@@ -6,7 +6,7 @@ export const testBluetooth = async () => {
     console.log('✅ BLE OK');
     
     const devices = [];
-    const scan = BleClient.requestLEScan(
+    await BleClient.requestLEScan(
       { services: [], allowDuplicates: false },
       (result) => {
         if (result.device.name) {
@@ -16,8 +16,8 @@ export const testBluetooth = async () => {
       }
     );
     
-    setTimeout(() => {
-      scan();
+    setTimeout(async () => {
+      await BleClient.stopLEScan();
       console.log('Imprimantes:', devices);
     }, 8000);
     
