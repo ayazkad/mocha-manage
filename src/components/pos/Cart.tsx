@@ -91,7 +91,7 @@ const SwipeableCartItem = ({
 
       {/* Swipeable content */}
       <div
-        className={`bg-card relative z-10 p-2 border-2 transition-transform duration-200 ease-out rounded-lg ${isSelected ? 'border-primary bg-primary/5' : 'border-border/30'
+        className={`bg-card relative z-10 p-2 border-2 transition-transform duration-200 ease-out rounded-lg ${isSelected ? 'border-blue-500 bg-blue-500/10' : 'border-border/30'
           }`}
         style={{ transform: `translateX(${offsetX}px)` }}
         onTouchStart={handleTouchStart}
