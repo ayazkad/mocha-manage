@@ -322,17 +322,28 @@ const QuickEditProductDialog = ({ product, open, onClose, onSaved }: QuickEditPr
           </div>
 
           {/* Product Photo */}
-          <div>
-            <Input
-              id="image"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            <div className="mt-2">
+          <div className="grid grid-cols-[80px_1fr] items-center gap-2">
+            <Label className="text-right">Photo</Label>
+            <div>
+              <Input
+                id="quick-edit-image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => document.getElementById('quick-edit-image')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose from gallery
+              </Button>
               {imagePreview && (
-                <div className="relative w-full h-32 rounded-md overflow-hidden bg-muted mb-2">
+                <div className="relative w-full h-32 rounded-md overflow-hidden bg-muted mt-2">
                   <img
                     src={imagePreview}
                     alt="Preview"
