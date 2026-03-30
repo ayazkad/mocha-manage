@@ -152,7 +152,7 @@ const ProductCard = ({ product, onClick, onLongPress, getProductName, isAdmin }:
       {/* Content overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4">
         <div className="flex flex-col gap-1">
-          <h3 className="font-bold text-xs md:text-base text-white leading-tight">
+          <h3 className="font-bold text-[9px] md:text-sm text-white leading-tight truncate whitespace-nowrap overflow-hidden">
             {getProductName(product)}
           </h3>
           <span className="bg-foreground/80 text-background px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-sm font-semibold w-fit backdrop-blur-sm">
