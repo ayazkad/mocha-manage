@@ -86,7 +86,7 @@ const SwipeableCartItem = ({
     >
       {/* Background delete layer */}
       <div className="absolute inset-0 bg-destructive flex items-center justify-end pr-4 rounded-lg">
-        <Trash2 className="text-white w-5 h-5" />
+        <Trash2 className="text-white w-5 h-5 -mt-4" />
       </div>
 
       {/* Swipeable content */}
