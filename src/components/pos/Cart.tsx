@@ -85,13 +85,18 @@ const SwipeableCartItem = ({
         }`}
     >
       {/* Background delete layer */}
-      <div className="absolute inset-0 bg-destructive flex items-center justify-end pr-4 rounded-lg">
-        <Trash2 className="text-white w-5 h-5 -mt-4" />
+      <div
+        className="absolute inset-0 rounded-lg bg-destructive transition-opacity duration-200"
+        style={{ opacity: offsetX < -8 ? Math.min(Math.abs(offsetX) / 80, 1) : 0 }}
+      >
+        <div className="absolute right-4 top-3">
+          <Trash2 className="w-5 h-5 text-destructive-foreground" />
+        </div>
       </div>
 
       {/* Swipeable content */}
       <div
-        className={`bg-card relative z-10 p-2 border-2 transition-transform duration-200 ease-out rounded-lg ${isSelected ? 'border-blue-500 bg-blue-500/10' : 'border-border/30'
+        className={`bg-card relative z-10 p-2 border-2 transition-all duration-200 ease-out rounded-lg ${isSelected ? 'border-primary bg-primary/10 ring-1 ring-primary/30' : 'border-border/30'
           }`}
         style={{ transform: `translateX(${offsetX}px)` }}
         onTouchStart={handleTouchStart}
