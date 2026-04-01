@@ -27,7 +27,8 @@ const TABS = [
   'offers',
   'employees',
   'customers',
-  'printer'
+  'printer',
+  'business'
 ];
 
 // Defined outside component to prevent unnecessary re-initialization
