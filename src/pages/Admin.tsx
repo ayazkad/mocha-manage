@@ -138,6 +138,7 @@ const Admin = () => {
       case 'employees': return <EmployeesManager />;
       case 'customers': return <CustomersManager />;
       case 'printer': return <BluetoothPrinterSettings />;
+      case 'business': return <BusinessSettingsManager />;
       default: return null;
     }
   };
