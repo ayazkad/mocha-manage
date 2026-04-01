@@ -12,6 +12,7 @@ import OrdersManager from '@/components/admin/OrdersManager';
 import OffersManager from '@/components/admin/OffersManager';
 import GlobalOptionsManager from '@/components/admin/GlobalOptionsManager';
 import BluetoothPrinterSettings from '@/components/admin/BluetoothPrinterSettings';
+import BusinessSettingsManager from '@/components/admin/BusinessSettingsManager';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import useEmblaCarousel from 'embla-carousel-react';
