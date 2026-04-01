@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_settings: {
+        Row: {
+          address: string
+          business_name: string
+          city: string
+          created_at: string
+          currency: string
+          email: string
+          footer_message: string
+          ice: string
+          id: string
+          identifiant_fiscal: string
+          patente: string
+          phone: string
+          rc: string
+          tva_rate: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          business_name?: string
+          city?: string
+          created_at?: string
+          currency?: string
+          email?: string
+          footer_message?: string
+          ice?: string
+          id?: string
+          identifiant_fiscal?: string
+          patente?: string
+          phone?: string
+          rc?: string
+          tva_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          business_name?: string
+          city?: string
+          created_at?: string
+          currency?: string
+          email?: string
+          footer_message?: string
+          ice?: string
+          id?: string
+          identifiant_fiscal?: string
+          patente?: string
+          phone?: string
+          rc?: string
+          tva_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           active: boolean | null
@@ -382,10 +436,12 @@ export type Database = {
           notes: string | null
           order_number: string
           payment_method: Database["public"]["Enums"]["payment_method"] | null
+          previous_hash: string | null
           session_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
           tax_amount: number | null
+          ticket_hash: string | null
           tip_amount: number | null
           total: number
         }
@@ -399,10 +455,12 @@ export type Database = {
           notes?: string | null
           order_number: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          previous_hash?: string | null
           session_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal: number
           tax_amount?: number | null
+          ticket_hash?: string | null
           tip_amount?: number | null
           total: number
         }
@@ -416,10 +474,12 @@ export type Database = {
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          previous_hash?: string | null
           session_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           tax_amount?: number | null
+          ticket_hash?: string | null
           tip_amount?: number | null
           total?: number
         }

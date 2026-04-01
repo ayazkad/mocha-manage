@@ -2,10 +2,10 @@ import { useEffect, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer, Globe, Copy, Check, AlertCircle } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import logoLatte from '@/assets/logo-latte.png';
 import { getPrintClient, isNativeMode } from '@/printing/printClient';
+import { supabase } from '@/integrations/supabase/client';
 import QRCode from 'qrcode';
 
 interface OrderItem {
@@ -35,6 +35,25 @@ interface ReceiptData {
   change?: number;
 }
 
+interface BusinessInfo {
+  business_name: string;
+  ice: string;
+  identifiant_fiscal: string;
+  patente: string;
+  rc: string;
+  address: string;
+  city: string;
+  phone: string;
+  tva_rate: number;
+  currency: string;
+  footer_message: string;
+}
+
+interface TicketHashInfo {
+  ticket_hash: string | null;
+  previous_hash: string | null;
+}
+
 type Language = 'fr' | 'en';
 
 const translations = {
@@ -49,6 +68,9 @@ const translations = {
     subtotal: 'Sous-total :',
     discount: 'Remise :',
     total: 'TOTAL :',
+    totalHT: 'Total HT :',
+    tva: 'TVA',
+    totalTTC: 'Total TTC :',
     payment: 'Paiement :',
     cash: 'ESPÈCES',
     card: 'CARTE',
@@ -73,6 +95,9 @@ const translations = {
     subtotal: 'Subtotal:',
     discount: 'Discount:',
     total: 'TOTAL:',
+    totalHT: 'Total excl. tax:',
+    tva: 'VAT',
+    totalTTC: 'Total incl. tax:',
     payment: 'Payment:',
     cash: 'CASH',
     card: 'CARD',
@@ -94,9 +119,14 @@ interface PrintReceiptDialogProps {
   receiptData: ReceiptData | null;
 }
 
-// Generate pure text receipt (can be sent to ESC/POS printer)
-export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en): string => {
-  const WIDTH = 42; // Character width for 80mm thermal printer
+// Generate pure text receipt with legal mentions
+export const generateTextReceipt = (
+  data: ReceiptData,
+  t: typeof translations.en,
+  business?: BusinessInfo | null,
+  hashInfo?: TicketHashInfo | null
+): string => {
+  const WIDTH = 42;
   const LINE = '='.repeat(WIDTH);
   const DASHED = '-'.repeat(WIDTH);
 
@@ -110,18 +140,34 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
     return left + ' '.repeat(spaces) + right;
   };
 
-  const formatPrice = (price: number): string => `${price.toFixed(2)} MAD`;
+  const currency = business?.currency || 'MAD';
+  const formatPrice = (price: number): string => `${price.toFixed(2)} ${currency}`;
 
   let receipt = '';
 
-  // Header - Only address info (logo is shown separately)
-  receipt += '\n';
-  receipt += center('Casablanca, Maroc') + '\n';
-  receipt += center('Tel: +212 6XX XX XX XX') + '\n';
+  // Header with business info
+  if (business && business.business_name) {
+    receipt += '\n';
+    if (business.address) receipt += center(business.address) + '\n';
+    if (business.city) receipt += center(business.city) + '\n';
+    if (business.phone) receipt += center('Tel: ' + business.phone) + '\n';
+    receipt += '\n';
+
+    // Legal mentions
+    if (business.ice) receipt += center('ICE: ' + business.ice) + '\n';
+    if (business.identifiant_fiscal) receipt += center('IF: ' + business.identifiant_fiscal) + '\n';
+    if (business.patente) receipt += center('Patente: ' + business.patente) + '\n';
+    if (business.rc) receipt += center('RC: ' + business.rc) + '\n';
+  } else {
+    receipt += '\n';
+    receipt += center('Casablanca, Maroc') + '\n';
+    receipt += center('Tel: +212 6XX XX XX XX') + '\n';
+  }
+
   receipt += '\n';
   receipt += LINE + '\n';
 
-  // Order Number (big and centered)
+  // Order Number
   receipt += '\n';
   receipt += center('*** ORDER ***') + '\n';
   receipt += center('#' + data.orderNumber) + '\n';
@@ -143,7 +189,6 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
     const priceLine = formatPrice(item.totalPrice);
     receipt += leftRight(itemLine, priceLine) + '\n';
 
-    // Options (size, milk)
     if (item.selectedSize || item.selectedMilk) {
       const options = [item.selectedSize?.name, item.selectedMilk?.name]
         .filter(Boolean)
@@ -151,24 +196,29 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
       receipt += '   -> ' + options + '\n';
     }
 
-    // Unit price if quantity > 1
     if (item.quantity > 1) {
-      receipt += `   @ ${item.unitPrice.toFixed(2)} MAD each\n`;
+      receipt += `   @ ${item.unitPrice.toFixed(2)} ${currency} each\n`;
     }
   });
   receipt += '\n';
   receipt += DASHED + '\n';
 
-  // Totals
+  // Totals with TVA
+  const tvaRate = business?.tva_rate || 20;
+  const totalTTC = data.total;
+  const totalHT = totalTTC / (1 + tvaRate / 100);
+  const tvaAmount = totalTTC - totalHT;
+
   receipt += leftRight(t.subtotal, formatPrice(data.subtotal)) + '\n';
   if (data.discount > 0) {
     receipt += leftRight(t.discount, '-' + formatPrice(data.discount)) + '\n';
   }
   receipt += DASHED + '\n';
 
-  // Grand Total (emphasized)
+  receipt += leftRight(t.totalHT, formatPrice(totalHT)) + '\n';
+  receipt += leftRight(`${t.tva} (${tvaRate}%) :`, formatPrice(tvaAmount)) + '\n';
   receipt += '\n';
-  receipt += leftRight('>>> ' + t.total, formatPrice(data.total) + ' <<<') + '\n';
+  receipt += leftRight('>>> ' + t.totalTTC, formatPrice(totalTTC) + ' <<<') + '\n';
   receipt += '\n';
   receipt += LINE + '\n';
 
@@ -193,15 +243,24 @@ export const generateTextReceipt = (data: ReceiptData, t: typeof translations.en
 
   // Footer
   receipt += '\n';
-  receipt += center(t.thanks) + '\n';
-  receipt += center(t.goodbye) + '\n';
+  if (business?.footer_message) {
+    receipt += center(business.footer_message) + '\n';
+  } else {
+    receipt += center(t.thanks) + '\n';
+    receipt += center(t.goodbye) + '\n';
+  }
   receipt += '\n';
+
+  // Ticket hash for anti-fraud (DGI compliance)
+  if (hashInfo?.ticket_hash) {
+    receipt += center('Hash: ' + hashInfo.ticket_hash.slice(0, 16)) + '\n';
+  }
 
   // Order ID for reference
   receipt += center('ID: ' + data.orderId.slice(0, 8)) + '\n';
   receipt += '\n';
   receipt += center('---') + '\n';
-  receipt += '\n\n\n'; // Paper feed
+  receipt += '\n\n\n';
 
   return receipt;
 };
@@ -211,11 +270,41 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
   const [copied, setCopied] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
+  const [hashInfo, setHashInfo] = useState<TicketHashInfo | null>(null);
   const logoBase64Ref = useRef<string>('');
 
   const t = translations['fr'];
   const isNative = isNativeMode();
   const printClient = getPrintClient();
+
+  // Fetch business settings
+  useEffect(() => {
+    const fetchBusiness = async () => {
+      const { data } = await supabase
+        .from('business_settings')
+        .select('*')
+        .limit(1)
+        .single();
+      if (data) setBusinessInfo(data as BusinessInfo);
+    };
+    fetchBusiness();
+  }, []);
+
+  // Fetch ticket hash when receipt opens
+  useEffect(() => {
+    if (receiptData?.orderId && open) {
+      const fetchHash = async () => {
+        const { data } = await supabase
+          .from('orders')
+          .select('ticket_hash, previous_hash')
+          .eq('id', receiptData.orderId)
+          .single();
+        if (data) setHashInfo(data as TicketHashInfo);
+      };
+      fetchHash();
+    }
+  }, [receiptData?.orderId, open]);
 
   // Convert logo to base64 on mount
   useEffect(() => {
@@ -241,33 +330,25 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
       QRCode.toDataURL(receiptData.orderId, {
         width: 120,
         margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#ffffff'
-        }
-      }).then(url => {
-        setQrCodeDataUrl(url);
-      }).catch(err => {
-        console.error('QR code generation failed:', err);
-      });
+        color: { dark: '#000000', light: '#ffffff' }
+      }).then(url => setQrCodeDataUrl(url))
+        .catch(err => console.error('QR code generation failed:', err));
     }
   }, [receiptData?.orderId]);
 
-  // Generate text receipt when data or language changes
+  // Generate text receipt when data or business info changes
   useEffect(() => {
     if (receiptData) {
-      const text = generateTextReceipt(receiptData, t);
+      const text = generateTextReceipt(receiptData, t, businessInfo, hashInfo);
       setReceiptText(text);
     }
-  }, [receiptData, t]);
+  }, [receiptData, t, businessInfo, hashInfo]);
 
   const handlePrint = async () => {
     if (isPrinting || !receiptData) return;
 
     try {
       setIsPrinting(true);
-      console.log('[PrintReceiptDialog] Sending receipt via PrintClient with images...');
-
       const result = await printClient.printReceiptWithImages(
         receiptText,
         logoBase64Ref.current || undefined,
@@ -279,7 +360,6 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         onClose();
         return;
       }
-
       toast.error(result.message);
     } catch (error) {
       const err = error as Error;
@@ -310,7 +390,6 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
         </DialogHeader>
 
         <div className="space-y-3">
-          {/* Web mode warning */}
           {!isNative && (
             <div className="flex items-start gap-2 rounded-lg border border-amber-500 bg-amber-500/10 p-3 text-sm">
               <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
@@ -320,28 +399,17 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             </div>
           )}
 
-
-
           {/* Receipt Preview with Logo */}
           <div className="bg-white text-black p-3 rounded-lg max-h-[45vh] overflow-auto">
             <div className="mx-auto w-fit">
               <div className="flex justify-center mb-2">
-                <img
-                  src={logoLatte}
-                  alt="Latte logo"
-                  className="h-10 w-auto object-contain block"
-                />
+                <img src={logoLatte} alt="Latte logo" className="h-10 w-auto object-contain block" />
               </div>
               <pre className="font-mono text-[9px] leading-tight whitespace-pre overflow-x-auto">{receiptText}</pre>
 
-              {/* QR Code integrated in receipt */}
               {qrCodeDataUrl && (
                 <div className="flex flex-col items-center mt-2">
-                  <img
-                    src={qrCodeDataUrl}
-                    alt="Order QR Code"
-                    className="w-20 h-20"
-                  />
+                  <img src={qrCodeDataUrl} alt="Order QR Code" className="w-20 h-20" />
                   <p className="font-mono text-[8px] text-gray-600 mt-1 text-center">
                     Scan to view order
                   </p>
@@ -350,7 +418,7 @@ const PrintReceiptDialog = ({ open, onClose, receiptData }: PrintReceiptDialogPr
             </div>
           </div>
 
-          {/* Actions - Always in English */}
+          {/* Actions */}
           <div className="flex gap-2">
             <Button
               onClick={handlePrint}
